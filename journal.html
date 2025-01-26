@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Journal</title>
+  <link href="journal.css" rel="stylesheet" type="text/css" />
+  <script src="journal.js" defer></script>
+</head>
+
+<body>
+  <header>
+    <div class="header-container">
+      <nav>
+        <ul class="nav-list">
+          <li><a href="index.html">Dashboard</a></li>
+          <li><a href="journal.html">Journal</a></li>
+          <li><a href="analytics.html">Analytics</a></li>
+          <li><a href="playbook.html">Playbook</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="journal">
+      <h1>Journal your trade</h1>
+      <form id="tradeForm">
+        <label for="date">Date:</label>
+        <input type="date" id="date" required>
+
+        <label for="time">Time:</label>
+        <input type="time" id="time" required>
+
+        <label for="session">Session:</label>
+        <select id="session">
+          <option value="Asia">Asia</option>
+          <option value="London">Pre London</option>
+          <option value="London">London</option>
+          <option value="New York">Pre New York</option>
+          <option value="New York">New York</option>
+        </select>
+
+        <label for="pair">Pair:</label>
+        <input type="text" id="pair" required>
+
+        <label for="setup">Setup:</label>
+        <input type="text" id="setup" required>
+
+        <label for="entry">Playbook Entry:</label>
+        <input type="text" id="entry" required>
+
+        <label for="timeframe">Timeframe:</label>
+        <input type="text" id="timeframe" required>
+
+        <label for="buySell">Buy/Sell:</label>
+        <select id="buySell">
+          <option value="Buy">Buy</option>
+          <option value="Sell">Sell</option>
+        </select>
+
+        <label for="rr">R:R:</label>
+        <input type="number" step="0.01" id="rr" required>
+
+        <label for="pips">Pips:</label>
+        <input type="number" id="pips" required>
+
+        <label for="outcome">Outcome:</label>
+        <select id="outcome">
+          <option value="Win">Win</option>
+          <option value="Lose">Lose</option>
+          <option value="Breakeven">Breakeven</option>
+        </select>
+
+        <button type="submit">Add Trade</button>
+      </form>
+
+      <div id="tradeEntries">
+        <h2>Trade Entries</h2>
+        <table id="tradesTable">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Session</th>
+              <th>Pair</th>
+              <th>Setup</th>
+              <th>Playbook Entry</th>
+              <th>Timeframe</th>
+              <th>Buy/Sell</th>
+              <th>R:R</th>
+              <th>Pips</th>
+              <th>Outcome</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Trade rows will appear here -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 TheInnerGold. All rights reserved.</p>
+  </footer>
+</body>
+</html>

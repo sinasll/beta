@@ -1,0 +1,33 @@
+document.addEventListener('DOMContentLoaded', () => {
+  // Fetch trade entries from localStorage or initialize an empty array
+  const tradeEntries = JSON.parse(localStorage.getItem('tradeEntries')) || [];
+  
+  // Calculate stats
+  const totalTrades = tradeEntries.length;
+  const wins = tradeEntries.filter(entry => entry.outcome === 'Win').length;
+  const losses = tradeEntries.filter(entry => entry.outcome === 'Lose').length;
+  const breakeven = tradeEntries.filter(entry => entry.outcome === 'Breakeven').length;
+
+  // Calculate total pips (add for wins, subtract for losses, and adjust for negative pips)
+  const totalPips = tradeEntries.reduce((acc, entry) => {
+    // Check if pips are positive or negative and adjust accordingly
+    if (entry.outcome === 'Win' || entry.outcome === 'Breakeven') {
+      return acc + Math.abs(entry.pips);  // Always add positive value of pips (Win or Breakeven)
+    } else if (entry.outcome === 'Lose') {
+      return acc - Math.abs(entry.pips);  // Subtract absolute value of pips for losses
+    } else {
+      return acc;  // No change for any other cases
+    }
+  }, 0);
+
+  // Calculate win rate
+  const winRate = totalTrades === 0 ? 0 : (wins / totalTrades) * 100;
+
+  // Update DOM with the stats
+  document.getElementById('win-rate').textContent = `${winRate.toFixed(2)}%`;
+  document.getElementById('total-trades').textContent = totalTrades;
+  document.getElementById('total-pips').textContent = totalPips;
+  document.getElementById('wins').textContent = wins;
+  document.getElementById('losses').textContent = losses;
+  document.getElementById('breakeven').textContent = breakeven;
+});

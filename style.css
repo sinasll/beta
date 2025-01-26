@@ -1,0 +1,159 @@
+/* General Reset and Setup */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: #111;
+  color: #f8f8f8;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+a {
+  text-decoration: none;
+}
+
+/* Header Styles */
+header {
+  background-color: #111;
+  padding: 12px 0;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  z-index: 1000;
+}
+
+.header-container {
+  max-width: 100%;
+  padding: 0 20px;
+  text-align: center;
+}
+
+nav ul.nav-list {
+  list-style-type: none;
+  display: flex;
+  justify-content: center;
+}
+
+nav ul.nav-list li {
+  margin: 0 15px;
+}
+
+nav ul.nav-list li a {
+  color: #f3b500; /* Golden Yellow */
+  font-size: 16px;
+  font-weight: bold;
+  padding: 12px;
+}
+
+/* Main Content Styling */
+main {
+  padding-top: 30%; /* Space for fixed header */
+  padding-bottom: 20%;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+.dashboard {
+  display: flex;
+  flex-direction: column; /* Stack all cards vertically */
+  align-items: center;
+}
+
+.stat-card {
+  border: 1px solid #f3b500;
+  border-radius: 10px;
+  padding: 30px;
+  margin: 10px;
+  text-align: center;
+  width: 100%; /* Make cards full width */
+  max-width: 350px; /* Limit max width for larger screens */
+}
+
+.stat-card h3 {
+  font-size: 16px;
+  color: #f3b500;
+  margin-bottom: 15px;
+}
+
+.stat-card p {
+  font-size: 18px;
+  color: #fff;
+  margin: 0px 0;
+}
+
+.stat-card p#win-rate,
+.stat-card p#total-trades,
+.stat-card p#total-pips,
+.stat-card p#wins,
+.stat-card p#losses,
+.stat-card p#breakeven {
+  font-size: 18px;
+  font-weight: bold;
+  color: #f3b500;
+}
+
+/* Footer Styles */
+footer {
+  background-color: #111;
+  padding: 12px 0;
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+  z-index: 1000;
+}
+
+/* Footer Styles */
+footer {
+  background-color: #111;
+  padding: 12px 0;
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+  text-align: center;
+  z-index: 1000;
+}
+
+footer p {
+  color: #f3b500; /* Golden Yellow */
+  font-size: 16px;
+  font-weight: bold;
+}
+
+
+
+
+/* Responsive Adjustments for Mobile */
+@media (max-width: 768px) {
+  .stat-card {
+    width: 100%; /* Ensure cards take full width on smaller screens */
+    margin: 10px 0;
+  }
+
+  nav ul.nav-list {
+    flex-direction: column;
+  }
+
+  nav ul.nav-list li a {
+    font-size: 14px;
+    padding: 10px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 12px; /* Further decrease font size for very small screens */
+  }
+
+  .stat-card h3 {
+    font-size: 14px;
+  }
+
+  .stat-card p {
+    font-size: 16px;
+  }
+}

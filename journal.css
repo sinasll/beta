@@ -1,0 +1,200 @@
+/* General Reset and Setup */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: #111;
+  color: #f8f8f8;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+a {
+  text-decoration: none;
+}
+
+/* Header Styles */
+header {
+  background-color: #111;
+  padding: 12px 0;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  z-index: 1000;
+}
+
+.header-container {
+  max-width: 100%;
+  padding: 0 20px;
+  text-align: center;
+}
+
+nav ul.nav-list {
+  list-style-type: none;
+  display: flex;
+  justify-content: center;
+}
+
+nav ul.nav-list li {
+  margin: 0 15px;
+}
+
+nav ul.nav-list li a {
+  color: #f3b500; /* Golden Yellow */
+  font-size: 16px;
+  font-weight: bold;
+  padding: 12px;
+}
+
+/* Main Content Styling */
+main {
+  padding-top: 30%; /* Space for fixed header */
+  padding-bottom: 20%;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+.journal {
+  text-align: center;
+}
+
+.journal h1 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #f3b500;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+form label {
+  font-size: 16px;
+  color: #f3b500;
+}
+
+form input, form select {
+  padding: 8px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #f3b500;
+  background-color: #222;
+  color: #f3b500;
+}
+
+form button {
+  padding: 12px 24px;
+  background-color: #f3b500;
+  color: #111;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+form button:hover {
+  background-color: #f0a700;
+}
+
+/* Delete Button Styling */
+.delete-btn {
+  padding: 8px 16px;
+  background-color: #f3b500;
+  color: #111;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.delete-btn:hover {
+  background-color: #f0a700;
+}
+
+/* Trade Entries Table Styling */
+#tradeEntries {
+  margin-top: 40px;
+}
+
+#tradesTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+#tradesTable th, #tradesTable td {
+  padding: 12px;
+  text-align: center;
+  border: 1px solid #f3b500;
+}
+
+#tradesTable th {
+  color: #f3b500;
+}
+
+#tradesTable td {
+  color: #f8f8f8;
+}
+
+/* Footer Styles */
+footer {
+  background-color: #111;
+  padding: 12px 0;
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+  text-align: center;
+  z-index: 1000;
+}
+
+footer p {
+  color: #f3b500; /* Golden Yellow */
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* Responsive Adjustments for Mobile */
+@media (max-width: 768px) {
+  form {
+    width: 90%;
+  }
+
+  nav ul.nav-list {
+    flex-direction: column;
+  }
+
+  nav ul.nav-list li a {
+    font-size: 14px;
+    padding: 10px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 12px; /* Further decrease font size for very small screens */
+  }
+
+  form label {
+    font-size: 14px;
+  }
+
+  form input, form select {
+    font-size: 14px;
+  }
+
+  form button {
+    font-size: 14px;
+    padding: 10px 20px;
+  }
+}
