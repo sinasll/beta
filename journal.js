@@ -10,7 +10,6 @@ document.getElementById('tradeForm').addEventListener('submit', function (e) {
   const entry = document.getElementById('entry').value;
   const timeframe = document.getElementById('timeframe').value;
   const buySell = document.getElementById('buySell').value;
-  const rr = document.getElementById('rr').value;
   const pips = document.getElementById('pips').value;
   const outcome = document.getElementById('outcome').value;
 
@@ -24,7 +23,6 @@ document.getElementById('tradeForm').addEventListener('submit', function (e) {
     entry,
     timeframe,
     buySell,
-    rr,
     pips,
     outcome
   };
@@ -65,7 +63,6 @@ function addTradeToTable(trade, index) {
     <td>${trade.entry}</td>
     <td>${trade.timeframe}</td>
     <td>${trade.buySell}</td>
-    <td>${trade.rr}</td>
     <td>${trade.pips}</td>
     <td>${trade.outcome}</td>
     <td><button class="delete-btn" data-index="${index}">Delete</button></td>
