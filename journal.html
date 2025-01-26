@@ -6,6 +6,11 @@
   <title>Journal</title>
   <link href="journal.css" rel="stylesheet" type="text/css" />
   <script src="journal.js" defer></script>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+  rel="stylesheet"
+/>
 </head>
 
 <body>
@@ -13,10 +18,16 @@
     <div class="header-container">
       <nav>
         <ul class="nav-list">
-          <li><a href="index.html">Dashboard</a></li>
-          <li><a href="journal.html">Journal</a></li>
-          <li><a href="analytics.html">Analytics</a></li>
-          <li><a href="playbook.html">Playbook</a></li>
+          <li>
+            <a href="index.html">
+              <i class="fas fa-tachometer-alt"></i> Dashboard
+            </a>
+          </li>
+          <li>
+            <a href="journal.html">
+              <i class="fas fa-book"></i> Journal
+            </a>
+          </li>
         </ul>
       </nav>
     </div>
@@ -24,15 +35,15 @@
 
   <main>
     <section class="journal">
-      <h1>Journal your trade</h1>
+      <h1 class="journalh1">TRACK YOUR TRADES</h1>
       <form id="tradeForm">
-        <label for="date">Date:</label>
+        <label for="date">Date</label>
         <input type="date" id="date" required>
 
-        <label for="time">Time:</label>
+        <label for="time">Time</label>
         <input type="time" id="time" required>
 
-        <label for="session">Session:</label>
+        <label for="session">Session</label>
         <select id="session">
           <option value="Asia">Asia</option>
           <option value="London">Pre London</option>
@@ -41,31 +52,50 @@
           <option value="New York">New York</option>
         </select>
 
-        <label for="pair">Pair:</label>
-        <input type="text" id="pair" required>
+        <label for="pair">Pair</label>
+        <select id="pair" required>
+          <option value="XAUUSD">XAUUSD</option>
+          <option value="GBPJPY">GBPJPY</option>
+          <option value="GBPUSD">GBPUSD</option>
+          <option value="US30">US30</option>
+          <option value="GER30">GER30</option>
+        </select>
 
-        <label for="setup">Setup:</label>
-        <input type="text" id="setup" required>
+        <label for="setup">Setup</label>
+        <select id="setup" required>
+          <option value="Breakout">Breakout</option>
+          <option value="Fakeout">Fakeout</option>
+          <option value="Dragon">Dragon</option>
+        </select>
 
-        <label for="entry">Playbook Entry:</label>
-        <input type="text" id="entry" required>
+        <label for="entry">Entry</label>
+        <select id="entry" required>
+          <option value="Break previos H/L">Break previos H/L</option>
+          <option value="Break current H/L">Break current H/L</option>
+          <option value="Flip">Flip</option>
+          <option value="One stair">One stair</option>
+          <option value="Wick entry">Wick entry</option>
+        </select>
 
-        <label for="timeframe">Timeframe:</label>
-        <input type="text" id="timeframe" required>
+        <label for="timeframe">Timeframe</label>
+        <select id="timeframe" required>
+          <option value="5min">5min</option>
+          <option value="15min">15min</option>
+          <option value="30min">30min</option>
+          <option value="1hr">1hr</option>
+          <option value="4hr">4hr</option>
+        </select>
 
-        <label for="buySell">Buy/Sell:</label>
+        <label for="buySell">Buy/Sell</label>
         <select id="buySell">
           <option value="Buy">Buy</option>
           <option value="Sell">Sell</option>
         </select>
 
-        <label for="rr">R:R:</label>
-        <input type="number" step="0.01" id="rr" required>
-
-        <label for="pips">Pips:</label>
+        <label for="pips">Pips</label>
         <input type="number" id="pips" required>
 
-        <label for="outcome">Outcome:</label>
+        <label for="outcome">Outcome</label>
         <select id="outcome">
           <option value="Win">Win</option>
           <option value="Lose">Lose</option>
@@ -76,7 +106,7 @@
       </form>
 
       <div id="tradeEntries">
-        <h2>Trade Entries</h2>
+        <h2 class="history">HISTORY</h2>
         <table id="tradesTable">
           <thead>
             <tr>
@@ -88,7 +118,6 @@
               <th>Playbook Entry</th>
               <th>Timeframe</th>
               <th>Buy/Sell</th>
-              <th>R:R</th>
               <th>Pips</th>
               <th>Outcome</th>
             </tr>
