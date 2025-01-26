@@ -6,7 +6,7 @@
 }
 
 body {
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Press Start 2P', sans-serif;
   background-color: #111;
   color: #f8f8f8;
   line-height: 1.6;
@@ -17,37 +17,51 @@ a {
   text-decoration: none;
 }
 
-/* Header Styles */
-header {
-  background-color: #111;
-  padding: 12px 0;
-  position: fixed;
-  width: 100%;
-  top: 0;
-  z-index: 1000;
-}
+  /* Header Styles */
+  header {
+    background-color: #111;
+    padding: 20px 0;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+  }
 
-.header-container {
-  max-width: 100%;
-  padding: 0 20px;
+  .header-container {
+    max-width: 100%;
+    padding: 0 20px;
+    text-align: center;
+  }
+
+  nav ul.nav-list {
+    list-style-type: none;
+    display: flex;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+  }
+
+  nav ul.nav-list li {
+    margin: 0 15px;
+  }
+
+  nav ul.nav-list li a {
+    color: #FFD700; 
+    font-size: 16px;
+    font-weight: bold;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+  }
+
+/*h1 style */
+.stats {
+  color: #FFD700;
+  font-size: 20px;
   text-align: center;
-}
-
-nav ul.nav-list {
-  list-style-type: none;
-  display: flex;
-  justify-content: center;
-}
-
-nav ul.nav-list li {
-  margin: 0 15px;
-}
-
-nav ul.nav-list li a {
-  color: #f3b500; /* Golden Yellow */
-  font-size: 16px;
-  font-weight: bold;
-  padding: 12px;
+  margin-bottom: 10px;
 }
 
 /* Main Content Styling */
@@ -65,7 +79,7 @@ main {
 }
 
 .stat-card {
-  border: 1px solid #f3b500;
+  border: 1px solid #FFD700;
   border-radius: 10px;
   padding: 30px;
   margin: 10px;
@@ -76,7 +90,7 @@ main {
 
 .stat-card h3 {
   font-size: 16px;
-  color: #f3b500;
+  color: #FFD700;
   margin-bottom: 15px;
 }
 
@@ -94,7 +108,7 @@ main {
 .stat-card p#breakeven {
   font-size: 18px;
   font-weight: bold;
-  color: #f3b500;
+  color: #FFD700;
 }
 
 /* Footer Styles */
@@ -119,8 +133,8 @@ footer {
 }
 
 footer p {
-  color: #f3b500; /* Golden Yellow */
-  font-size: 16px;
+  color: #FFD700; /* Golden Yellow */
+  font-size: 10px;
   font-weight: bold;
 }
 
