@@ -28,10 +28,15 @@
               <i class="fas fa-book"></i> Journal
             </a>
           </li>
+          <li>
+            <a href="calendar.html">
+              <i class="fas fa-calendar-alt"></i> Calendar
+            </a>
+          </li>
         </ul>
       </nav>
     </div>
-  </header>
+  </header>  
 
   <main>
     <section class="journal">
@@ -46,9 +51,9 @@
         <label for="session">Session</label>
         <select id="session">
           <option value="Asia">Asia</option>
-          <option value="London">Pre London</option>
+          <option value="Pre London">Pre London</option>
           <option value="London">London</option>
-          <option value="New York">Pre New York</option>
+          <option value="Pre New York">Pre New York</option>
           <option value="New York">New York</option>
         </select>
 
@@ -58,7 +63,8 @@
           <option value="GBPJPY">GBPJPY</option>
           <option value="GBPUSD">GBPUSD</option>
           <option value="US30">US30</option>
-          <option value="GER30">GER30</option>
+          <option value="NAS100">NAS100</option>
+          <option value="BTCUSDT">BTCUSDT</option>
         </select>
 
         <label for="setup">Setup</label>
@@ -107,28 +113,10 @@
 
       <div id="tradeEntries">
         <h2 class="history">HISTORY</h2>
-        <table id="tradesTable">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Time</th>
-              <th>Session</th>
-              <th>Pair</th>
-              <th>Setup</th>
-              <th>Playbook Entry</th>
-              <th>Timeframe</th>
-              <th>Buy/Sell</th>
-              <th>Pips</th>
-              <th>Outcome</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- Trade rows will appear here -->
-          </tbody>
-        </table>
-      </div>
-    </section>
-  </main>
+        <div id="tradesList">
+          <!-- Trade cards will appear here -->
+        </div>
+      </div>      
 
   <footer>
     <p>&copy; 2025 TheInnerGold. All rights reserved.</p>
