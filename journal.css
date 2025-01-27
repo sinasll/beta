@@ -7,7 +7,7 @@
 
 body {
   font-family: 'Press Start 2P', sans-serif;
-  background-color: #111;
+  background-color: #000;
   color: #f8f8f8;
   line-height: 1.6;
   font-size: 14px;
@@ -19,7 +19,7 @@ a {
 
 /* Header Styles */
 header {
-  background-color: #111;
+  background-color: #000;
   padding: 20px 0;
   position: fixed;
   width: 100%;
@@ -58,7 +58,7 @@ nav ul.nav-list li a {
 
 /* Main Content Styling */
 main {
-  padding-top: 30%; /* Space for fixed header */
+  padding-top: 40%; /* Space for fixed header */
   padding-bottom: 20%;
   padding-left: 15px;
   padding-right: 15px;
@@ -91,7 +91,7 @@ form input, form select {
   font-size: 16px;
   border-radius: 0px;
   border: 1px solid #FFD700;
-  background-color: #222;
+  background-color: #000;
   color: #FFD700;
 }
 
@@ -100,7 +100,7 @@ form button {
   margin-top: 10px;
   padding: 12px 24px;
   background-color: #FFD700;
-  color: #111;
+  color: #000;
   font-weight: bold;
   border: none;
   border-radius: 0px;
@@ -108,22 +108,9 @@ form button {
 }
 
 
-/* Delete Button Styling */
-.delete-btn {
-  padding: 8px 16px;
-  background-color: #FFD700;
-  color: #111;
-  font-weight: bold;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-
-/* Trade Entries Table Styling */
-
+/* History Section Styling */
 .history {
-  color: #FFD700 ;
+  color: #FFD700;
   font-size: 20px;
   text-align: center;
   margin-bottom: 10px;
@@ -133,29 +120,46 @@ form button {
   margin-top: 40px;
 }
 
-#tradesTable {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-}
-
-#tradesTable th, #tradesTable td {
-  padding: 15px;
-  text-align: center;
+/* Trade Card Styling */
+.trade-card {
+  background-color: #000;
   border: 1px solid #FFD700;
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 20px;
+  color: #FFD700;
+  font-family: 'Press Start 2P', sans-serif;
 }
 
-#tradesTable th {
-  color: #FFD700;
+.trade-card h3 {
+  font-size: 12px;
+  margin-bottom: 10px;
 }
 
-#tradesTable td {
-  color: #FFD700;
+.trade-card p {
+  font-size: 10px;
+  margin: 5px 0;
 }
+
+.trade-card .view-btn,
+.delete-btn  {
+  font-family: 'Press Start 2P', sans-serif;
+  padding: 8px 16px;
+  background-color: #FFD700;
+  color: #000;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 10px;
+  display: block;
+  text-align: center;
+}
+
 
 /* Footer Styles */
 footer {
-  background-color: #111;
+  background-color: #000;
   padding: 12px 0;
   position: fixed;
   width: 100%;
@@ -166,7 +170,7 @@ footer {
 
 footer p {
   color: #FFD700; /* Golden Yellow */
-  font-size: 0.5rem;
+  font-size: 10px;
   font-weight: bold;
 }
 
