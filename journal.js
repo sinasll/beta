@@ -24,7 +24,7 @@ document.getElementById('tradeForm').addEventListener('submit', function (e) {
     timeframe,
     buySell,
     pips,
-    outcome
+    outcome,
   };
 
   // Retrieve existing trades from localStorage or initialize as an empty array
@@ -36,8 +36,8 @@ document.getElementById('tradeForm').addEventListener('submit', function (e) {
   // Save the updated trade entries back to localStorage
   localStorage.setItem('tradeEntries', JSON.stringify(tradeEntries));
 
-  // Add the new trade to the table
-  addTradeToTable(newTrade);
+  // Add the new trade to the card list
+  addTradeToCards(newTrade, tradeEntries.length - 1);
 
   // Reset the form after submission
   document.getElementById('tradeForm').reset();
@@ -47,34 +47,62 @@ document.getElementById('tradeForm').addEventListener('submit', function (e) {
 function loadTrades() {
   const tradeEntries = JSON.parse(localStorage.getItem('tradeEntries')) || [];
   tradeEntries.forEach((trade, index) => {
-    addTradeToTable(trade, index);
+    addTradeToCards(trade, index);
   });
 }
 
-// Function to add a trade to the table with a delete button
-function addTradeToTable(trade, index) {
-  const row = document.createElement('tr');
-  row.innerHTML = `
-    <td>${trade.date}</td>
-    <td>${trade.time}</td>
-    <td>${trade.session}</td>
-    <td>${trade.pair}</td>
-    <td>${trade.setup}</td>
-    <td>${trade.entry}</td>
-    <td>${trade.timeframe}</td>
-    <td>${trade.buySell}</td>
-    <td>${trade.pips}</td>
-    <td>${trade.outcome}</td>
-    <td><button class="delete-btn" data-index="${index}">Delete</button></td>
+// Function to add a trade as a minimized card with View and Delete buttons
+function addTradeToCards(trade, index) {
+  const tradesList = document.getElementById('tradesList');
+  const tradeCard = document.createElement('div');
+  tradeCard.classList.add('trade-card', 'minimized'); // Start as minimized
+
+  tradeCard.innerHTML = `
+    <h3>Trade ${index + 1}</h3>
+    <div class="card-details" style="display: none;"> <!-- Initially hidden -->
+      <p><strong>Date:</strong> ${trade.date}</p>
+      <p><strong>Time:</strong> ${trade.time}</p>
+      <p><strong>Session:</strong> ${trade.session}</p>
+      <p><strong>Pair:</strong> ${trade.pair}</p>
+      <p><strong>Setup:</strong> ${trade.setup}</p>
+      <p><strong>Playbook Entry:</strong> ${trade.entry}</p>
+      <p><strong>Timeframe:</strong> ${trade.timeframe}</p>
+      <p><strong>Buy/Sell:</strong> ${trade.buySell}</p>
+      <p><strong>Pips:</strong> ${trade.pips}</p>
+      <p><strong>Outcome:</strong> ${trade.outcome}</p>
+    </div>
+    <button class="view-btn">View</button>
+    <button class="delete-btn" data-index="${index}">Delete</button>
   `;
 
-  // Add the new row to the table
-  document.getElementById('tradesTable').querySelector('tbody').appendChild(row);
+  tradesList.appendChild(tradeCard);
 
-  // Add event listener for the delete button
-  row.querySelector('.delete-btn').addEventListener('click', function () {
+  // Add event listener for the View button
+  const viewButton = tradeCard.querySelector('.view-btn');
+  viewButton.addEventListener('click', function () {
+    toggleCardDetails(tradeCard, viewButton);
+  });
+
+  // Add event listener for the Delete button
+  tradeCard.querySelector('.delete-btn').addEventListener('click', function () {
     deleteTrade(index);
   });
+}
+
+// Function to toggle card details
+function toggleCardDetails(card, button) {
+  const details = card.querySelector('.card-details');
+  const isHidden = details.style.display === 'none';
+
+  if (isHidden) {
+    details.style.display = 'block';
+    card.classList.remove('minimized');
+    button.textContent = 'Hide';
+  } else {
+    details.style.display = 'none';
+    card.classList.add('minimized');
+    button.textContent = 'View';
+  }
 }
 
 // Function to delete a trade
@@ -88,8 +116,8 @@ function deleteTrade(index) {
   // Save the updated trade entries back to localStorage
   localStorage.setItem('tradeEntries', JSON.stringify(tradeEntries));
 
-  // Reload the trades to update the table
-  document.querySelector('tbody').innerHTML = '';
+  // Reload the trades to update the card list
+  document.getElementById('tradesList').innerHTML = '';
   loadTrades();
 }
 
