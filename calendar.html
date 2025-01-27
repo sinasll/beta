@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calendar</title>
+  <link href="calendar.css" rel="stylesheet" type="text/css" />
+  <script src="calendar.js" defer></script>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet"/>
+</head>
+
+<body>
+  <header>
+    <div class="header-container">
+      <nav>
+        <ul class="nav-list">
+          <li>
+            <a href="index.html">
+              <i class="fas fa-tachometer-alt"></i> Dashboard
+            </a>
+          </li>
+          <li>
+            <a href="journal.html">
+              <i class="fas fa-book"></i> Journal
+            </a>
+          </li>
+          <li>
+            <a href="calendar.html">
+              <i class="fas fa-calendar-alt"></i> Calendar
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="calendar">
+      <div class="year">
+        <h2 id="currentYear"></h2>
+        <div id="monthsGrid" class="months-grid"></div>
+      </div>
+      <div id="daysGrid" class="days-grid"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 TheInnerGold. All rights reserved.</p>
+  </footer>
+</body>
+</html>
