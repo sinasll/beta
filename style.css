@@ -7,7 +7,7 @@
 
 body {
   font-family: 'Press Start 2P', sans-serif;
-  background-color: #111;
+  background-color: #000;
   color: #f8f8f8;
   line-height: 1.6;
   font-size: 14px;
@@ -19,7 +19,7 @@ a {
 
   /* Header Styles */
   header {
-    background-color: #111;
+    background-color: #000;
     padding: 20px 0;
     position: fixed;
     width: 100%;
@@ -66,7 +66,7 @@ a {
 
 /* Main Content Styling */
 main {
-  padding-top: 30%; /* Space for fixed header */
+  padding-top: 40%; /* Space for fixed header */
   padding-bottom: 20%;
   padding-left: 15px;
   padding-right: 15px;
@@ -105,7 +105,8 @@ main {
 .stat-card p#total-pips,
 .stat-card p#wins,
 .stat-card p#losses,
-.stat-card p#breakeven {
+.stat-card p#breakeven,
+.stat-card p#average-pips  {
   font-size: 18px;
   font-weight: bold;
   color: #FFD700;
@@ -113,7 +114,7 @@ main {
 
 /* Footer Styles */
 footer {
-  background-color: #111;
+  background-color: #000;
   padding: 12px 0;
   position: fixed;
   width: 100%;
@@ -123,7 +124,7 @@ footer {
 
 /* Footer Styles */
 footer {
-  background-color: #111;
+  background-color: #000;
   padding: 12px 0;
   position: fixed;
   width: 100%;
@@ -134,7 +135,7 @@ footer {
 
 footer p {
   color: #FFD700; /* Golden Yellow */
-  font-size: 0.5rem;
+  font-size: 10px;
   font-weight: bold;
 }
 
