@@ -107,9 +107,9 @@ main {
 .stat-card p#losses,
 .stat-card p#breakeven,
 .stat-card p#average-pips,
-.stat-card p#Breakouts,
-.stat-card p#Faekouts,
-.stat-card p#Dragons  {
+.stat-card p#breakout-win-rate,
+.stat-card p#fakeout-win-rate,
+.stat-card p#dragon-win-rate  {
   font-size: 18px;
   font-weight: bold;
   color: #FFD700;
