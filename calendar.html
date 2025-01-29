@@ -13,7 +13,7 @@
 <body>
   <header>
     <div class="header-container">
-      <nav>
+      <nav> 
         <ul class="nav-list">
           <li>
             <a href="index.html">
@@ -36,13 +36,25 @@
   </header>
 
   <main>
-    <section class="calendar">
-      <div class="year">
-        <h2 id="currentYear"></h2>
-        <div id="monthsGrid" class="months-grid"></div>
+    <div class="calendar-container">
+      <div class="calendar-header">
+        <button id="prevYear" class="nav-btn">Prev Year</button>
+        <span id="yearLabel"></span>
+        <button id="nextYear" class="nav-btn">Next Year</button>
       </div>
-      <div id="daysGrid" class="days-grid"></div>
-    </section>
+      
+      <div class="calendar-nav">
+        <button id="prevMonth" class="nav-btn">Prev Month</button>
+        <div class="calendar-header">
+          <span id="monthLabel"></span>
+        </div>
+        <button id="nextMonth" class="nav-btn">Next Month</button>
+      </div>
+
+      <div id="stats" class="stats">
+        <!-- Stats will be dynamically generated here -->
+      </div>
+    </div>
   </main>
 
   <footer>

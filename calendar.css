@@ -56,7 +56,15 @@ a {
     padding: 12px;
   }
 
-/* Main Content Styling */
+/*h1 style */
+.stats {
+  color: #FFD700;
+  font-size: 20px;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+/* Calendar Container */
 main {
   padding-top: 40%; /* Space for fixed header */
   padding-bottom: 20%;
@@ -64,55 +72,61 @@ main {
   padding-right: 15px;
 }
 
-.calendar-h1 {
-  color: #FFD700 ;
-  font-size: 20px;
-  text-align: center;
-  margin-bottom: 10px;
-}
-
-/* Calendar Styling */
-.year {
-  color: #FFD700 ;
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-#monthsGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 5px;
-  margin-top: 20px;
-}
-
-.month-card {
-  background-color: #000;
-  border: 1px solid #FFD700;
-  padding: 10px;
-  text-align: center;
-  color: #FFD700;
-  font-size: 10px;
-  cursor: pointer;
-}
-
-#daysGrid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 5px;
-  margin-top: 20px;
-}
-
-.day-card {
-  background-color: #000;
-  border: 1px solid #FFD700;
-  padding: 10px;
-  color: #FFD700;
-  font-size: 10px;
+.calendar-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
+  padding: 10px;
+}
+
+.calendar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.nav-btn {
+  font-family: 'Press Start 2P', sans-serif;
+  background-color: #FFD700;
+  color: #000;
+  border: none;
+  padding: 10px 20px;
   cursor: pointer;
+  font-size: 10px;
+  margin: 1px;
+  margin-bottom: 10px;
+}
+
+.calendar-header {
+  font-size: 10px;
+  font-weight: bold;
+  color: #FFD700;
+  margin: 0 10px;
+}
+
+.stats {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+  font-size: 18px;
+}
+
+.stat-card {
+  border: 1px solid #FFD700;
+  border-radius: 10px;
+  padding: 30px;
+  margin: 10px;
+  text-align: center;
+  width: 100%; /* Make cards full width */
+  max-width: 350px; /* Limit max width for larger screens */
+}
+
+.stat-card h3 {
+  font-size: 16px;
+  color: #FFD700;
+  margin-bottom: 15px;
 }
 
 footer {
@@ -126,15 +140,16 @@ footer {
 }
 
 footer p {
-  color: #FFD700; /* Golden Yellow */
+  color: #FFD700;
   font-size: 10px;
   font-weight: bold;
 }
 
 /* Responsive Adjustments for Mobile */
 @media (max-width: 768px) {
-  form {
-    width: 90%;
+  .stat-card {
+    width: 100%; /* Ensure cards take full width on smaller screens */
+    margin: 10px 0;
   }
 
   nav ul.nav-list {
@@ -152,16 +167,11 @@ footer p {
     font-size: 12px; /* Further decrease font size for very small screens */
   }
 
-  form label {
+  .stat-card h3 {
     font-size: 14px;
   }
 
-  form input, form select {
-    font-size: 14px;
-  }
-
-  form button {
-    font-size: 14px;
-    padding: 10px 20px;
+  .stat-card p {
+    font-size: 16px;
   }
 }

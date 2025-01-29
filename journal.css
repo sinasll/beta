@@ -156,6 +156,48 @@ form button {
   text-align: center;
 }
 
+/* Modal Styling */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1001;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background-color: #000;
+  color: #FFD700;
+  border: 2px solid #FFD700;
+  padding: 20px;
+  text-align: center;
+  font-family: 'Press Start 2P', sans-serif;
+  max-width: 300px;
+  margin: auto;
+  border-radius: 10px;
+}
+
+.modal-btn {
+  font-family: 'Press Start 2P', sans-serif;
+  background-color: #FFD700;
+  color: #000;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 14px;
+  margin: 10px;
+}
+
+.modal-btn:hover {
+  background-color: #daa520;
+}
+
+
 
 /* Footer Styles */
 footer {

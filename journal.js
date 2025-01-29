@@ -105,21 +105,97 @@ function toggleCardDetails(card, button) {
   }
 }
 
-// Function to delete a trade
 function deleteTrade(index) {
-  // Retrieve existing trades from localStorage
-  const tradeEntries = JSON.parse(localStorage.getItem('tradeEntries')) || [];
+  // Check if modal already exists, remove it
+  let existingModal = document.getElementById("deleteModal");
+  if (existingModal) {
+    existingModal.remove();
+  }
 
-  // Remove the trade at the specified index
-  tradeEntries.splice(index, 1);
+  // Create modal container
+  let modal = document.createElement("div");
+  modal.id = "deleteModal";
+  modal.style.position = "fixed";
+  modal.style.top = "0";
+  modal.style.left = "0";
+  modal.style.width = "100%";
+  modal.style.height = "100%";
+  modal.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+  modal.style.display = "flex";
+  modal.style.alignItems = "center";
+  modal.style.justifyContent = "center";
+  modal.style.zIndex = "1001";
+  modal.style.fontSize = "10px";
 
-  // Save the updated trade entries back to localStorage
-  localStorage.setItem('tradeEntries', JSON.stringify(tradeEntries));
+  // Create modal content
+  let modalContent = document.createElement("div");
+  modalContent.style.backgroundColor = "#000";
+  modalContent.style.color = "#FFD700";
+  modalContent.style.border = "2px solid #FFD700";
+  modalContent.style.padding = "20px";
+  modalContent.style.textAlign = "center";
+  modalContent.style.fontFamily = "'Press Start 2P', sans-serif";
+  modalContent.style.maxWidth = "300px";
+  modalContent.style.borderRadius = "10px";
 
-  // Reload the trades to update the card list
-  document.getElementById('tradesList').innerHTML = '';
-  loadTrades();
+  // Create confirmation text
+  let text = document.createElement("p");
+  text.textContent = "ARE YOU SURE TO DELETE?";
+  modalContent.appendChild(text);
+
+  // Create Yes button
+  let confirmBtn = document.createElement("button");
+  confirmBtn.textContent = "YES";
+  confirmBtn.style.backgroundColor = "#FFD700";
+  confirmBtn.style.color = "#000";
+  confirmBtn.style.border = "none";
+  confirmBtn.style.padding = "10px 20px";
+  confirmBtn.style.cursor = "pointer";
+  confirmBtn.style.fontSize = "10px";
+  confirmBtn.style.margin = "10px";
+  confirmBtn.style.fontFamily = "'Press Start 2P', sans-serif";
+  confirmBtn.onclick = function () {
+    // Retrieve existing trades from localStorage
+    const tradeEntries = JSON.parse(localStorage.getItem("tradeEntries")) || [];
+
+    // Remove the trade at the specified index
+    tradeEntries.splice(index, 1);
+
+    // Save the updated trade entries back to localStorage
+    localStorage.setItem("tradeEntries", JSON.stringify(tradeEntries));
+
+    // Reload the trades to update the card list
+    document.getElementById("tradesList").innerHTML = "";
+    loadTrades();
+
+    // Remove modal
+    modal.remove();
+  };
+
+  // Create No button
+  let cancelBtn = document.createElement("button");
+  cancelBtn.textContent = "NO";
+  cancelBtn.style.backgroundColor = "#FFD700";
+  cancelBtn.style.color = "#000";
+  cancelBtn.style.border = "none";
+  cancelBtn.style.padding = "10px 20px";
+  cancelBtn.style.cursor = "pointer";
+  cancelBtn.style.fontSize = "10px";
+  cancelBtn.style.margin = "10px";
+  cancelBtn.style.fontFamily = "'Press Start 2P', sans-serif";
+  cancelBtn.onclick = function () {
+    modal.remove();
+  };
+
+  // Append buttons to modal content
+  modalContent.appendChild(confirmBtn);
+  modalContent.appendChild(cancelBtn);
+  modal.appendChild(modalContent);
+
+  // Append modal to body
+  document.body.appendChild(modal);
 }
+
 
 // Load trades when the page is loaded
 document.addEventListener('DOMContentLoaded', loadTrades);

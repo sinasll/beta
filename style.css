@@ -106,7 +106,10 @@ main {
 .stat-card p#wins,
 .stat-card p#losses,
 .stat-card p#breakeven,
-.stat-card p#average-pips  {
+.stat-card p#average-pips,
+.stat-card p#Breakouts,
+.stat-card p#Faekouts,
+.stat-card p#Dragons  {
   font-size: 18px;
   font-weight: bold;
   color: #FFD700;
