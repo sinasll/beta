@@ -8,6 +8,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const losses = tradeEntries.filter(entry => entry.outcome === 'Lose').length;
   const breakeven = tradeEntries.filter(entry => entry.outcome === 'Breakeven').length;
 
+  // Filter out breakout, fakeout, and dragon trades
+  const breakoutTrades = tradeEntries.filter(entry => entry.setup === 'Breakout');
+  const fakeoutTrades = tradeEntries.filter(entry => entry.setup === 'Fakeout');
+  const dragonTrades = tradeEntries.filter(entry => entry.setup === 'Dragon');
+
+  // Calculate breakout win rate
+  const breakoutWins = breakoutTrades.filter(entry => entry.outcome === 'Win').length;
+  const breakoutWinRate = breakoutTrades.length === 0 ? 0 : (breakoutWins / breakoutTrades.length) * 100;
+
+  // Calculate fakeout win rate
+  const fakeoutWins = fakeoutTrades.filter(entry => entry.outcome === 'Win').length;
+  const fakeoutWinRate = fakeoutTrades.length === 0 ? 0 : (fakeoutWins / fakeoutTrades.length) * 100;
+
+  // Calculate dragon win rate
+  const dragonWins = dragonTrades.filter(entry => entry.outcome === 'Win').length;
+  const dragonWinRate = dragonTrades.length === 0 ? 0 : (dragonWins / dragonTrades.length) * 100;
+
   // Calculate total pips (add for wins, subtract for losses, and adjust for negative pips)
   const totalPips = tradeEntries.reduce((acc, entry) => {
     if (entry.outcome === 'Win' || entry.outcome === 'Breakeven') {
@@ -32,4 +49,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('average-pips').textContent = averagePips.toFixed(2);
   document.getElementById('wins').textContent = wins;
   document.getElementById('losses').textContent = losses;
+
+  // Update Breakout, Fakeout, and Dragon Win Rates
+  document.getElementById('breakout-win-rate').textContent = `${breakoutWinRate.toFixed(2)}%`;
+  document.getElementById('fakeout-win-rate').textContent = `${fakeoutWinRate.toFixed(2)}%`;
+  document.getElementById('dragon-win-rate').textContent = `${dragonWinRate.toFixed(2)}%`;
 });
