@@ -109,11 +109,27 @@ main {
 .stat-card p#average-pips,
 .stat-card p#breakout-win-rate,
 .stat-card p#fakeout-win-rate,
-.stat-card p#dragon-win-rate  {
+.stat-card p#dragon-win-rate,
+.stat-card p#break-prev-win-rate,
+.stat-card p#break-current-win-rate,
+.stat-card p#flip-win-rate,
+.stat-card p#one-stair-win-rate,
+.stat-card p#wick-entry-win-rate,
+.stat-card p#t5min,
+.stat-card p#t15min,
+.stat-card p#t30min,
+.stat-card p#t1hr,
+.stat-card p#t4hr,
+.stat-card p#Asia,
+.stat-card p#PreLondon,
+.stat-card p#London,
+.stat-card p#PreNewYork,
+.stat-card p#NewYork {
   font-size: 18px;
   font-weight: bold;
   color: #FFD700;
 }
+
 
 /* Footer Styles */
 footer {

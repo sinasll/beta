@@ -2,56 +2,84 @@ document.addEventListener('DOMContentLoaded', () => {
   // Fetch trade entries from localStorage or initialize an empty array
   const tradeEntries = JSON.parse(localStorage.getItem('tradeEntries')) || [];
 
-  // Calculate stats
+  // Calculate total trades, wins, and losses
   const totalTrades = tradeEntries.length;
   const wins = tradeEntries.filter(entry => entry.outcome === 'Win').length;
   const losses = tradeEntries.filter(entry => entry.outcome === 'Lose').length;
-  const breakeven = tradeEntries.filter(entry => entry.outcome === 'Breakeven').length;
 
-  // Filter out breakout, fakeout, and dragon trades
+  // Breakout, Fakeout, and Dragon Trades
   const breakoutTrades = tradeEntries.filter(entry => entry.setup === 'Breakout');
   const fakeoutTrades = tradeEntries.filter(entry => entry.setup === 'Fakeout');
   const dragonTrades = tradeEntries.filter(entry => entry.setup === 'Dragon');
 
-  // Calculate breakout win rate
-  const breakoutWins = breakoutTrades.filter(entry => entry.outcome === 'Win').length;
-  const breakoutWinRate = breakoutTrades.length === 0 ? 0 : (breakoutWins / breakoutTrades.length) * 100;
+  // Calculate win rates for setups
+  const breakoutWinRate = breakoutTrades.length ? (breakoutTrades.filter(e => e.outcome === 'Win').length / breakoutTrades.length) * 100 : 0;
+  const fakeoutWinRate = fakeoutTrades.length ? (fakeoutTrades.filter(e => e.outcome === 'Win').length / fakeoutTrades.length) * 100 : 0;
+  const dragonWinRate = dragonTrades.length ? (dragonTrades.filter(e => e.outcome === 'Win').length / dragonTrades.length) * 100 : 0;
 
-  // Calculate fakeout win rate
-  const fakeoutWins = fakeoutTrades.filter(entry => entry.outcome === 'Win').length;
-  const fakeoutWinRate = fakeoutTrades.length === 0 ? 0 : (fakeoutWins / fakeoutTrades.length) * 100;
-
-  // Calculate dragon win rate
-  const dragonWins = dragonTrades.filter(entry => entry.outcome === 'Win').length;
-  const dragonWinRate = dragonTrades.length === 0 ? 0 : (dragonWins / dragonTrades.length) * 100;
-
-  // Calculate total pips (add for wins, subtract for losses, and adjust for negative pips)
+  // Calculate total and average pips
   const totalPips = tradeEntries.reduce((acc, entry) => {
-    if (entry.outcome === 'Win' || entry.outcome === 'Breakeven') {
-      return acc + Math.abs(entry.pips); // Add positive value for wins or breakeven
-    } else if (entry.outcome === 'Lose') {
-      return acc - Math.abs(entry.pips); // Subtract value for losses
-    } else {
-      return acc; // No change for other outcomes
-    }
+    return entry.outcome === 'Win' || entry.outcome === 'Breakeven'
+      ? acc + Math.abs(entry.pips)
+      : acc - Math.abs(entry.pips);
   }, 0);
 
-  // Calculate win rate
-  const winRate = totalTrades === 0 ? 0 : (wins / totalTrades) * 100;
+  const averagePips = totalTrades ? totalPips / totalTrades : 0;
+  const winRate = totalTrades ? (wins / totalTrades) * 100 : 0;
 
-  // Calculate average pips per trade
-  const averagePips = totalTrades === 0 ? 0 : totalPips / totalTrades;
-
-  // Update DOM with the stats
+  // Update Overall Stats
   document.getElementById('win-rate').textContent = `${winRate.toFixed(2)}%`;
   document.getElementById('total-trades').textContent = totalTrades;
   document.getElementById('total-pips').textContent = totalPips.toFixed(2);
   document.getElementById('average-pips').textContent = averagePips.toFixed(2);
   document.getElementById('wins').textContent = wins;
   document.getElementById('losses').textContent = losses;
-
-  // Update Breakout, Fakeout, and Dragon Win Rates
+  
+  // Update Setup Win Rates
   document.getElementById('breakout-win-rate').textContent = `${breakoutWinRate.toFixed(2)}%`;
   document.getElementById('fakeout-win-rate').textContent = `${fakeoutWinRate.toFixed(2)}%`;
   document.getElementById('dragon-win-rate').textContent = `${dragonWinRate.toFixed(2)}%`;
+
+  // Define Entry Types for Calculation
+  const entryTypes = [
+    { id: 'break-prev-win-rate', name: 'Break previos H/L' },
+    { id: 'break-current-win-rate', name: 'Break current H/L' },
+    { id: 'flip-win-rate', name: 'Flip' },
+    { id: 'one-stair-win-rate', name: 'One stair' },
+    { id: 'wick-entry-win-rate', name: 'Wick entry' }
+  ];
+
+  // Calculate and Update Win Rates for Each Entry Type
+  entryTypes.forEach(entry => {
+    const filteredTrades = tradeEntries.filter(trade => trade.entry === entry.name);
+    const winCount = filteredTrades.filter(trade => trade.outcome === 'Win').length;
+    const winRate = filteredTrades.length ? (winCount / filteredTrades.length) * 100 : 0;
+    document.getElementById(entry.id).textContent = `${winRate.toFixed(2)}%`;
+  });
+
+  // Timeframe Win Rates
+  const timeframes = ['5min', '15min', '30min', '1hr', '4hr'];
+
+  timeframes.forEach(timeframe => {
+    const timeframeTrades = tradeEntries.filter(entry => entry.timeframe === timeframe);
+    const timeframeWinCount = timeframeTrades.filter(entry => entry.outcome === 'Win').length;
+    const timeframeWinRate = timeframeTrades.length ? (timeframeWinCount / timeframeTrades.length) * 100 : 0;
+    document.getElementById(`t${timeframe}`).textContent = `${timeframeWinRate.toFixed(2)}%`;
+  });
+
+  // Session Win Rates (Asia, Pre London, London, Pre New York, New York)
+  const sessions = [
+    { id: 'Asia', name: 'Asia' },
+    { id: 'PreLondon', name: 'Pre London' },
+    { id: 'London', name: 'London' },
+    { id: 'PreNewYork', name: 'Pre New York' },
+    { id: 'NewYork', name: 'New York' }
+  ];
+
+  sessions.forEach(session => {
+    const sessionTrades = tradeEntries.filter(entry => entry.session === session.name);
+    const sessionWinCount = sessionTrades.filter(entry => entry.outcome === 'Win').length;
+    const sessionWinRate = sessionTrades.length ? (sessionWinCount / sessionTrades.length) * 100 : 0;
+    document.getElementById(session.id).textContent = `${sessionWinRate.toFixed(2)}%`;
+  });
 });
