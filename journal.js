@@ -51,7 +51,7 @@ function loadTrades() {
   });
 }
 
-// Function to add a trade as a minimized card with View and Delete buttons
+// Function to add a trade as a minimized card with View, Delete, and Print buttons
 function addTradeToCards(trade, index) {
   const tradesList = document.getElementById('tradesList');
   const tradeCard = document.createElement('div');
@@ -73,6 +73,7 @@ function addTradeToCards(trade, index) {
     </div>
     <button class="view-btn">View</button>
     <button class="delete-btn" data-index="${index}">Delete</button>
+    <button class="print-btn" data-index="${index}">Print</button>
   `;
 
   tradesList.appendChild(tradeCard);
@@ -86,6 +87,11 @@ function addTradeToCards(trade, index) {
   // Add event listener for the Delete button
   tradeCard.querySelector('.delete-btn').addEventListener('click', function () {
     deleteTrade(index);
+  });
+
+  // Add event listener for the Print button
+  tradeCard.querySelector('.print-btn').addEventListener('click', function () {
+    printTradeAsPDF(trade);
   });
 }
 
@@ -196,6 +202,28 @@ function deleteTrade(index) {
   document.body.appendChild(modal);
 }
 
+// Function to print trade details as PDF
+function printTradeAsPDF(trade) {
+  const { jsPDF } = window.jspdf;  // Initialize jsPDF
+
+  const doc = new jsPDF();
+
+  // Add the trade details to the PDF
+  doc.text(`Trade Details:`, 10, 10);
+  doc.text(`Date: ${trade.date}`, 10, 20);
+  doc.text(`Time: ${trade.time}`, 10, 30);
+  doc.text(`Session: ${trade.session}`, 10, 40);
+  doc.text(`Pair: ${trade.pair}`, 10, 50);
+  doc.text(`Setup: ${trade.setup}`, 10, 60);
+  doc.text(`Playbook Entry: ${trade.entry}`, 10, 70);
+  doc.text(`Timeframe: ${trade.timeframe}`, 10, 80);
+  doc.text(`Buy/Sell: ${trade.buySell}`, 10, 90);
+  doc.text(`Pips: ${trade.pips}`, 10, 100);
+  doc.text(`Outcome: ${trade.outcome}`, 10, 110);
+
+  // Download the PDF
+  doc.save(`trade-${trade.date}-${trade.time}.pdf`);
+}
 
 // Load trades when the page is loaded
 document.addEventListener('DOMContentLoaded', loadTrades);

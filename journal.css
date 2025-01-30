@@ -142,7 +142,7 @@ form button {
 }
 
 .trade-card .view-btn,
-.delete-btn  {
+.delete-btn, .print-btn  {
   font-family: 'Press Start 2P', sans-serif;
   padding: 8px 16px;
   background-color: #FFD700;
