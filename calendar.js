@@ -4,7 +4,7 @@ let currentDate = new Date();
 // Function to update the month and year labels
 function updateCalendarLabels() {
   const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 
+    'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
     'September', 'October', 'November', 'December'
   ];
   document.getElementById('monthLabel').textContent = monthNames[currentDate.getMonth()];
@@ -16,96 +16,160 @@ function generateStats() {
   const statsContainer = document.getElementById('stats');
   statsContainer.innerHTML = ''; // Clear previous stats
 
-  // Get the current month and year
   const month = currentDate.getMonth();
   const year = currentDate.getFullYear();
 
-  // Retrieve trades from localStorage
   const tradeEntries = JSON.parse(localStorage.getItem('tradeEntries')) || [];
 
-  // Filter trades for the current month and year
+  // Filter trades for the current month
   const currentMonthTrades = tradeEntries.filter(trade => {
     const tradeDate = new Date(trade.date);
     return tradeDate.getMonth() === month && tradeDate.getFullYear() === year;
   });
 
-  // Calculate stats based on filtered trades
   const totalTrades = currentMonthTrades.length;
   const totalPips = currentMonthTrades.reduce((total, trade) => total + parseFloat(trade.pips), 0);
-  const winTrades = currentMonthTrades.filter(trade => trade.outcome.toLowerCase() === 'win').length;
-  const lossTrades = currentMonthTrades.filter(trade => trade.outcome.toLowerCase() === 'loss').length;
-  const winRate = totalTrades > 0 ? ((winTrades / totalTrades) * 100).toFixed(2) : 0;
 
-  // Calculate average pips
+  // Counting win and lose trades
+  const winTrades = currentMonthTrades.filter(trade => trade.outcome.toLowerCase() === 'win').length;
+  const loseTrades = currentMonthTrades.filter(trade => trade.outcome.toLowerCase() === 'lose').length;
+
+  // Calculating win rate and average pips
+  const winRate = totalTrades > 0 ? ((winTrades / totalTrades) * 100).toFixed(2) : 0;
   const averagePips = totalTrades > 0 ? (totalPips / totalTrades).toFixed(2) : 0;
 
-  // Create stat cards for the current month
   const stats = [
-    {
-      title: 'Win Rate',
-      value: `${winRate}%`
-    },
-    {
-      title: 'Total Trades',
-      value: totalTrades.toString()
-    },
-    {
-      title: 'Total Pips',
-      value: totalPips.toFixed(2)
-    },
-    {
-      title: 'Average Pips',
-      value: averagePips
-    },
-    {
-      title: 'Wins',
-      value: winTrades.toString()
-    },
-    {
-      title: 'Losses',
-      value: lossTrades.toString()
-    }
+    { title: 'Win Rate', value: `${winRate}%` },
+    { title: 'Total Trades', value: totalTrades.toString() },
+    { title: 'Total Pips', value: totalPips.toFixed(2) },
+    { title: 'Average Pips', value: averagePips },
+    { title: 'Wins', value: winTrades.toString() },
+    { title: 'Losses', value: loseTrades.toString() }
   ];
 
-  // Generate stat cards
-  stats.forEach(stat => {
-    const statCard = document.createElement('div');
-    statCard.classList.add('stat-card');
+// Grouping by stats section (Win Rate, Total Trades, etc.)
+const statGroups = [
+  { title: 'Month Stats', stats: stats },
+  { title: 'Setups', stats: getSetupsStats(currentMonthTrades) },
+  { title: 'Entries', stats: getEntriesStats(currentMonthTrades) },
+  { title: 'Timeframes', stats: getTimeframesStats(currentMonthTrades) }, // Moved above Sessions
+  { title: 'Sessions', stats: getSessionsStats(currentMonthTrades) } // Moved below Timeframes
+];
 
-    const statTitle = document.createElement('h3');
-    statTitle.textContent = stat.title;
 
-    const statValue = document.createElement('p');
-    statValue.textContent = stat.value;
+  // Generate stat cards for each group
+  statGroups.forEach(group => {
+    // Create group title and apply styles
+    const groupTitle = document.createElement('h1');
+    groupTitle.textContent = group.title;
+    groupTitle.style.color = '#FFD700'; // Apply gold color
+    groupTitle.style.fontSize = '20px'; // Set font size
+    groupTitle.style.textAlign = 'center'; // Center align text
+    groupTitle.style.marginBottom = '10px'; // Margin bottom
+    statsContainer.appendChild(groupTitle);
 
-    statCard.appendChild(statTitle);
-    statCard.appendChild(statValue);
-    statsContainer.appendChild(statCard);
+    group.stats.forEach(stat => {
+      const statCard = document.createElement('div');
+      statCard.classList.add('stat-card');
+
+      const statTitle = document.createElement('h3');
+      statTitle.textContent = stat.title;
+
+      const statValue = document.createElement('p');
+      statValue.textContent = stat.value;
+
+      statCard.appendChild(statTitle);
+      statCard.appendChild(statValue);
+      statsContainer.appendChild(statCard);
+    });
   });
 }
 
-// Function to navigate to the next month
+// Function to calculate setup stats
+function getSetupsStats(trades) {
+  const setups = [...new Set(trades.map(trade => trade.setup))]; // Unique setups
+  return setups.map(setup => {
+    const tradesForSetup = trades.filter(trade => trade.setup === setup);
+    const setupWinRate = tradesForSetup.length > 0 ? 
+      ((tradesForSetup.filter(trade => trade.outcome.toLowerCase() === 'win').length / tradesForSetup.length) * 100).toFixed(2)
+      : 0;
+
+    return { title: `${setup}`, value: `${setupWinRate}%` };
+  });
+}
+
+// Function to calculate entry stats
+function getEntriesStats(trades) {
+  const entries = [...new Set(trades.map(trade => trade.entry))]; // Unique entries
+  return entries.map(entry => {
+    const tradesForEntry = trades.filter(trade => trade.entry === entry);
+    const entryWinRate = tradesForEntry.length > 0 ? 
+      ((tradesForEntry.filter(trade => trade.outcome.toLowerCase() === 'win').length / tradesForEntry.length) * 100).toFixed(2)
+      : 0;
+
+    return { title: `${entry}`, value: `${entryWinRate}%` };
+  });
+}
+
+// Function to calculate timeframe stats
+function getTimeframesStats(trades) {
+  const timeframes = ['5min', '15min', '30min', '1hr', '4hr'];
+  return timeframes.map(timeframe => {
+    const tradesForTimeframe = trades.filter(trade => trade.timeframe === timeframe);
+    const timeframeWinRate = tradesForTimeframe.length > 0 ? 
+      ((tradesForTimeframe.filter(trade => trade.outcome.toLowerCase() === 'win').length / tradesForTimeframe.length) * 100).toFixed(2)
+      : 0;
+
+    return { title: `${timeframe} Timeframe`, value: `${timeframeWinRate}%` };
+  });
+}
+
+
+// Function to calculate session stats
+function getSessionsStats(trades) {
+  const sessions = ['Asia', 'Pre London', 'London', 'Pre New York', 'New York'];
+  return sessions.map(session => {
+    const tradesForSession = trades.filter(trade => trade.session === session);
+    const sessionWinRate = tradesForSession.length > 0 ? 
+      ((tradesForSession.filter(trade => trade.outcome.toLowerCase() === 'win').length / tradesForSession.length) * 100).toFixed(2)
+      : 0;
+
+    return { title: `${session}`, value: `${sessionWinRate}%` };
+  });
+}
+
+// Function to calculate timeframe stats
+function getTimeframesStats(trades) {
+  const timeframes = ['5min', '15min', '30min', '1hr', '4hr'];
+  return timeframes.map(timeframe => {
+    const tradesForTimeframe = trades.filter(trade => trade.timeframe === timeframe);
+    const timeframeWinRate = tradesForTimeframe.length > 0 ? 
+      ((tradesForTimeframe.filter(trade => trade.outcome.toLowerCase() === 'win').length / tradesForTimeframe.length) * 100).toFixed(2)
+      : 0;
+
+    return { title: `${timeframe}`, value: `${timeframeWinRate}%` };
+  });
+}
+
+// Navigation functions
 function nextMonth() {
   currentDate.setMonth(currentDate.getMonth() + 1);
   updateCalendarLabels();
   generateStats();
 }
 
-// Function to navigate to the previous month
 function prevMonth() {
   currentDate.setMonth(currentDate.getMonth() - 1);
   updateCalendarLabels();
   generateStats();
 }
 
-// Function to navigate to the next year
 function nextYear() {
   currentDate.setFullYear(currentDate.getFullYear() + 1);
   updateCalendarLabels();
   generateStats();
 }
 
-// Function to navigate to the previous year
 function prevYear() {
   currentDate.setFullYear(currentDate.getFullYear() - 1);
   updateCalendarLabels();
@@ -118,6 +182,6 @@ document.getElementById('prevMonth').addEventListener('click', prevMonth);
 document.getElementById('nextYear').addEventListener('click', nextYear);
 document.getElementById('prevYear').addEventListener('click', prevYear);
 
-// Initial call to set up the calendar
+// Initial setup
 updateCalendarLabels();
 generateStats();

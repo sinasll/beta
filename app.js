@@ -7,6 +7,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const wins = tradeEntries.filter(entry => entry.outcome === 'Win').length;
   const losses = tradeEntries.filter(entry => entry.outcome === 'Lose').length;
 
+  // Initialize win streak counter
+  let winStreak = 0;
+  let maxWinStreak = 0;
+
+  // Iterate over the trade entries and calculate streaks
+  tradeEntries.forEach(entry => {
+    if (entry.outcome === 'Win') {
+      winStreak++;
+      if (winStreak > maxWinStreak) {
+        maxWinStreak = winStreak;
+      }
+    } else if (entry.outcome === 'Lose') {
+      winStreak = 0; // Reset win streak after a loss
+    }
+  });
+
   // Breakout, Fakeout, and Dragon Trades
   const breakoutTrades = tradeEntries.filter(entry => entry.setup === 'Breakout');
   const fakeoutTrades = tradeEntries.filter(entry => entry.setup === 'Fakeout');
@@ -34,7 +50,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('average-pips').textContent = averagePips.toFixed(2);
   document.getElementById('wins').textContent = wins;
   document.getElementById('losses').textContent = losses;
-  
+  document.getElementById('win-streak').textContent = winStreak;
+
   // Update Setup Win Rates
   document.getElementById('breakout-win-rate').textContent = `${breakoutWinRate.toFixed(2)}%`;
   document.getElementById('fakeout-win-rate').textContent = `${fakeoutWinRate.toFixed(2)}%`;

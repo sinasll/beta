@@ -105,7 +105,7 @@ main {
 .stat-card p#total-pips,
 .stat-card p#wins,
 .stat-card p#losses,
-.stat-card p#breakeven,
+.stat-card p#win-streak,
 .stat-card p#average-pips,
 .stat-card p#breakout-win-rate,
 .stat-card p#fakeout-win-rate,
