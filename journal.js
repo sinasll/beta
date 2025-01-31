@@ -1,3 +1,4 @@
+// Listen for form submission
 document.getElementById('tradeForm').addEventListener('submit', function (e) {
   e.preventDefault();
 
@@ -95,7 +96,7 @@ function addTradeToCards(trade, index) {
   });
 }
 
-// Function to toggle card details
+// Function to toggle card details visibility
 function toggleCardDetails(card, button) {
   const details = card.querySelector('.card-details');
   const isHidden = details.style.display === 'none';
@@ -111,6 +112,7 @@ function toggleCardDetails(card, button) {
   }
 }
 
+// Function to delete a trade
 function deleteTrade(index) {
   // Check if modal already exists, remove it
   let existingModal = document.getElementById("deleteModal");
@@ -131,7 +133,6 @@ function deleteTrade(index) {
   modal.style.alignItems = "center";
   modal.style.justifyContent = "center";
   modal.style.zIndex = "1001";
-  modal.style.fontSize = "10px";
 
   // Create modal content
   let modalContent = document.createElement("div");
@@ -209,40 +210,40 @@ function printTradeAsPDF(trade) {
   const doc = new jsPDF();
 
   // Load the external font 'Press Start 2P'
-doc.addFileToVFS('PressStart2P-Regular.ttf', 'YOUR_FONT_FILE_CONTENT'); // Add the correct file content
-doc.addFont('PressStart2P-Regular.ttf', 'Press Start 2P', 'normal');
+  doc.addFileToVFS('PressStart2P-Regular.ttf', 'YOUR_FONT_FILE_CONTENT'); // Add the correct file content
+  doc.addFont('PressStart2P-Regular.ttf', 'Press Start 2P', 'normal');
 
-// Set font and background style
-doc.setFont('Press Start 2P', 'normal');
-doc.setTextColor(248, 248, 248); // Color: #f8f8f8
-doc.setFillColor(0, 0, 0); // Background Color: #000
+  // Set font and background style
+  doc.setFont('Press Start 2P', 'normal');
+  doc.setTextColor(248, 248, 248); // Color: #f8f8f8
+  doc.setFillColor(0, 0, 0); // Background Color: #000
 
-// Set page background color
-doc.rect(0, 0, doc.internal.pageSize.width, doc.internal.pageSize.height, 'F');
+  // Set page background color
+  doc.rect(0, 0, doc.internal.pageSize.width, doc.internal.pageSize.height, 'F');
 
-// Set text alignment and line height
-doc.setTextColor(248, 248, 248); // Color: #f8f8f8
-doc.setFontSize(14);
-doc.setLineHeightFactor(1.6);
+  // Set text alignment and line height
+  doc.setFontSize(14);
+  doc.setLineHeightFactor(1.6);
 
-// Add the trade details with centered text
-const x = doc.internal.pageSize.width / 2;
-const y = 20; // starting position
+  // Add the trade details with centered text
+  const x = doc.internal.pageSize.width / 2;
+  let y = 20; // starting position
 
-doc.text('Trade Details:', x, y, { align: 'center' });
-doc.text(`Date: ${trade.date}`, x, y + 10, { align: 'center' });
-doc.text(`Time: ${trade.time}`, x, y + 20, { align: 'center' });
-doc.text(`Session: ${trade.session}`, x, y + 30, { align: 'center' });
-doc.text(`Pair: ${trade.pair}`, x, y + 40, { align: 'center' });
-doc.text(`Setup: ${trade.setup}`, x, y + 50, { align: 'center' });
-doc.text(`Playbook Entry: ${trade.entry}`, x, y + 60, { align: 'center' });
-doc.text(`Timeframe: ${trade.timeframe}`, x, y + 70, { align: 'center' });
-doc.text(`Buy/Sell: ${trade.buySell}`, x, y + 80, { align: 'center' });
-doc.text(`Pips: ${trade.pips}`, x, y + 90, { align: 'center' });
-doc.text(`Outcome: ${trade.outcome}`, x, y + 100, { align: 'center' });
+  doc.text('Trade Details:', x, y, { align: 'center' });
+  doc.text(`Date: ${trade.date}`, x, y += 10, { align: 'center' });
+  doc.text(`Time: ${trade.time}`, x, y += 10, { align: 'center' });
+  doc.text(`Session: ${trade.session}`, x, y += 10, { align: 'center' });
+  doc.text(`Pair: ${trade.pair}`, x, y += 10, { align: 'center' });
+  doc.text(`Setup: ${trade.setup}`, x, y += 10, { align: 'center' });
+  doc.text(`Playbook Entry: ${trade.entry}`, x, y += 10, { align: 'center' });
+  doc.text(`Timeframe: ${trade.timeframe}`, x, y += 10, { align: 'center' });
+  doc.text(`Buy/Sell: ${trade.buySell}`, x, y += 10, { align: 'center' });
+  doc.text(`Pips: ${trade.pips}`, x, y += 10, { align: 'center' });
+  doc.text(`Outcome: ${trade.outcome}`, x, y += 10, { align: 'center' });
 
-// Download the PDF
-doc.save(`trade-${trade.date}-${trade.time}.pdf`);
+  // Download the PDF
+  doc.save(`trade-${trade.date}-${trade.time}.pdf`);
+}
 
 // Load trades when the page is loaded
 document.addEventListener('DOMContentLoaded', loadTrades);
