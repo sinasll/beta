@@ -206,7 +206,9 @@ function deleteTrade(index) {
 function printTradeAsPDF(trade) {
   const { jsPDF } = window.jspdf;  // Initialize jsPDF
 
-  const doc = new // Add the trade details to the PDF
+  const doc = new jsPDF();
+
+  // Add the trade details to the PDF
   doc.text(`Trade Details:`, 10, 10);
   doc.text(`Date: ${trade.date}`, 10, 20);
   doc.text(`Time: ${trade.time}`, 10, 30);
@@ -221,8 +223,7 @@ function printTradeAsPDF(trade) {
 
   // Download the PDF
   doc.save(`trade-${trade.date}-${trade.time}.pdf`);
-} 
+}
 
 // Load trades when the page is loaded
 document.addEventListener('DOMContentLoaded', loadTrades);
-
