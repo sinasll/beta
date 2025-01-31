@@ -227,3 +227,4 @@ function printTradeAsPDF(trade) {
 
 // Load trades when the page is loaded
 document.addEventListener('DOMContentLoaded', loadTrades);
+
