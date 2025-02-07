@@ -1,0 +1,170 @@
+/* General Reset and Setup */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: 'Press Start 2P', sans-serif;
+    background-color: #000;
+    color: #f8f8f8;
+    line-height: 1.6;
+    font-size: 14px;
+  }
+  
+  a {
+    text-decoration: none;
+  }
+  
+  /* Container and Layout */
+  .container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+  
+  /* Header Styles */
+  header {
+    background-color: #000;
+    padding: 20px 0;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+  }
+  
+  .header-container {
+    max-width: 100%;
+    padding: 0 20px;
+    text-align: center;
+  }
+  
+  nav ul.nav-list {
+    list-style-type: none;
+    display: flex;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+  }
+  
+  nav ul.nav-list li {
+    margin: 0 15px;
+  }
+  
+  nav ul.nav-list li a {
+    color: #FFD700;
+    font-size: 16px;
+    font-weight: bold;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+  }
+  
+  /* Header h2 Style */
+  h2 {
+    color: #FFD700;
+    font-size: 22px;
+    margin-bottom: 10px;
+  }
+  
+  p {
+    font-size: 16px;
+    color: #fff;
+    margin-bottom: 10px;
+  }
+  
+  button {
+    background-color: #FFD700;
+    color: #000;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  button:hover {
+    background-color: #FFB200;
+  }
+  
+  /* Form Elements */
+  input[type="text"] {
+    background-color: #222;
+    color: #fff;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #FFD700;
+    border-radius: 5px;
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  input[type="text"]:focus {
+    outline: none;
+    border-color: #FFB200;
+  }
+  
+  h2 + h2 {
+    margin-top: 40px;
+  }
+  
+  /* Footer Styles */
+  footer {
+    background-color: #000;
+    padding: 12px 0;
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+    text-align: center;
+    z-index: 1000;
+  }
+  
+  footer p {
+    color: #FFD700;
+    font-size: 10px;
+    font-weight: bold;
+  }
+  
+  /* Responsive Adjustments for Mobile */
+  @media (max-width: 768px) {
+    .container {
+      padding: 15px;
+    }
+  
+    input[type="text"] {
+      width: 100%;
+      max-width: 100%;
+    }
+  
+    button {
+      width: 100%;
+      max-width: 100%;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    body {
+      font-size: 12px;
+    }
+  
+    h2 {
+      font-size: 18px;
+    }
+  
+    p {
+      font-size: 14px;
+    }
+  
+    button {
+      font-size: 14px;
+    }
+  }
+  
