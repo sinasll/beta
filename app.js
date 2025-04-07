@@ -1,6 +1,6 @@
 /**********************
-         * 1. Initialize Firebase
-         **********************/
+ * 1. Initialize Firebase
+ **********************/
 const firebaseConfig = {
   apiKey: "AIzaSyAzXSCn_QL2XeyRZD71By443sl4wOtXf2Y",
   authDomain: "pipcore-8844f.firebaseapp.com",
@@ -23,22 +23,31 @@ let miningInterval;
 let countdownInterval;
 
 /**********************
-* 3. User Initialization
+* 3. User Initialization with Telegram WebApp
 **********************/
 async function initUser() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const tgUser = urlParams.get('tg_user') || '{"username":"telegram_user","id":123}';
-  
   try {
-      const userData = JSON.parse(tgUser);
-      userId = `tg_${userData.id}`;
+      // Initialize Telegram WebApp
+      Telegram.WebApp.ready();
+      Telegram.WebApp.expand();
+      
+      // Get Telegram user data
+      const tgUser = Telegram.WebApp.initDataUnsafe.user;
+      if (!tgUser) {
+          throw new Error("Telegram user data not available");
+      }
+      
+      userId = `tg_${tgUser.id}`;
       userRef = db.collection('users').doc(userId);
 
       // Check or create user document
       const doc = await userRef.get();
       if (!doc.exists) {
           await userRef.set({
-              telegramUsername: userData.username,
+              telegramId: tgUser.id,
+              telegramUsername: tgUser.username || `user_${tgUser.id}`,
+              firstName: tgUser.first_name,
+              lastName: tgUser.last_name || '',
               balance: 0,
               miningPower: 1,
               uniqueCode: '',
@@ -65,6 +74,22 @@ async function initUser() {
 
   } catch (e) {
       console.error("Error initializing user:", e);
+      // Fallback for testing outside Telegram
+      if (!userId) {
+          userId = `tg_${Math.floor(Math.random() * 1000000)}`;
+          userRef = db.collection('users').doc(userId);
+          await userRef.set({
+              telegramUsername: "test_user",
+              balance: 0,
+              miningPower: 1,
+              uniqueCode: '',
+              submissionsReceived: 0,
+              hasSubmitted: false,
+              miningActive: false,
+              joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
+              lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+          });
+      }
   }
 }
 
@@ -176,14 +201,18 @@ async function submitCode() {
 * 6. UI Functions
 **********************/
 function updateUI(data) {
-  document.getElementById('username').textContent = data?.telegramUsername || 'User';
-  document.getElementById('balance').textContent = data?.balance?.toFixed(2) || '0.00';
-  document.getElementById('power').textContent = calculatePower(data || {}).toFixed(1);
-  document.getElementById('code').textContent = data?.uniqueCode || '';
-  document.getElementById('submissions').textContent = data?.submissionsReceived || 0;
-  document.getElementById('mineButton').disabled = !!data?.miningActive;
-  document.getElementById('mineButton').textContent = data?.miningActive ? 'Mining...' : 'Start Mining';
-  updateProgress(data?.balance || 0);
+  if (!data) return;
+  
+  // Display Telegram username or first name
+  const displayName = data.telegramUsername || data.firstName || 'User';
+  document.getElementById('username').textContent = `@${displayName}`;
+  document.getElementById('balance').textContent = data.balance?.toFixed(2) || '0.00';
+  document.getElementById('power').textContent = calculatePower(data).toFixed(1);
+  document.getElementById('code').textContent = data.uniqueCode || '';
+  document.getElementById('submissions').textContent = data.submissionsReceived || 0;
+  document.getElementById('mineButton').disabled = !!data.miningActive;
+  document.getElementById('mineButton').textContent = data.miningActive ? 'Mining...' : 'Start Mining';
+  updateProgress(data.balance || 0);
 }
 
 function updateProgress(balance) {
@@ -215,10 +244,22 @@ function startCountdown(expiration) {
   }, 1000);
 }
 
+function copyCode() {
+  const code = document.getElementById('code').textContent;
+  if (!code) return;
+  
+  navigator.clipboard.writeText(code).then(() => {
+      alert('Code copied to clipboard!');
+  }).catch(err => {
+      console.error('Failed to copy code: ', err);
+  });
+}
+
 /**********************
 * 7. Initialization
 **********************/
 document.addEventListener('DOMContentLoaded', initUser);
 window.addEventListener('beforeunload', () => {
   if (unsubscribeUser) unsubscribeUser();
+  stopMining();
 });
