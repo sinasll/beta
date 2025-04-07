@@ -2,69 +2,152 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>$BLACK Mining</title>
   <style>
     :root {
-      --tg-theme-bg-color: #070606;
+      --tg-theme-bg-color: #000000;
       --tg-theme-text-color: #ffffff;
-      --tg-theme-hint-color: #7f8c8d;
-      --tg-theme-link-color: #3a7bd5;
-      --tg-theme-button-color: #3a7bd5;
+      --tg-theme-secondary-bg-color: #1a1a1a;
+      --tg-theme-hint-color: #666666;
+      --tg-theme-link-color: #007AFF;
+      --tg-theme-button-color: #007AFF;
       --tg-theme-button-text-color: #ffffff;
     }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, sans-serif;
       background: var(--tg-theme-bg-color);
       color: var(--tg-theme-text-color);
       margin: 0;
       padding: 0;
-      max-width: 100%;
-      overflow-x: hidden;
+      height: 100vh;
+      overflow: hidden;
+      -webkit-overflow-scrolling: touch;
+      touch-action: none;
     }
-    /* Professional UI components */
-    .container { padding: 16px; max-width: 500px; margin: 0 auto; }
-    .card { background: rgba(255,255,255,0.1); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
-    .progress-bar { height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px; overflow: hidden; }
-    .progress { height: 100%; background: var(--tg-theme-button-color); transition: width 0.3s; }
-    .button { display: block; width: 100%; padding: 12px; border-radius: 12px; background: var(--tg-theme-button-color); color: var(--tg-theme-button-text-color); text-align: center; font-weight: 500; border: none; }
-    .countdown { font-size: 0.8em; color: var(--tg-theme-hint-color); margin-top: 12px; }
+
+    .container {
+      padding: 16px;
+      height: calc(100% - 120px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      box-sizing: border-box;
+      margin-top: 120px;
+    }
+
+    .card {
+      background: var(--tg-theme-secondary-bg-color);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .progress-container {
+      margin: 20px 0;
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress {
+      height: 100%;
+      background: var(--tg-theme-button-color);
+      transition: width 0.3s ease;
+    }
+
+    .stats-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 8px 0;
+      font-size: 0.9em;
+      color: var(--tg-theme-hint-color);
+    }
+
+    .button {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      border-radius: 12px;
+      background: var(--tg-theme-button-color);
+      color: var(--tg-theme-button-text-color);
+      text-align: center;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      text-transform: uppercase;
+      font-size: 0.9em;
+      letter-spacing: 0.5px;
+    }
+
+    .button:active {
+      opacity: 0.8;
+    }
+
+    .countdown {
+      font-size: 0.8em;
+      color: var(--tg-theme-hint-color);
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: var(--tg-theme-bg-color);
+      padding: 16px;
+      z-index: 100;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
   </style>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 </head>
 <body>
+  <div class="header">
+    <div class="stats-row">
+      <div>Total Mined</div>
+      <div><span id="mined">0.00</span> / 125,000,000</div>
+    </div>
+    <div class="progress-bar">
+      <div class="progress" id="progress"></div>
+    </div>
+    <div class="stats-row">
+      <div>Global Progress</div>
+      <div id="minedPercentage">0%</div>
+    </div>
+  </div>
+
   <div class="container">
     <div class="card">
-      <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-        <div>Total Supply</div>
-        <div>125,000,000</div>
+      <h2 style="margin: 0 0 16px 0; font-size: 1.2em;">Your Miner</h2>
+      <div class="stats-row">
+        <div>Account</div>
+        <div>@<span id="username">loading...</span></div>
       </div>
-      <div class="progress-bar">
-        <div class="progress" id="progress"></div>
-      </div>
-      <div style="text-align: right; margin-top: 8px; font-size: 0.9em;">
-        Mined: <span id="mined">0.00</span>
-        <div id="minedPercentage">0%</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2 style="margin: 0 0 16px 0;">Your Account</h2>
-      <div style="margin-bottom: 12px;">@<span id="username">loading...</span></div>
-      <div style="display: flex; justify-content: space-between;">
+      <div class="stats-row">
         <div>Balance</div>
         <div><span id="balance">0.00</span> $BLACK</div>
       </div>
-      <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+      <div class="stats-row">
         <div>Mining Power</div>
         <div><span id="power">1.0</span>x</div>
       </div>
-      <div class="countdown" id="countdown">Time until new day: Loading...</div>
     </div>
 
     <button class="button" id="mineButton" onclick="app.toggleMining()">Start Mining</button>
+
+    <div class="countdown" id="countdown">Daily reset in 00:00:00</div>
   </div>
 
   <script>
@@ -107,6 +190,8 @@
           // Initialize Telegram WebApp
           Telegram.WebApp.ready();
           Telegram.WebApp.expand();
+          Telegram.WebApp.MainButton.showProgress();
+          Telegram.WebApp.enableClosingConfirmation();
 
           // Get and verify Telegram user
           const tgUser = Telegram.WebApp.initDataUnsafe.user;
@@ -181,7 +266,6 @@
           Telegram.WebApp.showAlert("Mining is already active.");
           return;
         } else {
-          // Start mining without any code-based features
           await userRef.update({
             miningActive: true
           });
@@ -248,7 +332,7 @@
           const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
 
           document.getElementById('countdown').textContent = 
-            `Time until new day: ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            `Daily reset in ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }, 1000);
       }
 
