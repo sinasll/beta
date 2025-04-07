@@ -281,6 +281,10 @@
               lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
             });
 
+            // NOTE: Updating another user's document here (codeUserDoc.ref) requires
+            // that your Firestore security rules allow the current user to update that document.
+            // A 403 error indicates that the current security rules do not permit this update.
+            // You may need to adjust your Firestore rules or use a Cloud Function to perform this update.
             transaction.update(codeUserDoc.ref, {
               submissionsReceived: firebase.firestore.FieldValue.increment(1),
               lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
