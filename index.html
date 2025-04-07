@@ -6,7 +6,7 @@
   <title>$BLACK Mining</title>
   <style>
     :root {
-      --tg-theme-bg-color: #1a1a1a;
+      --tg-theme-bg-color: #070606;
       --tg-theme-text-color: #ffffff;
       --tg-theme-hint-color: #7f8c8d;
       --tg-theme-link-color: #3a7bd5;
@@ -28,8 +28,6 @@
     .progress-bar { height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px; overflow: hidden; }
     .progress { height: 100%; background: var(--tg-theme-button-color); transition: width 0.3s; }
     .button { display: block; width: 100%; padding: 12px; border-radius: 12px; background: var(--tg-theme-button-color); color: var(--tg-theme-button-text-color); text-align: center; font-weight: 500; border: none; }
-    .input-group { display: flex; gap: 8px; margin: 12px 0; }
-    .input { flex: 1; padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.1); border: none; color: var(--tg-theme-text-color); }
   </style>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -63,22 +61,6 @@
       </div>
     </div>
 
-    <div class="card">
-      <h2 style="margin: 0 0 16px 0;">Daily Code</h2>
-      <div class="input-group">
-        <input type="text" class="input" id="inputCode" placeholder="Enter friend's code">
-        <button class="button" onclick="app.submitCode()" style="flex: 0 0 80px;">Submit</button>
-      </div>
-      <div style="display: flex; justify-content: space-between; font-size: 0.9em;">
-        <div>Your Code: <span id="code">••••••••••</span></div>
-        <button onclick="app.copyCode()" style="background: none; color: var(--tg-theme-link-color); padding: 0;">Copy</button>
-      </div>
-      <div style="display: flex; justify-content: space-between; margin-top: 12px; font-size: 0.9em;">
-        <div>Expires in: <span id="countdown">00:00:00</span></div>
-        <div>Used: <span id="submissions">0</span>/10</div>
-      </div>
-    </div>
-
     <button class="button" id="mineButton" onclick="app.toggleMining()">Start Mining</button>
   </div>
 
@@ -87,17 +69,8 @@
     // 1. Configuration
     // ======================
     const ENV = {
-      BASE_RATE: 0.003472 / 6, // 0.02/hour
-      MAX_SUBMISSIONS: 10,
-      CODE_LENGTH: 10
-      // CODE_DURATION is no longer used as we now rely on next 00:00 UTC.
+      BASE_RATE: 0.003472 / 6 // 0.02/hour
     };
-
-    // Helper function: returns a Date object for next midnight (00:00 UTC)
-    function getNextMidnightUTC() {
-      const now = new Date();
-      return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
-    }
 
     // ======================
     // 2. Firebase Setup
@@ -122,7 +95,6 @@
       constructor() {
         this.userId = null;
         this.miningInterval = null;
-        this.countdownInterval = null;
         this.init();
       }
 
@@ -162,9 +134,6 @@
           lastName: tgUser.last_name || '',
           balance: 0,
           miningPower: 1,
-          uniqueCode: '',
-          submissionsReceived: 0,
-          hasSubmitted: false,
           miningActive: false,
           lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
         };
@@ -187,7 +156,6 @@
 
           if (data.miningActive && !this.miningInterval) {
             this.startMiningEngine();
-            this.startCodeCountdown(data.codeExpiration?.toDate());
           }
         }, error => {
           console.error("Realtime update error:", error);
@@ -202,43 +170,15 @@
         const doc = await userRef.get();
         const data = doc.data();
 
-        // If mining is already active, show a countdown alert.
         if (data.miningActive) {
-          const expiration = data.codeExpiration.toDate();
-          const now = new Date();
-          const diff = expiration - now;
-          const hours = Math.floor(diff / 3600000);
-          const minutes = Math.floor((diff % 3600000) / 60000);
-          const seconds = Math.floor((diff % 60000) / 1000);
-          Telegram.WebApp.showAlert(`Mining will stop at 00:00 UTC in ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+          Telegram.WebApp.showAlert("Mining is already active.");
           return;
         } else {
-          // When starting mining, set expiration to next 00:00 UTC for both mining and daily code.
-          const code = await this.generateUniqueCode();
-          const nextMidnight = getNextMidnightUTC();
+          // Start mining without any code-based features
           await userRef.update({
-            miningActive: true,
-            uniqueCode: code,
-            codeExpiration: firebase.firestore.Timestamp.fromDate(nextMidnight)
+            miningActive: true
           });
         }
-      }
-
-      async generateUniqueCode() {
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        let code;
-        do {
-          code = Array.from({length: ENV.CODE_LENGTH}, () => 
-            chars[Math.floor(Math.random() * chars.length)]
-          ).join('');
-
-          const snapshot = await db.collection('users')
-            .where('uniqueCode', '==', code)
-            .limit(1)
-            .get();
-
-          if (snapshot.empty) return code;
-        } while (true);
       }
 
       startMiningEngine() {
@@ -255,139 +195,24 @@
       }
 
       calculatePower(data) {
-        return 1 +
-          (data.submissionsReceived * 0.1) +
-          (data.hasSubmitted ? 0.5 : 0) +
-          (data.premium ? 0.5 : 0);
+        // Basic power calculation; extend this function if more factors are needed.
+        return 1 + (data.premium ? 0.5 : 0);
       }
 
       // ======================
-      // 5. Code System
-      // ======================
-      async submitCode() {
-        const inputCode = document.getElementById('inputCode').value.trim().toUpperCase();
-        if (!inputCode || inputCode.length !== ENV.CODE_LENGTH) {
-          this.showError("Invalid code format");
-          return;
-        }
-
-        try {
-          const codeUserSnapshot = await db.collection('users')
-            .where('uniqueCode', '==', inputCode)
-            .get();
-          if (codeUserSnapshot.empty) throw new Error("Invalid code");
-          const codeUserDoc = codeUserSnapshot.docs[0];
-          if (codeUserDoc.id === this.userId) throw new Error("Self-use not allowed");
-
-          const today = new Date().toISOString().split('T')[0];
-          const submissionRef = db.collection('submissions').doc(`${this.userId}_${today}_${inputCode}`);
-
-          await db.runTransaction(async (transaction) => {
-            const submissionDoc = await transaction.get(submissionRef);
-            if (submissionDoc.exists) throw new Error("Code already used today");
-
-            transaction.set(submissionRef, {
-              code: inputCode,
-              submittedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            transaction.update(userRef, {
-              hasSubmitted: true,
-              lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            transaction.update(codeUserDoc.ref, {
-              submissionsReceived: firebase.firestore.FieldValue.increment(1),
-              lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-            });
-          });
-
-          this.showSuccess("Code submitted successfully!");
-          document.getElementById('inputCode').value = '';
-        } catch (error) {
-          this.showError(error.message);
-        }
-      }
-
-      // ======================
-      // 6. UI Management
+      // 5. UI Management
       // ======================
       updateUI(data) {
         document.getElementById('username').textContent = data.username;
         document.getElementById('balance').textContent = data.balance.toFixed(2);
         document.getElementById('power').textContent = this.calculatePower(data).toFixed(1);
 
-        document.getElementById('code').textContent = data.uniqueCode || '••••••••••';
-        document.getElementById('submissions').textContent = data.submissionsReceived;
-
-        const progress = (data.balance / 125000000) * 100;
-        document.getElementById('progress').style.width = `${progress}%`;
-        document.getElementById('mined').textContent = data.balance.toFixed(2);
-
         const mineButton = document.getElementById('mineButton');
-        if (data.miningActive && data.codeExpiration) {
-          mineButton.textContent = "Mining stops in 00:00:00";
-        } else {
-          mineButton.textContent = "Start Mining";
-        }
-      }
-
-      // Updated countdown function with reset logic
-      startCodeCountdown(expiration) {
-        clearInterval(this.countdownInterval);
-        if (!expiration) return;
-
-        const updateTimer = () => {
-          const now = new Date();
-          const diff = expiration - now;
-
-          if (diff <= 0) {
-            clearInterval(this.countdownInterval);
-            // Reset mining status and fields affecting mining power at 00:00 UTC
-            userRef.update({ 
-              miningActive: false, 
-              submissionsReceived: 0, 
-              hasSubmitted: false 
-            });
-            document.getElementById('mineButton').textContent = "Start Mining";
-            document.getElementById('countdown').textContent = "00:00:00";
-            return;
-          }
-
-          const hours = Math.floor(diff / 3600000);
-          const minutes = Math.floor((diff % 3600000) / 60000);
-          const seconds = Math.floor((diff % 60000) / 1000);
-          const formattedTime = `${hours.toString().padStart(2, '0')}:` +
-                                `${minutes.toString().padStart(2, '0')}:` +
-                                `${seconds.toString().padStart(2, '0')}`;
-
-          document.getElementById('countdown').textContent = formattedTime;
-          document.getElementById('mineButton').textContent = `Mining stops in ${formattedTime}`;
-        };
-
-        updateTimer();
-        this.countdownInterval = setInterval(updateTimer, 1000);
-      }
-
-      // ======================
-      // 7. Utility Functions
-      // ======================
-      copyCode() {
-        const code = document.getElementById('code').textContent;
-        if (code && navigator.clipboard) {
-          navigator.clipboard.writeText(code);
-          this.showSuccess("Code copied!");
-        }
+        mineButton.textContent = data.miningActive ? "Mining Active" : "Start Mining";
       }
 
       showError(message) {
         Telegram.WebApp.showAlert(message);
-      }
-
-      showSuccess(message) {
-        Telegram.WebApp.showAlert(message, () => {
-          document.getElementById('inputCode').value = '';
-        });
       }
 
       handleVisibilityChange = () => {
@@ -404,11 +229,10 @@
       }
 
       // ======================
-      // 8. Cleanup
+      // 6. Cleanup
       // ======================
       destroy() {
         clearInterval(this.miningInterval);
-        clearInterval(this.countdownInterval);
         if (unsubscribeUser) unsubscribeUser();
         document.removeEventListener('visibilitychange', this.handleVisibilityChange);
       }
@@ -418,6 +242,21 @@
     let app;
     document.addEventListener('DOMContentLoaded', () => app = new MiningApp());
     window.addEventListener('beforeunload', () => app.destroy());
+
+    // ======================
+    // 7. Global Mined Tokens Tracker
+    // ======================
+    // Listen for changes on the entire "users" collection and sum the balance values.
+    db.collection('users').onSnapshot(snapshot => {
+      let totalMined = 0;
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        totalMined += data.balance;
+      });
+      document.getElementById('mined').textContent = totalMined.toFixed(2);
+      const progress = (totalMined / 125000000) * 100;
+      document.getElementById('progress').style.width = `${progress}%`;
+    });
   </script>
 </body>
 </html>
