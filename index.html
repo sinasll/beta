@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>$BLACK Mining</title>
   <style>
     :root {
@@ -34,7 +34,6 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 </head>
 <body>
   <div class="container">
@@ -67,7 +66,7 @@
     <div class="card">
       <h2 style="margin: 0 0 16px 0;">Daily Code</h2>
       <div class="input-group">
-        <input type="text" class="input" id="inputCode" placeholder="Enter friend's code" />
+        <input type="text" class="input" id="inputCode" placeholder="Enter friend's code">
         <button class="button" onclick="app.submitCode()" style="flex: 0 0 80px;">Submit</button>
       </div>
       <div style="display: flex; justify-content: space-between; font-size: 0.9em;">
@@ -104,32 +103,16 @@
     // 2. Firebase Setup
     // ======================
     const firebaseConfig = {
-      apiKey: "AIzaSyAzXSCn_QL2XeyRZD71By443sl4wOtXf2Y",
-      authDomain: "pipcore-8844f.firebaseapp.com",
-      projectId: "pipcore-8844f",
-      storageBucket: "pipcore-8844f.appspot.com",
-      messagingSenderId: "921115337984",
-      appId: "1:921115337984:web:17161651342ad78017bfe5"
-    };
+        apiKey: "AIzaSyAzXSCn_QL2XeyRZD71By443sl4wOtXf2Y",
+        authDomain: "pipcore-8844f.firebaseapp.com",
+        projectId: "pipcore-8844f",
+        storageBucket: "pipcore-8844f.appspot.com",
+        messagingSenderId: "921115337984",
+        appId: "1:921115337984:web:17161651342ad78017bfe5"
+      };
 
     firebase.initializeApp(firebaseConfig);
-
-    // Sign in anonymously (or replace with a custom auth method that verifies your Telegram user)
-    firebase.auth().signInAnonymously().catch((error) => {
-      console.error("Firebase auth error:", error);
-    });
-
-    // After authentication, initialize Firestore
-    firebase.auth().onAuthStateChanged((user) => {
-      if (user) {
-        window.currentUser = user;
-        window.db = firebase.firestore();
-        // Initialize the app after ensuring the user is authenticated
-        document.addEventListener('DOMContentLoaded', () => app = new MiningApp());
-        window.addEventListener('beforeunload', () => app.destroy());
-      }
-    });
-
+    const db = firebase.firestore();
     let userRef, unsubscribeUser;
 
     // ======================
@@ -149,18 +132,19 @@
           Telegram.WebApp.ready();
           Telegram.WebApp.expand();
 
-          // Get and verify Telegram user from the Telegram WebApp data.
+          // Get and verify Telegram user
           const tgUser = Telegram.WebApp.initDataUnsafe.user;
           if (!tgUser?.id) throw new Error("Invalid Telegram user");
 
-          // Initialize user session using the Firebase auth UID
+          // Initialize user session
           await this.initUserSession(tgUser);
 
-          // Setup real-time listener on the user document
+          // Setup real-time listener
           this.setupRealtimeUpdates();
 
           // Handle visibility changes
           document.addEventListener('visibilitychange', this.handleVisibilityChange);
+
         } catch (error) {
           console.error("App initialization failed:", error);
           this.showError("Failed to initialize. Please restart the app.");
@@ -168,12 +152,11 @@
       }
 
       async initUserSession(tgUser) {
-        // Use the Firebase auth UID as the document ID for enhanced security.
-        this.userId = firebase.auth().currentUser.uid;
+        this.userId = `tg_${tgUser.id}`;
         userRef = db.collection('users').doc(this.userId);
 
         const userData = {
-          telegramId: tgUser.id,  // Immutable: protected by security rules
+          telegramId: tgUser.id,
           username: tgUser.username || `user_${tgUser.id}`,
           firstName: tgUser.first_name,
           lastName: tgUser.last_name || '',
@@ -186,31 +169,27 @@
           lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
         };
 
-        // Use a transaction to create the user document if it does not exist.
         await db.runTransaction(async (transaction) => {
           const doc = await transaction.get(userRef);
           if (!doc.exists) {
             transaction.set(userRef, {
               ...userData,
-              joinedAt: firebase.firestore.FieldValue.serverTimestamp() // Immutable: protected by security rules
+              joinedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
           }
         });
       }
 
       setupRealtimeUpdates() {
-        unsubscribeUser = userRef.onSnapshot((doc) => {
+        unsubscribeUser = userRef.onSnapshot(async (doc) => {
           const data = doc.data() || {};
           this.updateUI(data);
 
-          // Start mining engine and countdown when mining is active.
           if (data.miningActive && !this.miningInterval) {
             this.startMiningEngine();
-            if (data.codeExpiration) {
-              this.startCodeCountdown(data.codeExpiration.toDate());
-            }
+            this.startCodeCountdown(data.codeExpiration?.toDate());
           }
-        }, (error) => {
+        }, error => {
           console.error("Realtime update error:", error);
           this.showError("Connection lost. Reconnecting...");
         });
@@ -249,7 +228,7 @@
         const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
         let code;
         do {
-          code = Array.from({ length: ENV.CODE_LENGTH }, () =>
+          code = Array.from({length: ENV.CODE_LENGTH}, () => 
             chars[Math.floor(Math.random() * chars.length)]
           ).join('');
 
@@ -263,7 +242,6 @@
       }
 
       startMiningEngine() {
-        // Increment balance at set intervals using Firestore transactions for safety.
         this.miningInterval = setInterval(async () => {
           const doc = await userRef.get();
           const data = doc.data();
@@ -310,8 +288,7 @@
 
             transaction.set(submissionRef, {
               code: inputCode,
-              submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
-              userId: this.userId
+              submittedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
 
             transaction.update(userRef, {
@@ -339,6 +316,7 @@
         document.getElementById('username').textContent = data.username;
         document.getElementById('balance').textContent = data.balance.toFixed(2);
         document.getElementById('power').textContent = this.calculatePower(data).toFixed(1);
+
         document.getElementById('code').textContent = data.uniqueCode || '••••••••••';
         document.getElementById('submissions').textContent = data.submissionsReceived;
 
@@ -365,7 +343,7 @@
 
           if (diff <= 0) {
             clearInterval(this.countdownInterval);
-            // Reset mining status and fields affecting mining power at 00:00 UTC.
+            // Reset mining status and fields affecting mining power at 00:00 UTC
             userRef.update({ 
               miningActive: false, 
               submissionsReceived: 0, 
@@ -435,6 +413,11 @@
         document.removeEventListener('visibilitychange', this.handleVisibilityChange);
       }
     }
+
+    // Initialize application
+    let app;
+    document.addEventListener('DOMContentLoaded', () => app = new MiningApp());
+    window.addEventListener('beforeunload', () => app.destroy());
   </script>
 </body>
 </html>
