@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>$BLACK Mining</title>
+  <title>$BLACK</title>
   <style>
     :root {
       --tg-theme-bg-color: #000000;
@@ -29,11 +29,11 @@
 
     .container {
       padding: 16px;
-      height: calc(100% - 120px);
+      height: calc(100% - 90px);
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       box-sizing: border-box;
-      margin-top: 120px;
+      margin-top: 90px;
     }
 
     .card {
@@ -43,23 +43,6 @@
       margin-bottom: 16px;
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .progress-container {
-      margin: 20px 0;
-    }
-
-    .progress-bar {
-      height: 6px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 3px;
-      overflow: hidden;
-    }
-
-    .progress {
-      height: 100%;
-      background: var(--tg-theme-button-color);
-      transition: width 0.3s ease;
     }
 
     .stats-row {
@@ -117,22 +100,15 @@
   <div class="header">
     <div class="stats-row">
       <div>Total Mined</div>
-      <div><span id="mined">0.00</span> / 125,000,000</div>
-    </div>
-    <div class="progress-bar">
-      <div class="progress" id="progress"></div>
-    </div>
-    <div class="stats-row">
-      <div>Global Progress</div>
-      <div id="minedPercentage">0%</div>
+      <div><span id="mined">0.00</span> / 125,000,000 $BLACK</div>
     </div>
   </div>
 
   <div class="container">
     <div class="card">
-      <h2 style="margin: 0 0 16px 0; font-size: 1.2em;">Your Miner</h2>
+      <h2 style="margin: 0 0 16px 0; font-size: 1.2em;">ACC</h2>
       <div class="stats-row">
-        <div>Account</div>
+        <div>Miner</div>
         <div>@<span id="username">loading...</span></div>
       </div>
       <div class="stats-row">
@@ -181,7 +157,7 @@
     class MiningApp {
       constructor() {
         this.userId = null;
-        this.miningInterval = null;
+        this.lastUpdate = null;
         this.init();
       }
 
@@ -202,9 +178,6 @@
 
           // Setup real-time listener
           this.setupRealtimeUpdates();
-
-          // Handle visibility changes
-          document.addEventListener('visibilitychange', this.handleVisibilityChange);
 
           // Start countdown timer
           this.startCountdown();
@@ -246,8 +219,8 @@
           const data = doc.data() || {};
           this.updateUI(data);
 
-          if (data.miningActive && !this.miningInterval) {
-            this.startMiningEngine();
+          if (data.miningActive) {
+            await this.calculateEarnings(data);
           }
         }, error => {
           console.error("Realtime update error:", error);
@@ -256,33 +229,38 @@
       }
 
       // ======================
-      // 4. Mining System
+      // 4. Persistent Mining System
       // ======================
-      async toggleMining() {
-        const doc = await userRef.get();
-        const data = doc.data();
-
-        if (data.miningActive) {
-          Telegram.WebApp.showAlert("Mining is already active.");
-          return;
-        } else {
-          await userRef.update({
-            miningActive: true
-          });
-        }
-      }
-
-      startMiningEngine() {
-        this.miningInterval = setInterval(async () => {
-          const doc = await userRef.get();
-          const data = doc.data();
-          const earnings = ENV.BASE_RATE * this.calculatePower(data);
+      async calculateEarnings(data) {
+        const now = Date.now();
+        const lastUpdated = data.lastUpdated?.toDate()?.getTime() || now;
+        const elapsed = now - lastUpdated;
+        
+        if (elapsed > 10000) { // Update every 10 seconds
+          const hoursElapsed = elapsed / 3600000;
+          const earnings = ENV.BASE_RATE * hoursElapsed * this.calculatePower(data);
 
           await userRef.update({
             balance: firebase.firestore.FieldValue.increment(earnings),
             lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
           });
-        }, 10000);
+        }
+      }
+
+      async toggleMining() {
+        const doc = await userRef.get();
+        const data = doc.data();
+
+        if (data.miningActive) {
+          // Final calculation when stopping
+          await this.calculateEarnings(data);
+          await userRef.update({ miningActive: false });
+        } else {
+          await userRef.update({
+            miningActive: true,
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
       }
 
       calculatePower(data) {
@@ -294,28 +272,16 @@
       // ======================
       updateUI(data) {
         document.getElementById('username').textContent = data.username;
-        document.getElementById('balance').textContent = data.balance.toFixed(2);
+        document.getElementById('balance').textContent = data.balance?.toFixed(2) || '0.00';
         document.getElementById('power').textContent = this.calculatePower(data).toFixed(1);
 
         const mineButton = document.getElementById('mineButton');
         mineButton.textContent = data.miningActive ? "Mining Active" : "Start Mining";
+        mineButton.style.opacity = data.miningActive ? 0.6 : 1;
       }
 
       showError(message) {
         Telegram.WebApp.showAlert(message);
-      }
-
-      handleVisibilityChange = () => {
-        if (document.visibilityState === 'hidden') {
-          clearInterval(this.miningInterval);
-          this.miningInterval = null;
-        } else {
-          userRef.get().then(doc => {
-            if (doc.exists && doc.data().miningActive && !this.miningInterval) {
-              this.startMiningEngine();
-            }
-          });
-        }
       }
 
       // ======================
@@ -340,9 +306,7 @@
       // 7. Cleanup
       // ======================
       destroy() {
-        clearInterval(this.miningInterval);
         if (unsubscribeUser) unsubscribeUser();
-        document.removeEventListener('visibilitychange', this.handleVisibilityChange);
       }
     }
 
@@ -358,12 +322,17 @@
       let totalMined = 0;
       snapshot.forEach(doc => {
         const data = doc.data();
-        totalMined += data.balance;
+        if (data.balance && typeof data.balance === 'number') {
+          totalMined += data.balance;
+        }
       });
-      const progress = (totalMined / TOTAL_SUPPLY) * 100;
+
+      // Update UI with total mined
       document.getElementById('mined').textContent = totalMined.toFixed(2);
-      document.getElementById('progress').style.width = progress + '%';
-      document.getElementById('minedPercentage').textContent = progress.toFixed(2) + '%';
+      
+    }, error => {
+      console.error("Global tracker error:", error);
+      Telegram.WebApp.showAlert("Failed to load mining data");
     });
   </script>
 </body>
