@@ -272,7 +272,6 @@
         }
 
         try {
-          // Query outside of the transaction for the user with the matching code
           const codeUserSnapshot = await db.collection('users')
             .where('uniqueCode', '==', inputCode)
             .get();
@@ -314,32 +313,26 @@
       // 6. UI Management
       // ======================
       updateUI(data) {
-        // Update user info
         document.getElementById('username').textContent = data.username;
         document.getElementById('balance').textContent = data.balance.toFixed(2);
         document.getElementById('power').textContent = this.calculatePower(data).toFixed(1);
 
-        // Update code system
         document.getElementById('code').textContent = data.uniqueCode || '••••••••••';
         document.getElementById('submissions').textContent = data.submissionsReceived;
 
-        // Update progress bar
         const progress = (data.balance / 125000000) * 100;
         document.getElementById('progress').style.width = `${progress}%`;
         document.getElementById('mined').textContent = data.balance.toFixed(2);
 
-        // Update mining button text:
         const mineButton = document.getElementById('mineButton');
         if (data.miningActive && data.codeExpiration) {
-          // The countdown will be updated in startCodeCountdown.
-          // For now, if no countdown is active, show a default message.
           mineButton.textContent = "Mining stops in 00:00:00";
         } else {
           mineButton.textContent = "Start Mining";
         }
       }
 
-      // Countdown for both mining stop and daily code expiration (both end at next 00:00 UTC)
+      // Updated countdown function with reset logic
       startCodeCountdown(expiration) {
         clearInterval(this.countdownInterval);
         if (!expiration) return;
@@ -350,8 +343,12 @@
 
           if (diff <= 0) {
             clearInterval(this.countdownInterval);
-            // Reset miningActive so user can start mining again.
-            userRef.update({ miningActive: false });
+            // Reset mining status and fields affecting mining power at 00:00 UTC
+            userRef.update({ 
+              miningActive: false, 
+              submissionsReceived: 0, 
+              hasSubmitted: false 
+            });
             document.getElementById('mineButton').textContent = "Start Mining";
             document.getElementById('countdown').textContent = "00:00:00";
             return;
@@ -364,7 +361,6 @@
                                 `${minutes.toString().padStart(2, '0')}:` +
                                 `${seconds.toString().padStart(2, '0')}`;
 
-          // Update both the daily code countdown and the mining button text.
           document.getElementById('countdown').textContent = formattedTime;
           document.getElementById('mineButton').textContent = `Mining stops in ${formattedTime}`;
         };
