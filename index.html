@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLACK Mining</title>
+    <link href="style.css" rel="stylesheet" type="text/css">
+
+    <!-- Add Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+</head>
+<body>
+
+  <div class="header">
+    <h2>$BLACK</h2>
+  </div>
+
+    <div class="container">
+        <!-- Token Info Box -->
+        <div class="box">
+            <div class="stats">
+                <div>Supply: 125,000,000</div>
+                <div>Mined: <span id="mined">0.00</span></div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress" id="progress"></div>
+            </div>
+        </div>
+
+        <!-- User Info Box -->
+        <div class="box">
+            <h2>User Info</h2>
+            <div>Username: <span id="username">Loading...</span></div>
+            <div>Balance: <span id="balance">0.00</span> $BLACK</div>
+            <div>Mining Power: <span id="power">1.0</span>x</div>
+        </div>
+
+        <!-- Daily Codes Box -->
+        <div class="box">
+            <h2>Daily Codes</h2>
+            <div>Your Code: <span id="code"></span>
+                <button onclick="copyCode()">Copy</button>
+            </div>
+            <div class="code-section">
+                <input type="text" id="inputCode" placeholder="Enter code">
+                <button onclick="submitCode()">Submit</button>
+            </div>
+            <div id="codeStatus">
+                <div>Expires in: <span id="countdown">00:00:00</span></div>
+                <div>Submitted: <span id="submissions">0</span>/10</div>
+            </div>
+        </div>
+
+        <!-- Mining Button -->
+        <div class="box" style="text-align: center">
+            <button id="mineButton" onclick="startMining()">Start Mining</button>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="nav">
+            <div class="nav-item">MINE</div>
+            <div class="nav-item">TASKS</div>
+            <div class="nav-item">FRIENDS</div>
+            <div class="nav-item">WALLET</div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
