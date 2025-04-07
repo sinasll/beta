@@ -410,17 +410,32 @@ class MiningApp {
 
     // Initialize application
 let app;
+
 document.addEventListener('DOMContentLoaded', async () => {
   try {
-    app = new MiningApp();
-  } catch (error) {
-    console.error("App creation failed:", error);
-    Telegram.WebApp.showAlert("Failed to start app. Please try again.");
-  }
-});
+    // First check if running in Telegram
+    if (!window.Telegram || !Telegram.WebApp) {
+      alert("Please open this in Telegram");
+      return;
+    }
 
-window.addEventListener('beforeunload', () => {
-  if (app) app.destroy();
+    // Initialize Firebase first
+    try {
+      await firebase.auth().signInAnonymously();
+      console.log("Firebase auth successful");
+    } catch (authError) {
+      console.error("Auth error:", authError);
+      Telegram.WebApp.showAlert("Authentication error. Please try again.");
+      return;
+    }
+
+    // Then create app instance
+    app = new MiningApp();
+    
+  } catch (error) {
+    console.error("Startup error:", error);
+    Telegram.WebApp.showAlert(`Startup failed: ${error.message}`);
+  }
 });
   </script>
 </body>
