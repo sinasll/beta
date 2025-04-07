@@ -33,7 +33,6 @@
   </style>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 </head>
 <body>
@@ -84,110 +83,117 @@
   </div>
 
   <script>
-// ======================
-// 1. Configuration
-// ======================
-const ENV = {
-  BASE_RATE: 0.003472 / 6, // 0.02/hour
-  MAX_SUBMISSIONS: 10,
-  CODE_LENGTH: 10
-};
+    // ======================
+    // 1. Configuration
+    // ======================
+    const ENV = {
+      BASE_RATE: 0.003472 / 6, // 0.02/hour
+      MAX_SUBMISSIONS: 10,
+      CODE_LENGTH: 10
+      // CODE_DURATION is no longer used as we now rely on next 00:00 UTC.
+    };
 
-// Helper function: returns a Date object for next midnight (00:00 UTC)
-function getNextMidnightUTC() {
-  const now = new Date();
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
-}
-
-// ======================
-// 2. Firebase Setup
-// ======================
-const firebaseConfig = {
-  apiKey: "AIzaSyDoE08Bgp9sKO8q1-HH5BsxkvUtOccyLSk",
-  authDomain: "betaminiapp.firebaseapp.com",
-  projectId: "betaminiapp",
-  storageBucket: "betaminiapp.appspot.com",
-  messagingSenderId: "952692449784",
-  appId: "1:952692449784:web:e21622059e4b203b96b60d"
-};
-
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-let userRef, unsubscribeUser;
-
-// ======================
-// 3. Core Application
-// ======================
-class MiningApp {
-  constructor() {
-    this.userId = null;
-    this.miningInterval = null;
-    this.countdownInterval = null;
-    this.init();
-  }
-
-  async init() {
-    try {
-      // Initialize Telegram WebApp
-      Telegram.WebApp.ready();
-      Telegram.WebApp.expand();
-
-      // Get and verify Telegram user
-      const tgUser = Telegram.WebApp.initDataUnsafe.user;
-      if (!tgUser?.id) throw new Error("Invalid Telegram user");
-
-      // Initialize user session with authentication
-      await this.initUserSession(tgUser);
-
-      // Setup real-time listener
-      this.setupRealtimeUpdates();
-
-      // Handle visibility changes
-      document.addEventListener('visibilitychange', this.handleVisibilityChange);
-
-    } catch (error) {
-      console.error("App initialization failed:", error);
-      this.showError("Failed to initialize. Please restart the app.");
+    // Helper function: returns a Date object for next midnight (00:00 UTC)
+    function getNextMidnightUTC() {
+      const now = new Date();
+      return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
     }
-  }
 
-  async initUserSession(tgUser) {
-    try {
-      // Sign in anonymously (required by security rules)
-      await firebase.auth().signInAnonymously();
-      
-      this.userId = `tg_${tgUser.id}`;
-      userRef = db.collection('users').doc(this.userId);
-
-      const userData = {
-        telegramId: tgUser.id,
-        username: tgUser.username || `user_${tgUser.id}`,
-        firstName: tgUser.first_name,
-        lastName: tgUser.last_name || '',
-        balance: 0,
-        miningPower: 1,
-        uniqueCode: '',
-        submissionsReceived: 0,
-        hasSubmitted: false,
-        miningActive: false,
-        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+    // ======================
+    // 2. Firebase Setup
+    // ======================
+    const firebaseConfig = {
+        apiKey: "AIzaSyAzXSCn_QL2XeyRZD71By443sl4wOtXf2Y",
+        authDomain: "pipcore-8844f.firebaseapp.com",
+        projectId: "pipcore-8844f",
+        storageBucket: "pipcore-8844f.appspot.com",
+        messagingSenderId: "921115337984",
+        appId: "1:921115337984:web:17161651342ad78017bfe5"
       };
 
-      await db.runTransaction(async (transaction) => {
-        const doc = await transaction.get(userRef);
-        if (!doc.exists) {
-          transaction.set(userRef, {
-            ...userData,
-            joinedAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    let userRef, unsubscribeUser;
+
+    // ======================
+    // 3. Core Application
+    // ======================
+    class MiningApp {
+      constructor() {
+        this.userId = null;
+        this.miningInterval = null;
+        this.countdownInterval = null;
+        this.init();
+      }
+
+      async init() {
+        try {
+          // Initialize Telegram WebApp
+          Telegram.WebApp.ready();
+          Telegram.WebApp.expand();
+
+          // Get and verify Telegram user
+          const tgUser = Telegram.WebApp.initDataUnsafe.user;
+          if (!tgUser?.id) throw new Error("Invalid Telegram user");
+
+          // Initialize user session
+          await this.initUserSession(tgUser);
+
+          // Setup real-time listener
+          this.setupRealtimeUpdates();
+
+          // Handle visibility changes
+          document.addEventListener('visibilitychange', this.handleVisibilityChange);
+
+        } catch (error) {
+          console.error("App initialization failed:", error);
+          this.showError("Failed to initialize. Please restart the app.");
         }
-      });
-    } catch (error) {
-      console.error("User session init failed:", error);
-      throw error;
-    }
-  }
+      }
+
+      async initUserSession(tgUser) {
+        this.userId = `tg_${tgUser.id}`;
+        userRef = db.collection('users').doc(this.userId);
+
+        const userData = {
+          telegramId: tgUser.id,
+          username: tgUser.username || `user_${tgUser.id}`,
+          firstName: tgUser.first_name,
+          lastName: tgUser.last_name || '',
+          balance: 0,
+          miningPower: 1,
+          uniqueCode: '',
+          submissionsReceived: 0,
+          hasSubmitted: false,
+          miningActive: false,
+          lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        await db.runTransaction(async (transaction) => {
+          const doc = await transaction.get(userRef);
+          if (!doc.exists) {
+            transaction.set(userRef, {
+              ...userData,
+              joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          }
+        });
+      }
+
+      setupRealtimeUpdates() {
+        unsubscribeUser = userRef.onSnapshot(async (doc) => {
+          const data = doc.data() || {};
+          this.updateUI(data);
+
+          if (data.miningActive && !this.miningInterval) {
+            this.startMiningEngine();
+            this.startCodeCountdown(data.codeExpiration?.toDate());
+          }
+        }, error => {
+          console.error("Realtime update error:", error);
+          this.showError("Connection lost. Reconnecting...");
+        });
+      }
 
       // ======================
       // 4. Mining System
@@ -409,34 +415,9 @@ class MiningApp {
     }
 
     // Initialize application
-let app;
-
-document.addEventListener('DOMContentLoaded', async () => {
-  try {
-    // First check if running in Telegram
-    if (!window.Telegram || !Telegram.WebApp) {
-      alert("Please open this in Telegram");
-      return;
-    }
-
-    // Initialize Firebase first
-    try {
-      await firebase.auth().signInAnonymously();
-      console.log("Firebase auth successful");
-    } catch (authError) {
-      console.error("Auth error:", authError);
-      Telegram.WebApp.showAlert("Authentication error. Please try again.");
-      return;
-    }
-
-    // Then create app instance
-    app = new MiningApp();
-    
-  } catch (error) {
-    console.error("Startup error:", error);
-    Telegram.WebApp.showAlert(`Startup failed: ${error.message}`);
-  }
-});
+    let app;
+    document.addEventListener('DOMContentLoaded', () => app = new MiningApp());
+    window.addEventListener('beforeunload', () => app.destroy());
   </script>
 </body>
 </html>
