@@ -157,7 +157,7 @@
     class MiningApp {
       constructor() {
         this.userId = null;
-        this.lastUpdate = null;
+        this.miningInterval = null;
         this.init();
       }
 
@@ -178,6 +178,9 @@
 
           // Setup real-time listener
           this.setupRealtimeUpdates();
+
+          // Handle visibility changes
+          document.addEventListener('visibilitychange', this.handleVisibilityChange);
 
           // Start countdown timer
           this.startCountdown();
@@ -219,8 +222,8 @@
           const data = doc.data() || {};
           this.updateUI(data);
 
-          if (data.miningActive) {
-            await this.calculateEarnings(data);
+          if (data.miningActive && !this.miningInterval) {
+            this.startMiningEngine();
           }
         }, error => {
           console.error("Realtime update error:", error);
@@ -229,38 +232,33 @@
       }
 
       // ======================
-      // 4. Persistent Mining System
+      // 4. Mining System
       // ======================
-      async calculateEarnings(data) {
-        const now = Date.now();
-        const lastUpdated = data.lastUpdated?.toDate()?.getTime() || now;
-        const elapsed = now - lastUpdated;
-        
-        if (elapsed > 10000) { // Update every 10 seconds
-          const hoursElapsed = elapsed / 3600000;
-          const earnings = ENV.BASE_RATE * hoursElapsed * this.calculatePower(data);
-
-          await userRef.update({
-            balance: firebase.firestore.FieldValue.increment(earnings),
-            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-          });
-        }
-      }
-
       async toggleMining() {
         const doc = await userRef.get();
         const data = doc.data();
 
         if (data.miningActive) {
-          // Final calculation when stopping
-          await this.calculateEarnings(data);
-          await userRef.update({ miningActive: false });
+          Telegram.WebApp.showAlert("Mining is already active.");
+          return;
         } else {
           await userRef.update({
-            miningActive: true,
-            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            miningActive: true
           });
         }
+      }
+
+      startMiningEngine() {
+        this.miningInterval = setInterval(async () => {
+          const doc = await userRef.get();
+          const data = doc.data();
+          const earnings = ENV.BASE_RATE * this.calculatePower(data);
+
+          await userRef.update({
+            balance: firebase.firestore.FieldValue.increment(earnings),
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }, 10000);
       }
 
       calculatePower(data) {
@@ -272,16 +270,28 @@
       // ======================
       updateUI(data) {
         document.getElementById('username').textContent = data.username;
-        document.getElementById('balance').textContent = data.balance?.toFixed(2) || '0.00';
+        document.getElementById('balance').textContent = data.balance.toFixed(2);
         document.getElementById('power').textContent = this.calculatePower(data).toFixed(1);
 
         const mineButton = document.getElementById('mineButton');
         mineButton.textContent = data.miningActive ? "Mining Active" : "Start Mining";
-        mineButton.style.opacity = data.miningActive ? 0.6 : 1;
       }
 
       showError(message) {
         Telegram.WebApp.showAlert(message);
+      }
+
+      handleVisibilityChange = () => {
+        if (document.visibilityState === 'hidden') {
+          clearInterval(this.miningInterval);
+          this.miningInterval = null;
+        } else {
+          userRef.get().then(doc => {
+            if (doc.exists && doc.data().miningActive && !this.miningInterval) {
+              this.startMiningEngine();
+            }
+          });
+        }
       }
 
       // ======================
@@ -306,7 +316,9 @@
       // 7. Cleanup
       // ======================
       destroy() {
+        clearInterval(this.miningInterval);
         if (unsubscribeUser) unsubscribeUser();
+        document.removeEventListener('visibilitychange', this.handleVisibilityChange);
       }
     }
 
