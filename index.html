@@ -58,6 +58,9 @@
       <div style="display: flex; justify-content: space-between; margin-top: 8px;">
         <div>Mining Power</div>
         <div><span id="power">1.0</span>x</div>
+
+        <div id="countdownTimer" style="display: none;"></div>
+
       </div>
     </div>
 
@@ -258,5 +261,54 @@
       document.getElementById('progress').style.width = `${progress}%`;
     });
   </script>
+
+<script>
+   let countdownInterval;
+
+function startCountdown() {
+  function updateCountdown() {
+    const now = new Date();
+    const utcNow = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
+    const targetTime = new Date(utcNow);
+    targetTime.setUTCHours(23, 59, 59, 999);
+
+    const timeDifference = targetTime - utcNow;
+
+    if (timeDifference > 0) {
+      const hours = Math.floor((timeDifference / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((timeDifference / (1000 * 60)) % 60);
+      const seconds = Math.floor((timeDifference / 1000) % 60);
+
+      const formattedTime = `${hours.toString().padStart(2, '0')}:` +
+                            `${minutes.toString().padStart(2, '0')}:` +
+                            `${seconds.toString().padStart(2, '0')}`;
+
+      document.getElementById('countdownTimer').textContent = `Mining stops in ${formattedTime}`;
+    } else {
+      document.getElementById('countdownTimer').textContent = "Mining has stopped.";
+      clearInterval(countdownInterval);
+    }
+  }
+
+  updateCountdown();
+  countdownInterval = setInterval(updateCountdown, 1000);
+}
+
+function stopCountdown() {
+  clearInterval(countdownInterval);
+  document.getElementById('countdownTimer').style.display = 'none';
+}
+
+function onMiningStart() {
+  document.getElementById('countdownTimer').style.display = 'block';
+  startCountdown();
+}
+
+function onMiningStop() {
+  stopCountdown();
+}
+
+    </script>
+    
 </body>
 </html>
