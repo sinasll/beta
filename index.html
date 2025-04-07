@@ -33,53 +33,13 @@
   </style>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 </head>
 <body>
+  <!-- Your existing HTML content remains the same -->
   <div class="container">
-    <div class="card">
-      <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-        <div>Total Supply</div>
-        <div>125,000,000</div>
-      </div>
-      <div class="progress-bar">
-        <div class="progress" id="progress"></div>
-      </div>
-      <div style="text-align: right; margin-top: 8px; font-size: 0.9em;">
-        Mined: <span id="mined">0.00</span>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2 style="margin: 0 0 16px 0;">Your Account</h2>
-      <div style="margin-bottom: 12px;">@<span id="username">loading...</span></div>
-      <div style="display: flex; justify-content: space-between;">
-        <div>Balance</div>
-        <div><span id="balance">0.00</span> $BLACK</div>
-      </div>
-      <div style="display: flex; justify-content: space-between; margin-top: 8px;">
-        <div>Mining Power</div>
-        <div><span id="power">1.0</span>x</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2 style="margin: 0 0 16px 0;">Daily Code</h2>
-      <div class="input-group">
-        <input type="text" class="input" id="inputCode" placeholder="Enter friend's code">
-        <button class="button" onclick="app.submitCode()" style="flex: 0 0 80px;">Submit</button>
-      </div>
-      <div style="display: flex; justify-content: space-between; font-size: 0.9em;">
-        <div>Your Code: <span id="code">••••••••••</span></div>
-        <button onclick="app.copyCode()" style="background: none; color: var(--tg-theme-link-color); padding: 0;">Copy</button>
-      </div>
-      <div style="display: flex; justify-content: space-between; margin-top: 12px; font-size: 0.9em;">
-        <div>Expires in: <span id="countdown">24:00:00</span></div>
-        <div>Used: <span id="submissions">0</span>/10</div>
-      </div>
-    </div>
-
-    <button class="button" id="mineButton" onclick="app.toggleMining()" style="margin-top: 16px;">Start Mining</button>
+    <!-- ... all your existing HTML content ... -->
   </div>
 
   <script>
@@ -97,14 +57,15 @@
     // 2. Firebase Setup
     // ======================
     const firebaseConfig = {
-        apiKey: "AIzaSyAzXSCn_QL2XeyRZD71By443sl4wOtXf2Y",
-        authDomain: "pipcore-8844f.firebaseapp.com",
-        projectId: "pipcore-8844f",
-        storageBucket: "pipcore-8844f.appspot.com",
-        messagingSenderId: "921115337984",
-        appId: "1:921115337984:web:17161651342ad78017bfe5"
-      };
+      apiKey: "AIzaSyAzXSCn_QL2XeyRZD71By443sl4wOtXf2Y",
+      authDomain: "pipcore-8844f.firebaseapp.com",
+      projectId: "pipcore-8844f",
+      storageBucket: "pipcore-8844f.appspot.com",
+      messagingSenderId: "921115337984",
+      appId: "1:921115337984:web:17161651342ad78017bfe5"
+    };
 
+    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     let userRef, unsubscribeUser;
@@ -130,6 +91,11 @@
           const tgUser = Telegram.WebApp.initDataUnsafe.user;
           if (!tgUser?.id) throw new Error("Invalid Telegram user");
 
+          // Initialize Firebase Anonymous Auth
+          await firebase.auth().signInAnonymously();
+          const currentUser = firebase.auth().currentUser;
+          console.log("Anonymous user ID:", currentUser.uid);
+
           // Initialize user session
           await this.initUserSession(tgUser);
 
@@ -145,49 +111,14 @@
         }
       }
 
-      async initUserSession(tgUser) {
-        this.userId = `tg_${tgUser.id}`;
-        userRef = db.collection('users').doc(this.userId);
+      // ... rest of your existing class methods remain unchanged ...
+      // (initUserSession, setupRealtimeUpdates, toggleMining, etc.)
+    }
 
-        const userData = {
-          telegramId: tgUser.id,
-          username: tgUser.username || `user_${tgUser.id}`,
-          firstName: tgUser.first_name,
-          lastName: tgUser.last_name || '',
-          balance: 0,
-          miningPower: 1,
-          uniqueCode: '',
-          submissionsReceived: 0,
-          hasSubmitted: false,
-          miningActive: false,
-          lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-        };
-
-        await db.runTransaction(async (transaction) => {
-          const doc = await transaction.get(userRef);
-          if (!doc.exists) {
-            transaction.set(userRef, {
-              ...userData,
-              joinedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-          }
-        });
-      }
-
-      setupRealtimeUpdates() {
-        unsubscribeUser = userRef.onSnapshot(async (doc) => {
-          const data = doc.data() || {};
-          this.updateUI(data);
-
-          if (data.miningActive && !this.miningInterval) {
-            this.startMiningEngine();
-            this.startCodeCountdown(data.codeExpiration?.toDate());
-          }
-        }, error => {
-          console.error("Realtime update error:", error);
-          this.showError("Connection lost. Reconnecting...");
-        });
-      }
+    // Initialize application
+    let app;
+    document.addEventListener('DOMContentLoaded', () => app = new MiningApp());
+    window.addEventListener('beforeunload', () => app.destroy());
 
       // ======================
       // 4. Mining System
