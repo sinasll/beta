@@ -229,7 +229,6 @@
         this.miningInterval = setInterval(async () => {
           const doc = await userRef.get();
           const data = doc.data();
-          
           const earnings = ENV.BASE_RATE * this.calculatePower(data);
           
           await userRef.update({
@@ -257,23 +256,21 @@
         }
 
         try {
+          // Query outside of the transaction for the user with the matching code
+          const codeUserSnapshot = await db.collection('users')
+            .where('uniqueCode', '==', inputCode)
+            .get();
+          if (codeUserSnapshot.empty) throw new Error("Invalid code");
+          const codeUserDoc = codeUserSnapshot.docs[0];
+          if (codeUserDoc.id === this.userId) throw new Error("Self-use not allowed");
+
           const today = new Date().toISOString().split('T')[0];
           const submissionRef = db.collection('submissions').doc(`${this.userId}_${today}_${inputCode}`);
 
           await db.runTransaction(async (transaction) => {
-            // Check code validity
-            const codeUser = await transaction.get(
-              db.collection('users').where('uniqueCode', '==', inputCode)
-            );
-            
-            if (codeUser.empty) throw new Error("Invalid code");
-            if (codeUser.docs[0].id === this.userId) throw new Error("Self-use not allowed");
-            
-            // Check daily limits
             const submissionDoc = await transaction.get(submissionRef);
             if (submissionDoc.exists) throw new Error("Code already used today");
-            
-            // Update transactions
+
             transaction.set(submissionRef, {
               code: inputCode,
               submittedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -284,7 +281,7 @@
               lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
             });
 
-            transaction.update(codeUser.docs[0].ref, {
+            transaction.update(codeUserDoc.ref, {
               submissionsReceived: firebase.firestore.FieldValue.increment(1),
               lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
             });
@@ -292,7 +289,6 @@
 
           this.showSuccess("Code submitted successfully!");
           document.getElementById('inputCode').value = '';
-
         } catch (error) {
           this.showError(error.message);
         }
@@ -302,22 +298,22 @@
       // 6. UI Management
       // ======================
       updateUI(data) {
-        // User Info
+        // Update user info
         document.getElementById('username').textContent = data.username;
         document.getElementById('balance').textContent = data.balance.toFixed(2);
         document.getElementById('power').textContent = this.calculatePower(data).toFixed(1);
         
-        // Code System
+        // Update code system
         document.getElementById('code').textContent = data.uniqueCode || '••••••••••';
         document.getElementById('submissions').textContent = data.submissionsReceived;
         
-        // Mining Controls
+        // Update mining controls
         const mineButton = document.getElementById('mineButton');
         mineButton.textContent = data.miningActive ? 'Stop Mining' : 'Start Mining';
         mineButton.style.background = data.miningActive ? '#e74c3c' : 
           getComputedStyle(document.documentElement).getPropertyValue('--tg-theme-button-color');
         
-        // Progress System
+        // Update progress bar
         const progress = (data.balance / 125000000) * 100;
         document.getElementById('progress').style.width = `${progress}%`;
         document.getElementById('mined').textContent = data.balance.toFixed(2);
@@ -401,5 +397,5 @@
     document.addEventListener('DOMContentLoaded', () => app = new MiningApp());
     window.addEventListener('beforeunload', () => app.destroy());
   </script>
-</body> 
+</body>
 </html>
