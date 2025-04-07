@@ -66,7 +66,7 @@
   </div>
 
   <script>
-   // ======================
+// ======================
 // 1. Configuration
 // ======================
 const ENV = {
@@ -169,22 +169,20 @@ class MiningApp {
   // ======================
   // 4. Mining System
   // ======================
-  async toggleMining() {
+  async startMining() {
     const doc = await userRef.get();
     const data = doc.data();
 
     if (data.miningActive) {
-      // Stop mining
-      await userRef.update({
-        miningActive: false
-      });
-      this.stopCountdown(); // Stop the countdown when mining stops
+      // Mining is already active, do nothing.
+      return;
     } else {
       // Start mining
       await userRef.update({
         miningActive: true
       });
-      this.startCountdown(); // Start the countdown when mining starts
+      this.startMiningEngine();
+      this.startCountdown();  // Start the countdown when mining starts
     }
   }
 
@@ -214,6 +212,7 @@ class MiningApp {
     document.getElementById('balance').textContent = data.balance.toFixed(2);
     document.getElementById('power').textContent = this.calculatePower(data).toFixed(1);
 
+    // The mining button should always say "Mining Active" if mining is active
     const mineButton = document.getElementById('mineButton');
     mineButton.textContent = data.miningActive ? "Mining Active" : "Start Mining";
   }
@@ -265,6 +264,7 @@ class MiningApp {
       } else {
         countdownElement.textContent = "Mining has stopped.";
         clearInterval(this.countdownInterval);
+        this.restartMining();  // Restart mining when the day ends
       }
     };
 
@@ -276,6 +276,21 @@ class MiningApp {
     clearInterval(this.countdownInterval);
     const countdownElement = document.getElementById('countdownTimer');
     countdownElement.style.display = 'none';
+  }
+
+  restartMining() {
+    // Automatically restart mining at 00:00 UTC
+    const now = new Date();
+    const utcNow = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
+    const targetTime = new Date(utcNow);
+    targetTime.setUTCHours(0, 0, 0, 0); // Target time at 00:00 UTC of the next day
+
+    // Calculate time until the next mining day
+    const timeUntilNextDay = targetTime - utcNow;
+
+    setTimeout(() => {
+      this.startMining();  // Start mining again when the new day begins
+    }, timeUntilNextDay);
   }
 
   // ======================
