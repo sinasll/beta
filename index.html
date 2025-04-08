@@ -4,109 +4,31 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>$BLACK</title>
-  <style>
-    :root {
-      --tg-theme-bg-color: #000000;
-      --tg-theme-text-color: #ffffff;
-      --tg-theme-secondary-bg-color: #1a1a1a;
-      --tg-theme-hint-color: #666666;
-      --tg-theme-link-color: #007AFF;
-      --tg-theme-button-color: #007AFF;
-      --tg-theme-button-text-color: #ffffff;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, sans-serif;
-      background: var(--tg-theme-bg-color);
-      color: var(--tg-theme-text-color);
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      overflow: hidden;
-      -webkit-overflow-scrolling: touch;
-      touch-action: none;
-    }
-
-    .container {
-      padding: 16px;
-      height: calc(100% - 90px);
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      box-sizing: border-box;
-      margin-top: 90px;
-    }
-
-    .card {
-      background: var(--tg-theme-secondary-bg-color);
-      border-radius: 14px;
-      padding: 20px;
-      margin-bottom: 16px;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .stats-row {
-      display: flex;
-      justify-content: space-between;
-      margin: 8px 0;
-      font-size: 0.9em;
-      color: var(--tg-theme-hint-color);
-    }
-
-    .button {
-      display: block;
-      width: 100%;
-      padding: 16px;
-      border-radius: 12px;
-      background: var(--tg-theme-button-color);
-      color: var(--tg-theme-button-text-color);
-      text-align: center;
-      font-weight: 600;
-      border: none;
-      cursor: pointer;
-      transition: opacity 0.2s;
-      text-transform: uppercase;
-      font-size: 0.9em;
-      letter-spacing: 0.5px;
-    }
-
-    .button:active {
-      opacity: 0.8;
-    }
-
-    .countdown {
-      font-size: 0.8em;
-      color: var(--tg-theme-hint-color);
-      text-align: center;
-      margin-top: 20px;
-    }
-
-    .header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      background: var(--tg-theme-bg-color);
-      padding: 16px;
-      z-index: 100;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 </head>
 <body>
-  <div class="header">
-    <div class="stats-row">
-      <div>Total Mined</div>
-      <div><span id="mined">0.00</span> / 125,000,000 $BLACK</div>
-    </div>
+  
+   <!-- Header with only the logo -->
+   <div class="header">
+    <h1 class="logo">$BLACK</h1>
   </div>
 
+  <!-- Main Content Container -->
   <div class="container">
+    <!-- Global Stats Card -->
+    <div class="card global-stats">
+      <div class="stats-row">
+        <div>Total Mined</div>
+        <div><span id="mined">0.00</span> / 125,000,000 $BLACK</div>
+      </div>
+    </div>
+
+    <!-- User Info Card -->
     <div class="card">
-      <h2 style="margin: 0 0 16px 0; font-size: 1.2em;">User</h2>
+      <h2 class="card-title">User</h2>
       <div class="stats-row">
         <div>Username</div>
         <div>@<span id="username">loading...</span></div>
@@ -121,8 +43,10 @@
       </div>
     </div>
 
+    <!-- Action Button -->
     <button class="button" id="mineButton" onclick="app.toggleMining()">Start Mining</button>
 
+    <!-- Countdown Timer -->
     <div class="countdown" id="countdown">Daily reset in 00:00:00</div>
   </div>
 
@@ -346,6 +270,37 @@
       console.error("Global tracker error:", error);
       Telegram.WebApp.showAlert("Failed to load mining data");
     });
+
+        // ======================
+    // 9. Daily Mining Reset
+    // ======================
+    const resetMiningAtMidnight = () => {
+      const now = new Date();
+      const millisTillMidnightUTC = new Date(
+        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0)
+      ) - now;
+
+      setTimeout(async () => {
+        try {
+          const doc = await userRef.get();
+          const data = doc.data();
+          if (data?.miningActive) {
+            await userRef.update({ miningActive: false });
+            console.log("Mining reset at midnight UTC.");
+          }
+        } catch (err) {
+          console.error("Error resetting mining:", err);
+        }
+        resetMiningAtMidnight(); // Schedule again for the next day
+      }, millisTillMidnightUTC);
+    };
+
+    // Add this inside DOMContentLoaded to ensure it runs
+    document.addEventListener('DOMContentLoaded', () => {
+      app = new MiningApp();
+      resetMiningAtMidnight(); // Start the reset timer
+    });
+
   </script>
 </body>
 </html>
