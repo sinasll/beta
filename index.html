@@ -10,11 +10,15 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 </head>
 <body>
-  <div class="header">
+  
+   <!-- Header with only the logo -->
+   <div class="header">
     <h1 class="logo">$BLACK</h1>
   </div>
 
+  <!-- Main Content Container -->
   <div class="container">
+    <!-- Global Stats Card -->
     <div class="card global-stats">
       <div class="stats-row">
         <div>Total Mined</div>
@@ -22,6 +26,7 @@
       </div>
     </div>
 
+    <!-- User Info Card -->
     <div class="card">
       <h2 class="card-title">User</h2>
       <div class="stats-row">
@@ -33,198 +38,42 @@
         <div><span id="balance">0.00</span> $BLACK</div>
       </div>
       <div class="stats-row">
-        <div>Pending</div>
-        <div><span id="pending">0.00</span> $BLACK</div>
-      </div>
-      <div class="stats-row">
         <div>Mining Power</div>
         <div><span id="power">1.0</span>x</div>
       </div>
     </div>
 
-    <button class="button" id="mineButton">Start Farming</button>
-    <div class="countdown" id="countdown">Start farming to begin!</div>
+    <!-- Action Button -->
+    <button class="button" id="mineButton" onclick="app.toggleMining()">Start Mining</button>
+
+    <!-- Countdown Timer -->
+    <div class="countdown" id="countdown">Daily reset in 00:00:00</div>
   </div>
 
-  <script>
-    const ENV = {
-      BASE_RATE: 0.003472 // per minute
-    };
+<!-- Bottom Navigation -->
+<nav class="bottom-nav">
+  <div class="nav-item active" data-view="mine">
+    <i class="fas fa-hard-hat"></i>
+    <span>Mine</span>
+  </div>
+  <a href="leaderboard.html">
+    <div class="nav-item" data-view="leaderboard">
+      <i class="fas fa-trophy"></i>
+      <span>Leaderboard</span>
+    </div>
+  </a>
+  <div class="nav-item" data-view="earn">
+    <i class="fas fa-gem"></i>
+    <span>Earn</span>
+  </div>
+  <div class="nav-item" data-view="friends">
+    <i class="fas fa-users"></i>
+    <span>Friends</span>
+  </div>
+</nav>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAzXSCn_QL2XeyRZD71By443sl4wOtXf2Y",
-      authDomain: "pipcore-8844f.firebaseapp.com",
-      projectId: "pipcore-8844f",
-      storageBucket: "pipcore-8844f.appspot.com",
-      messagingSenderId: "921115337984",
-      appId: "1:921115337984:web:17161651342ad78017bfe5"
-    };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+  <script src="app.js"></script>
 
-    class MiningApp {
-      constructor() {
-        this.userId = null;
-        this.userData = null;
-        this.userRef = null;
-        this.countdownInterval = null;
-        this.init();
-      }
-
-      async init() {
-        try {
-          Telegram.WebApp.ready();
-          Telegram.WebApp.expand();
-          const tgUser = Telegram.WebApp.initDataUnsafe.user;
-          
-          if (!tgUser?.id) throw new Error("Invalid user");
-          this.userId = `tg_${tgUser.id}`;
-          this.userRef = db.collection('users').doc(this.userId);
-
-          await this.initUser(tgUser);
-          this.setupListeners();
-          this.startCountdown();
-
-        } catch (error) {
-          console.error("Init error:", error);
-          Telegram.WebApp.showAlert("Initialization failed");
-        }
-      }
-
-      async initUser(tgUser) {
-        const userData = {
-          telegramId: tgUser.id,
-          username: tgUser.username || `user_${tgUser.id}`,
-          balance: 0,
-          miningPower: 1,
-          miningActive: false,
-          miningStartTime: null,
-          lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-        };
-
-        await this.userRef.set(userData, { merge: true });
-      }
-
-      setupListeners() {
-        this.userRef.onSnapshot(doc => {
-          this.userData = doc.data() || {};
-          this.updateUI();
-        });
-      }
-
-      updateUI() {
-        // Basic user info
-        document.getElementById('username').textContent = this.userData.username;
-        document.getElementById('balance').textContent = this.userData.balance.toFixed(2);
-        document.getElementById('power').textContent = this.userData.miningPower.toFixed(1);
-
-        // Pending balance
-        let pending = 0;
-        if (this.userData.miningActive && this.userData.miningStartTime) {
-          const now = firebase.firestore.Timestamp.now().toMillis();
-          const startTime = this.userData.miningStartTime.toMillis();
-          pending = ((now - startTime) / 60000) * ENV.BASE_RATE * this.userData.miningPower;
-        }
-        document.getElementById('pending').textContent = pending.toFixed(2);
-
-        // Button state
-        const btn = document.getElementById('mineButton');
-        if (this.userData.miningActive) {
-          const elapsed = pending / (ENV.BASE_RATE * this.userData.miningPower) * 60000;
-          if (elapsed >= 28800000) { // 8 hours
-            btn.textContent = "CLAIM NOW";
-            btn.onclick = () => this.handleClaim();
-          } else {
-            btn.textContent = "FARMING...";
-            btn.onclick = null;
-          }
-        } else {
-          btn.textContent = "START FARMING";
-          btn.onclick = () => this.startFarming();
-        }
-      }
-
-      async startFarming() {
-        await this.userRef.update({
-          miningActive: true,
-          miningStartTime: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      }
-
-      async handleClaim() {
-        try {
-          const doc = await this.userRef.get();
-          const data = doc.data();
-          
-          // Server-side validation
-          const now = firebase.firestore.Timestamp.now();
-          const startTime = data.miningStartTime;
-          const elapsed = now.toMillis() - startTime.toMillis();
-          
-          if (elapsed < 28800000) { // 8 hours
-            Telegram.WebApp.showAlert("Wait 8 hours between claims");
-            return;
-          }
-
-          const pending = ((elapsed) / 60000) * ENV.BASE_RATE * data.miningPower;
-          
-          await this.userRef.update({
-            balance: firebase.firestore.FieldValue.increment(pending),
-            miningStartTime: now
-          });
-
-          Telegram.WebApp.showAlert(`Claimed ${pending.toFixed(2)} $BLACK!`);
-        } catch (error) {
-          console.error("Claim error:", error);
-          Telegram.WebApp.showAlert("Claim failed");
-        }
-      }
-
-      startCountdown() {
-        this.countdownInterval = setInterval(() => {
-          const countdownEl = document.getElementById('countdown');
-          if (!this.userData?.miningActive) {
-            countdownEl.textContent = "Start farming to begin!";
-            return;
-          }
-
-          const now = firebase.firestore.Timestamp.now().toMillis();
-          const startTime = this.userData.miningStartTime?.toMillis() || now;
-          const elapsed = now - startTime;
-          const remaining = 28800000 - elapsed; // 8 hours
-
-          if (remaining <= 0) {
-            countdownEl.textContent = "READY TO CLAIM!";
-            return;
-          }
-
-          const hours = Math.floor(remaining / 3600000);
-          const minutes = Math.floor((remaining % 3600000) / 60000);
-          const seconds = Math.floor((remaining % 60000) / 1000);
-
-          countdownEl.textContent = 
-            `Next claim in ${hours}h ${minutes}m ${seconds}s`;
-        }, 1000);
-      }
-
-      destroy() {
-        clearInterval(this.countdownInterval);
-        if (this.userRef) this.userRef.onSnapshot(() => {});
-      }
-    }
-
-    // Global mined tracker
-    db.collection('users').onSnapshot(snap => {
-      let total = 0;
-      snap.forEach(doc => total += doc.data().balance || 0);
-      document.getElementById('mined').textContent = total.toFixed(2);
-    });
-
-    // Init app
-    let app;
-    document.addEventListener('DOMContentLoaded', () => app = new MiningApp());
-    window.addEventListener('beforeunload', () => app.destroy());
-  </script>
 </body>
 </html>
