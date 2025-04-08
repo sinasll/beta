@@ -11,29 +11,30 @@
   --tg-box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Base Styles */
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, sans-serif;
   background-color: var(--tg-theme-bg-color);
   color: var(--tg-theme-text-color);
   margin: 0;
   padding: 0;
-  /* Prevent the body itself from scrolling so the header stays fixed */
   height: 100vh;
-  overflow: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Header remains fixed at the top */
+/* Fixed Header */
 .header {
-  position: fixed;
+  position: sticky;
   top: 0;
   left: 0;
   right: 0;
   background-color: var(--tg-theme-bg-color);
-  padding: 20px 16px;
+  padding: 16px;
   text-align: center;
   border-bottom: 1px solid var(--tg-border-color);
   z-index: 100;
+  backdrop-filter: blur(10px);
+}-index: 100;
 }
 
 .logo {
@@ -42,12 +43,11 @@ body {
   margin: 0;
 }
 
-/* The container now fills the remaining viewport space and scrolls independently */
+/* Main Content Container */
 .container {
-  margin-top: 90px; /* Space reserved for the fixed header */
+  margin-top: 0;
   padding: 16px;
-  height: calc(100vh - 90px); /* Height adjusted to viewport minus header height */
-  overflow-y: auto;  /* Enables internal scrolling without moving the header */
+  padding-top: calc(16px + 60px);
 }
 
 /* Card Styles */
