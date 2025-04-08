@@ -18,10 +18,12 @@ body {
   color: var(--tg-theme-text-color);
   margin: 0;
   padding: 0;
-  min-height: 100vh;
+  /* Prevent the body itself from scrolling so the header stays fixed */
+  height: 100vh;
+  overflow: hidden;
 }
 
-/* Header with only the logo */
+/* Header remains fixed at the top */
 .header {
   position: fixed;
   top: 0;
@@ -40,10 +42,12 @@ body {
   margin: 0;
 }
 
-/* Main Content Container */
+/* The container now fills the remaining viewport space and scrolls independently */
 .container {
-  margin-top: 90px; /* leaves space for the fixed header */
+  margin-top: 90px; /* Space reserved for the fixed header */
   padding: 16px;
+  height: calc(100vh - 90px); /* Height adjusted to viewport minus header height */
+  overflow-y: auto;  /* Enables internal scrolling without moving the header */
 }
 
 /* Card Styles */
