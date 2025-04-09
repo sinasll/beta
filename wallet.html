@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>$BLACK | Wallet</title>
+  <link rel="stylesheet" href="wallet.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js"></script>
+
+</head>
+<body>
+  <div class="header">
+    <h1 class="logo">$BLACK</h1>
+  </div>
+
+  <div class="container">
+    <!-- TON Wallet Connection -->
+    <div class="card">
+      <h2 class="card-title">TON Wallet</h2>
+      
+      <div id="walletConnected" class="hidden">
+        <div class="wallet-connected">
+          <div class="wallet-icon">
+            <i class="fas fa-wallet"></i>
+          </div>
+          <div class="wallet-details">
+            <div class="wallet-name" id="walletName">TON Wallet</div>
+            <div class="wallet-address" id="walletAddress"></div>
+          </div>
+        </div>
+        
+        <button id="disconnectButton" class="button button-disconnect">
+          <i class="fas fa-unlink"></i> Disconnect Wallet
+        </button>
+      </div>
+      
+      <div id="walletDisconnected">
+        <button id="connectButton" class="button"></i> Connect TON Wallet
+    </button>
+      </div>
+    </div>
+
+    <!-- Balance Summary -->
+    <div class="card" id="balanceCard">
+      <div class="balance-display">
+        <div class="balance-label">Your $BLACK Balance</div>
+        <div class="balance-amount" id="blackBalance">0</div>
+        <div class="balance-label">≈ <span id="usdBalance">$0.00</span></div>
+      </div>
+      <div style="display: flex; gap: 10px;">
+
+        <button class="button" id="withdrawButton">
+          <i class="fas fa-arrow-up"></i> Withdraw
+        </button>
+      </div>
+    </div>
+
+    <!-- Transaction History -->
+    <div class="card">
+      <h2 class="card-title">Transaction History</h2>
+      
+      <div id="transactionHistory">
+        <!-- Transactions will be loaded here -->
+        <div class="empty-state">
+          <div>No transactions yet</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="nav-menu" id="nav-menu">
+    <ul class="nav-list">
+        <li><a href="index.html"><i class="fas fa-user"></i> MINE</a></li>
+        <li><a href="leaders.html"><i class="fas fa-trophy"></i> LEADERS</a></li>          
+        <li><a href="earn.html"><i class="fas fa-coins"></i> EARN</a></li>
+        <li><a href="friends.html"><i class="fas fa-users"></i> FRIENDS</a></li>
+        <li><a href="wallet.html"  class="active"><i class="fas fa-wallet"></i> WALLET</a></li>        
+    </ul>
+  </nav>
+
+</body>
+</html>

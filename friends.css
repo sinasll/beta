@@ -63,57 +63,119 @@
     margin-bottom: 16px;
     color: var(--accent-color);
   }
-  
+
+  .friend {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .friend:last-child {
+    border-bottom: none;
+  }
+
+  .friend-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+  }
+
+  .friend-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2em;
+  }
+
+  .friend-details {
+    flex: 1;
+  }
+
+  .friend-name {
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  .friend-status {
+    font-size: 0.7em;
+    color: var(--hint-color);
+  }
+
+  .friend-earnings {
+    font-size: 0.8em;
+    color: var(--accent-color);
+    text-align: right;
+  }
+
+  .friend-earnings span {
+    display: block;
+    font-size: 0.9em;
+    font-weight: 600;
+  }
+
+  .invite-section {
+    margin-top: 20px;
+  }
+
+  .invite-input {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  input[type="text"] {
+    flex: 1;
+    padding: 12px;
+    border-radius: var(--card-radius);
+    background-color: var(--secondary-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    font-size: 0.9em;
+  }
+
+  .button {
+    width: 100%;
+    padding: var(--input-button-padding);
+    border-radius: var(--card-radius);
+    background-color: var(--secondary-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    font-size: 0.9em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+
+  .button:active {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
   .stats-row {
     display: flex;
     justify-content: space-between;
     margin: 10px 0;
     font-size: 0.9em;
   }
-  
+
   .stats-row div:first-child {
     color: var(--hint-color);
   }
-  
-  .button, 
-  input[type="text"],
-  input[type="submit"] {
-    width: var(--input-button-width);
-    padding: var(--input-button-padding);
-    margin: var(--input-button-margin);
-    border-radius: var(--card-radius);
-    background-color: var(--secondary-bg);
-    color: var(--text-color);
-    border: 1px solid var(--border-color);
-    font-size: 0.9em;
-    box-sizing: border-box;
-    display: block;
-  }
-  
-  .button {
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
+
+  .empty-state {
     text-align: center;
-    text-transform: uppercase;
-  }
-  
-  .button:active {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-  
-  input[type="text"]::placeholder {
+    padding: 30px 0;
     color: var(--hint-color);
-    opacity: 0.7;
   }
-  
-  .countdown {
-    font-size: 0.8em;
-    color: var(--hint-color);
-    text-align: center;
-    margin: 20px 0;
-  }
-  
+
   .nav-menu {
     position: fixed;
     bottom: 0;
@@ -153,9 +215,4 @@
   
   .nav-list li a.active {
     color: var(--accent-color);
-  }
-  
-  .global-stats {
-    text-align: center;
-    font-weight: 600;
   }

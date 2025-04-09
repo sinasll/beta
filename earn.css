@@ -63,57 +63,93 @@
     margin-bottom: 16px;
     color: var(--accent-color);
   }
-  
-  .stats-row {
+
+  .task {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .task:last-child {
+    border-bottom: none;
+  }
+
+  .task-content {
     display: flex;
     justify-content: space-between;
-    margin: 10px 0;
-    font-size: 0.9em;
+    align-items: center;
+    margin-bottom: 10px;
   }
-  
-  .stats-row div:first-child {
+
+  .task-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+  }
+
+  .task-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2em;
+  }
+
+  .task-details {
+    flex: 1;
+  }
+
+  .task-name {
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .task-desc {
+    font-size: 0.8em;
     color: var(--hint-color);
   }
-  
-  .button, 
-  input[type="text"],
-  input[type="submit"] {
-    width: var(--input-button-width);
-    padding: var(--input-button-padding);
-    margin: var(--input-button-margin);
+
+  .task-reward {
+    font-weight: 600;
+    white-space: nowrap;
+    margin-left: 10px;
+    color: var(--accent-color);
+  }
+
+  .task-completed .task-reward {
+    color: #aaaaaa;
+  }
+
+  .task-completed .task-icon {
+    background-color: rgba(0, 255, 0, 0.1);
+  }
+
+  .task-button {
+    width: 100%;
+    padding: 10px;
     border-radius: var(--card-radius);
     background-color: var(--secondary-bg);
     color: var(--text-color);
     border: 1px solid var(--border-color);
-    font-size: 0.9em;
-    box-sizing: border-box;
-    display: block;
-  }
-  
-  .button {
+    font-size: 0.8em;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
-    text-align: center;
-    text-transform: uppercase;
   }
-  
-  .button:active {
+
+  .task-button:active {
     background-color: rgba(255, 255, 255, 0.1);
   }
-  
-  input[type="text"]::placeholder {
-    color: var(--hint-color);
-    opacity: 0.7;
+
+  .task-button.completed {
+    background-color: rgba(0, 255, 0, 0.1);
+    color: #aaaaaa;
+    border-color: rgba(0, 255, 0, 0.3);
   }
-  
-  .countdown {
-    font-size: 0.8em;
-    color: var(--hint-color);
-    text-align: center;
-    margin: 20px 0;
-  }
-  
+
   .nav-menu {
     position: fixed;
     bottom: 0;
@@ -154,8 +190,39 @@
   .nav-list li a.active {
     color: var(--accent-color);
   }
-  
-  .global-stats {
+
+  /* Task specific icons */
+  .icon-daily::before {
+    content: "\f783";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+  }
+
+  .icon-community::before {
+    content: "\f0c0";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+  }
+
+  .icon-twitter::before {
+    content: "\f099";
+    font-family: "Font Awesome 6 Brands";
+  }
+
+  .icon-friends::before {
+    content: "\f500";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+  }
+
+  /* Progress indicator */
+  .progress-text {
+    font-size: 0.7em;
+    color: var(--hint-color);
     text-align: center;
-    font-weight: 600;
+    margin-top: 5px;
+  }
+
+  .progress-text span {
+    color: var(--accent-color);
   }
