@@ -6,17 +6,15 @@
   <title>$BLACK</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/appwrite@17.0.1"></script>
+
 </head>
 <body>
-  
-  <!-- Header with only the logo -->
   <div class="header">
     <h1 class="logo">$BLACK</h1>
   </div>
 
-  <!-- Main Content Container -->
   <div class="container">
-    <!-- Global Stats Card -->
     <div class="card global-stats">
       <div class="stats-row">
         <div>Total Mined</div>
@@ -24,7 +22,6 @@
       </div>
     </div>
 
-    <!-- User Info Card -->
     <div class="card">
       <h2 class="card-title">User</h2>
       <div class="stats-row">
@@ -43,33 +40,186 @@
         <div>Your Daily Code</div>
         <div><span id="dailyCode">Not generated</span></div>
       </div>
-          <!-- Action Buttons -->
-    <button class="button" id="mineButton">Start Mining</button>
+      <button class="button" id="mineButton">Start Mining</button>
     </div>
-    
-    <!-- Submit Code Section -->
+
     <div class="card">
       <h2 class="card-title">Submit a Code</h2>
       <input type="text" id="submitCodeInput" placeholder="Enter 10-digit code">
       <button class="button" id="submitCodeButton">Submit Code</button>
     </div>
 
-    <!-- Countdown Timer -->
     <div class="countdown" id="countdown">Daily reset in 00:00:00</div>
   </div>
 
-  <!-- Bottom Navigation -->
   <nav class="nav-menu" id="nav-menu">
     <ul class="nav-list">
-        <li><a href="index.html" class="active"><i class="fas fa-user"></i> MINE</a></li>
-        <li><a href="leaders.html"><i class="fas fa-trophy"></i> LEADERS</a></li>          
-        <li><a href="earn.html"><i class="fas fa-coins"></i> EARN</a></li>
-        <li><a href="friends.html"><i class="fas fa-users"></i> FRIENDS</a></li>
-        <li><a href="wallet.html"><i class="fas fa-wallet"></i> WALLET</a></li>        
+      <li><a href="index.html" class="active"><i class="fas fa-user"></i> MINE</a></li>
+      <li><a href="leaders.html"><i class="fas fa-trophy"></i> LEADERS</a></li>          
+      <li><a href="earn.html"><i class="fas fa-coins"></i> EARN</a></li>
+      <li><a href="friends.html"><i class="fas fa-users"></i> FRIENDS</a></li>
+      <li><a href="wallet.html"><i class="fas fa-wallet"></i> WALLET</a></li>        
     </ul>
   </nav>
 
-  <script src="app.js"></script>
+  <script>
+    // Initialize Appwrite
+    const client = new Appwrite.Client()
+      .setEndpoint('https://cloud.appwrite.io/v1')
+      .setProject('beta90miniapp');
 
+    const databases = new Appwrite.Databases(client);
+    const account = new Appwrite.Account(client);
+
+    // Appwrite database constants
+    const DATABASE_ID = '67f7015c00091f3a61da';
+    const COLLECTION_ID = '67f70164003d1cd73e93';
+
+    // Telegram Web App initialization
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    // User state
+    let currentUser = null;
+    let miningInterval = null;
+
+    // Required attributes in Appwrite collection:
+    // - username (string)
+    // - balance (float)
+    // - mining_power (float)
+    // - daily_code (string)
+    // - invited_friends (integer)
+    // - last_mine (datetime)
+
+    async function initApp() {
+      try {
+        // Telegram authentication
+        const session = await account.createSession('telegram', {
+          initData: tg.initData
+        });
+
+        try {
+          currentUser = await databases.getDocument(
+            DATABASE_ID,
+            COLLECTION_ID,
+            tg.initDataUnsafe.user.id.toString()
+          );
+        } catch (error) {
+          currentUser = await databases.createDocument(
+            DATABASE_ID,
+            COLLECTION_ID,
+            tg.initDataUnsafe.user.id.toString(),
+            {
+              username: tg.initDataUnsafe.user.username,
+              balance: 0.0,
+              mining_power: 1.0,
+              daily_code: generateDailyCode(),
+              invited_friends: 0,
+              last_mine: null
+            }
+          );
+        }
+
+        updateUI();
+        setupMining();
+        setupCodeSubmission();
+        setupCountdown();
+      } catch (error) {
+        console.error('Initialization error:', error);
+        tg.showAlert('Failed to initialize app. Please try again.');
+      }
+    }
+
+    function updateUI() {
+      document.getElementById('username').textContent = currentUser.username;
+      document.getElementById('balance').textContent = currentUser.balance.toFixed(3);
+      document.getElementById('power').textContent = currentUser.mining_power.toFixed(1);
+      document.getElementById('dailyCode').textContent = currentUser.daily_code;
+    }
+
+    function generateDailyCode() {
+      return Math.random().toString(36).slice(2, 12).toUpperCase();
+    }
+
+    function setupMining() {
+      const mineButton = document.getElementById('mineButton');
+
+      mineButton.addEventListener('click', async () => {
+        if (!miningInterval) {
+          mineButton.textContent = 'Mining...';
+          miningInterval = setInterval(async () => {
+            const newBalance = currentUser.balance + (0.1 * currentUser.mining_power);
+
+            await databases.updateDocument(
+              DATABASE_ID,
+              COLLECTION_ID,
+              currentUser.$id,
+              {
+                balance: newBalance,
+                last_mine: new Date().toISOString()
+              }
+            );
+
+            currentUser.balance = newBalance;
+            updateUI();
+          }, 1000);
+        } else {
+          clearInterval(miningInterval);
+          miningInterval = null;
+          mineButton.textContent = 'Start Mining';
+        }
+      });
+    }
+
+    function setupCodeSubmission() {
+      document.getElementById('submitCodeButton').addEventListener('click', async () => {
+        const inputCode = document.getElementById('submitCodeInput').value.toUpperCase();
+
+        if (inputCode === currentUser.daily_code) {
+          const newBalance = currentUser.balance + 500;
+
+          await databases.updateDocument(
+            DATABASE_ID,
+            COLLECTION_ID,
+            currentUser.$id,
+            {
+              balance: newBalance,
+              daily_code: generateDailyCode()
+            }
+          );
+
+          currentUser.balance = newBalance;
+          currentUser.daily_code = generateDailyCode();
+          updateUI();
+          tg.showAlert('Code accepted! +500 $BLACK');
+          document.getElementById('submitCodeInput').value = '';
+        } else {
+          tg.showAlert('Invalid code!');
+        }
+      });
+    }
+
+    function setupCountdown() {
+      function update() {
+        const now = new Date();
+        const midnight = new Date();
+        midnight.setHours(24, 0, 0, 0);
+
+        const diff = midnight - now;
+        const hours = Math.floor(diff / 3600000).toString().padStart(2, '0');
+        const minutes = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+        const seconds = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+
+        document.getElementById('countdown').textContent = 
+          `Daily reset in ${hours}:${minutes}:${seconds}`;
+      }
+
+      setInterval(update, 1000);
+      update();
+    }
+
+    // Initialize the app
+    initApp();
+  </script>
 </body>
 </html>
