@@ -6,13 +6,6 @@
   <title>$BLACK</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  
-  <!-- Appwrite SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/appwrite@17.0.1"></script>
-  <script src="https://cdn.jsdelivr.net/npm/appwrite@17.0.1/query.js"></script>
-  
-  <!-- Telegram WebApp Script -->
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
   <div class="header">
@@ -66,180 +59,244 @@
       <li><a href="wallet.html"><i class="fas fa-wallet"></i> WALLET</a></li>
     </ul>
   </nav>
+
+<script>
+  // Data storage using localStorage
+  const STORAGE_KEY = 'blackMinerData';
+  const GLOBAL_STATS_KEY = 'blackMinerGlobalStats';
   
-  <!-- Main JavaScript -->
-  <script>
-    // Import Appwrite components
-    const { Client, Databases, ID, Query } = Appwrite;
+  // Application state
+  let currentUser = null;
+  let miningInterval = null;
+  let dailyResetTimer = null;
+  let globalStats = {
+    totalMined: 0
+  };
 
-    // Configure Appwrite client
-    const client = new Client()
-  .setEndpoint('https://cloud.appwrite.io/v1')
-  .setProject('black-miner')
-  .setKey('standard_ba2d497708cba1de6d9f5e8c7251bde566b69677ebfa2b6457845b29541d90f275d0f79dac288f9f994f6d5fd85bae5b21b162c4e15d18dcc6926041a6f0fcda43a7eed3d3a4debbf8e578f877b27ac97c3e5e8b155126942d34dd20cf6b948da68e97f57ad40af1075245e213c0e76f9d87e253568b92052b74999380c5aab4');
+  // Initialize the app
+  document.addEventListener('DOMContentLoaded', () => {
+    loadGlobalStats();
+    initializeUser();
+    setupEventListeners();
+  });
 
-    const db = new Databases(client);
-    const DB_ID = 'black_db';
-    const USERS_COLLECTION = 'users';
-
-    let currentUser = null;
-
-    // Utility function to generate a 10-digit code
-    function generateCode() {
-      return Math.random().toString().slice(2, 12);
+  // Data management functions
+  function loadGlobalStats() {
+    const savedStats = localStorage.getItem(GLOBAL_STATS_KEY);
+    if (savedStats) {
+      globalStats = JSON.parse(savedStats);
     }
+    updateGlobalStatsUI();
+  }
 
-    // Load existing user or create a new one based on Telegram username
-    async function loadUser(username) {
-      try {
-        const result = await db.listDocuments(DB_ID, USERS_COLLECTION, [
-          Query.equal('username', username)
-        ]);
+  function saveGlobalStats() {
+    localStorage.setItem(GLOBAL_STATS_KEY, JSON.stringify(globalStats));
+  }
+
+  function initializeUser() {
+    const tg = window.Telegram?.WebApp;
+    const username = tg?.initDataUnsafe?.user?.username || 
+                     `guest_${Math.floor(Math.random() * 100000)}`;
+    
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    
+    if (savedData) {
+      currentUser = JSON.parse(savedData);
       
-        if (result.total === 0) {
-          // No user found; create a new document
-          const newCode = generateCode();
-          currentUser = await db.createDocument(DB_ID, USERS_COLLECTION, ID.unique(), {
-            username: username,
-            balance: 0,
-            power: 1.0,
-            minedToday: 0,
-            dailyCode: newCode,
-            codeCreatedAt: new Date().toISOString(),
-            codeUses: 0,
-            submittedToday: false
-          });
-        } else {
-          currentUser = result.documents[0];
-          // Reset daily code if 24 hours have passed
-          await checkCodeReset();
-        }
-        updateUI();
-      } catch (err) {
-        console.error('Error loading user:', err);
-      }
-    }
-
-    // Reset daily code after 24 hours
-    async function checkCodeReset() {
-      const codeTime = new Date(currentUser.codeCreatedAt);
+      // Check if 24 hours have passed for daily reset
+      const lastReset = new Date(currentUser.codeCreatedAt);
       const now = new Date();
-      const diffHours = (now - codeTime) / (1000 * 60 * 60);
-      if (diffHours >= 24) {
-        const newCode = generateCode();
-        currentUser = await db.updateDocument(DB_ID, USERS_COLLECTION, currentUser.$id, {
-          dailyCode: newCode,
-          codeCreatedAt: now.toISOString(),
-          codeUses: 0,
-          submittedToday: false,
-          minedToday: 0,
-          power: 1.0
-        });
+      const hoursSinceReset = (now - lastReset) / 3.6e6;
+      
+      if (hoursSinceReset >= 24) {
+        performDailyReset();
       }
+    } else {
+      // Create new user
+      currentUser = {
+        username: username,
+        balance: 0,
+        power: 1.0,
+        minedToday: 0,
+        dailyCode: generateCode(),
+        codeCreatedAt: new Date().toISOString(),
+        codeUses: 0,
+        submittedToday: false,
+        miningStartTime: null
+      };
+      saveUserData();
     }
+    
+    updateUI();
+    startDailyResetTimer();
+  }
 
-    // Start mining: add 0.003472 tokens per minute * current power
-    // Limit daily mining to 5 tokens
-    let miningInterval = null;
-    function startMining() {
-      if (miningInterval) return;  // Prevent multiple intervals
+  function saveUserData() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(currentUser));
+  }
+
+  // Mining functions
+  function startMining() {
+    if (miningInterval) return;
     
-      miningInterval = setInterval(async () => {
-        const power = parseFloat(currentUser.power);
-        const minedPerMin = 0.003472 * power;
-        const dailyLimit = 5;
-    
-        if (currentUser.minedToday + minedPerMin >= dailyLimit) {
-          clearInterval(miningInterval);
-          miningInterval = null;
-          return;
-        }
-    
-        const newBalance = currentUser.balance + minedPerMin;
-        const newMinedToday = currentUser.minedToday + minedPerMin;
-    
-        currentUser = await db.updateDocument(DB_ID, USERS_COLLECTION, currentUser.$id, {
-          balance: parseFloat(newBalance.toFixed(6)),
-          minedToday: parseFloat(newMinedToday.toFixed(6))
-        });
-    
-        updateUI();
-      }, 60000); // Execute every minute
+    // Record start time if not already mining
+    if (!currentUser.miningStartTime) {
+      currentUser.miningStartTime = new Date().toISOString();
+      saveUserData();
     }
+    
+    // Process mining immediately
+    processMining();
+    
+    // Then set up interval for continuous mining
+    miningInterval = setInterval(processMining, 60000); // Every minute
+    
+    // Update button state
+    document.getElementById("mineButton").textContent = "Mining...";
+    document.getElementById("mineButton").disabled = true;
+  }
 
-    // Submit a daily code from another user to boost mining power
-    async function submitCode(code) {
-      if (currentUser.submittedToday) {
-        alert("You’ve already submitted a code today.");
-        return;
-      }
+  function processMining() {
+    const power = currentUser.power;
+    const minedPerMin = 0.003472 * power;
+    const dailyLimit = 5;
     
-      try {
-        const result = await db.listDocuments(DB_ID, USERS_COLLECTION, [
-          Query.equal('dailyCode', code)
-        ]);
+    // Calculate minutes since mining started
+    const startTime = new Date(currentUser.miningStartTime);
+    const now = new Date();
+    const minutesMining = (now - startTime) / 60000;
     
-        if (result.total === 0) {
-          alert("Invalid code.");
-          return;
-        }
+    // Calculate potential earnings
+    const potentialEarnings = minedPerMin * minutesMining;
     
-        const targetUser = result.documents[0];
-        if (targetUser.$id === currentUser.$id) {
-          alert("You can’t submit your own code.");
-          return;
-        }
-    
-        // Increase submitting user's power by +0.5 (max cap 2.5x)
-        const newPowerSubmitting = Math.min(parseFloat(currentUser.power) + 0.5, 2.5);
-        currentUser = await db.updateDocument(DB_ID, USERS_COLLECTION, currentUser.$id, {
-          power: newPowerSubmitting,
-          submittedToday: true
-        });
-    
-        // Increase target user's power by +0.1 per submission (max cap 2.0x, and max 10 submissions)
-        if (targetUser.codeUses < 10) {
-          await db.updateDocument(DB_ID, USERS_COLLECTION, targetUser.$id, {
-            power: Math.min(parseFloat(targetUser.power) + 0.1, 2.0),
-            codeUses: targetUser.codeUses + 1
-          });
-        }
-    
-        alert("Code submitted successfully!");
-        updateUI();
-      } catch (err) {
-        console.error("Error submitting code:", err);
-      }
+    // Check if we've hit daily limit
+    if (currentUser.minedToday + potentialEarnings >= dailyLimit) {
+      stopMining();
+      return;
     }
+    
+    // Update balance
+    currentUser.balance += potentialEarnings;
+    currentUser.minedToday += potentialEarnings;
+    globalStats.totalMined += potentialEarnings;
+    
+    // Reset mining start time for next interval
+    currentUser.miningStartTime = new Date().toISOString();
+    
+    saveUserData();
+    saveGlobalStats();
+    updateUI();
+  }
 
-    // Update UI elements with current user data
-    function updateUI() {
-      document.getElementById("username").innerText = currentUser.username;
-      document.getElementById("balance").innerText = parseFloat(currentUser.balance).toFixed(3);
-      document.getElementById("power").innerText = parseFloat(currentUser.power).toFixed(1);
-      document.getElementById("dailyCode").innerText = currentUser.dailyCode;
+  function stopMining() {
+    clearInterval(miningInterval);
+    miningInterval = null;
+    document.getElementById("mineButton").textContent = "Start Mining";
+    document.getElementById("mineButton").disabled = false;
+  }
+
+  // Code system functions
+  function submitCode() {
+    const code = document.getElementById("submitCodeInput").value.trim();
+    
+    if (currentUser.submittedToday) {
+      alert("You've already submitted a code today.");
+      return;
     }
+    
+    if (code.length !== 10) {
+      alert("Please enter a valid 10-digit code.");
+      return;
+    }
+    
+    // In a real app, this would check against other users' codes
+    // For demo purposes, we'll just validate format
+    if (/^\d{10}$/.test(code)) {
+      // Increase user's power
+      currentUser.power = Math.min(currentUser.power + 0.5, 2.5);
+      currentUser.submittedToday = true;
+      
+      saveUserData();
+      updateUI();
+      alert("Code accepted! Your mining power has increased.");
+    } else {
+      alert("Invalid code format. Please enter a 10-digit number.");
+    }
+  }
 
-    // Initialize the app after the DOM is loaded and Telegram WebApp is ready
-    document.addEventListener("DOMContentLoaded", () => {
-      const tg = window.Telegram.WebApp;
-      tg.ready();
+  function generateCode() {
+    return Math.random().toString().slice(2, 12);
+  }
+
+  // Daily reset functions
+  function performDailyReset() {
+    currentUser.dailyCode = generateCode();
+    currentUser.codeCreatedAt = new Date().toISOString();
+    currentUser.codeUses = 0;
+    currentUser.submittedToday = false;
+    currentUser.minedToday = 0;
+    currentUser.power = 1.0;
+    currentUser.miningStartTime = null;
     
-      // Get Telegram username (fallback if not available)
-      const telegramUsername = tg.initDataUnsafe?.user?.username || ('guest_' + Math.floor(Math.random() * 100000));
-      loadUser(telegramUsername);
+    saveUserData();
+    updateUI();
+  }
+
+  function startDailyResetTimer() {
+    // Update immediately
+    updateResetTimer();
     
-      // Attach event listeners
-      document.getElementById("mineButton").addEventListener("click", startMining);
-      document.getElementById("submitCodeButton").addEventListener("click", () => {
-        const code = document.getElementById("submitCodeInput").value.trim();
-        if (code.length === 10) {
-          submitCode(code);
-        } else {
-          alert("Enter a valid 10-digit code.");
-        }
-      });
-    });
-  </script>
+    // Then update every second
+    dailyResetTimer = setInterval(updateResetTimer, 1000);
+  }
+
+  function updateResetTimer() {
+    if (!currentUser) return;
+    
+    const resetTime = new Date(currentUser.codeCreatedAt);
+    resetTime.setHours(resetTime.getHours() + 24);
+    
+    const now = new Date();
+    const diff = resetTime - now;
+    
+    if (diff <= 0) {
+      performDailyReset();
+      return;
+    }
+    
+    const hours = Math.floor(diff / (1000 * 60 * 60)).toString().padStart(2, '0');
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
+    
+    document.getElementById("countdown").textContent = `Daily reset in ${hours}:${minutes}:${seconds}`;
+  }
+
+  // UI update functions
+  function updateUI() {
+    if (!currentUser) return;
+    
+    document.getElementById("username").textContent = currentUser.username;
+    document.getElementById("balance").textContent = currentUser.balance.toFixed(3);
+    document.getElementById("power").textContent = currentUser.power.toFixed(1);
+    document.getElementById("dailyCode").textContent = currentUser.dailyCode;
+    
+    // Update mining button if at daily limit
+    if (currentUser.minedToday >= 5) {
+      document.getElementById("mineButton").textContent = "Daily Limit Reached";
+      document.getElementById("mineButton").disabled = true;
+      stopMining();
+    }
+  }
+
+  function updateGlobalStatsUI() {
+    document.getElementById("mined").textContent = globalStats.totalMined.toFixed(2);
+  }
+
+  // Event listeners
+  function setupEventListeners() {
+    document.getElementById("mineButton").addEventListener("click", startMining);
+    document.getElementById("submitCodeButton").addEventListener("click", submitCode);
+  }
+</script>
 </body>
 </html>
