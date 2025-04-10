@@ -74,12 +74,13 @@
 
     // Configure Appwrite client
     const client = new Client()
-      .setEndpoint('https://cloud.appwrite.io/v1') // Replace with your Appwrite endpoint
-      .setProject('black-miner'); // Replace with your Appwrite Project ID
+  .setEndpoint('https://cloud.appwrite.io/v1')
+  .setProject('black-miner')
+  .setKey('standard_ba2d497708cba1de6d9f5e8c7251bde566b69677ebfa2b6457845b29541d90f275d0f79dac288f9f994f6d5fd85bae5b21b162c4e15d18dcc6926041a6f0fcda43a7eed3d3a4debbf8e578f877b27ac97c3e5e8b155126942d34dd20cf6b948da68e97f57ad40af1075245e213c0e76f9d87e253568b92052b74999380c5aab4');
 
     const db = new Databases(client);
-    const DB_ID = 'black_db';          // Your database ID
-    const USERS_COLLECTION = 'users';  // Your users collection ID
+    const DB_ID = 'black_db';
+    const USERS_COLLECTION = 'users';
 
     let currentUser = null;
 
