@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/appwrite@17.0.1"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/appwrite@17.0.1/query.js"></script>
 </head>
 <body>
   <div class="header">
@@ -45,7 +45,7 @@
 
     <div class="card">
       <h2 class="card-title">Submit a Code</h2>
-      <input type="text" id="submitCodeInput" placeholder="Enter 10-digit code">
+      <input type="text" id="submitCodeInput" placeholder="Enter 10-digit code" maxlength="10">
       <button class="button" id="submitCodeButton">Submit Code</button>
     </div>
 
@@ -75,6 +75,12 @@
     const DATABASE_ID = '67f7015c00091f3a61da';
     const COLLECTION_ID = '67f70164003d1cd73e93';
 
+    // Check if running in Telegram
+    if (!window.Telegram || !window.Telegram.WebApp) {
+      alert('This app must be run within Telegram');
+      throw new Error('Telegram WebApp not detected');
+    }
+
     // Telegram Web App initialization
     const tg = window.Telegram.WebApp;
     tg.expand();
@@ -82,14 +88,6 @@
     // User state
     let currentUser = null;
     let miningInterval = null;
-
-    // Required attributes in Appwrite collection:
-    // - username (string)
-    // - balance (float)
-    // - mining_power (float)
-    // - daily_code (string)
-    // - invited_friends (integer)
-    // - last_mine (datetime)
 
     async function initApp() {
       try {
@@ -105,12 +103,13 @@
             tg.initDataUnsafe.user.id.toString()
           );
         } catch (error) {
+          // Create new user if doesn't exist
           currentUser = await databases.createDocument(
             DATABASE_ID,
             COLLECTION_ID,
             tg.initDataUnsafe.user.id.toString(),
             {
-              username: tg.initDataUnsafe.user.username,
+              username: tg.initDataUnsafe.user.username || `user_${Math.random().toString(36).substring(2, 8)}`,
               balance: 0.0,
               mining_power: 1.0,
               daily_code: generateDailyCode(),
@@ -131,10 +130,12 @@
     }
 
     function updateUI() {
+      if (!currentUser) return;
+
       document.getElementById('username').textContent = currentUser.username;
       document.getElementById('balance').textContent = currentUser.balance.toFixed(3);
       document.getElementById('power').textContent = currentUser.mining_power.toFixed(1);
-      document.getElementById('dailyCode').textContent = currentUser.daily_code;
+      document.getElementById('dailyCode').textContent = currentUser.daily_code || 'Not generated';
     }
 
     function generateDailyCode() {
@@ -147,36 +148,26 @@
       mineButton.addEventListener('click', async () => {
         if (!miningInterval) {
           mineButton.textContent = 'Mining...';
-          miningInterval = setInterval(async () => {
-            const newBalance = currentUser.balance + (0.1 * currentUser.mining_power);
+          mineButton.disabled = true;
 
-            await databases.updateDocument(
-              DATABASE_ID,
-              COLLECTION_ID,
-              currentUser.$id,
-              {
-                balance: newBalance,
-                last_mine: new Date().toISOString()
-              }
-            );
+          // Start mining immediately
+          await mineOnce();
 
-            currentUser.balance = newBalance;
-            updateUI();
-          }, 1000);
+          // Then set up interval
+          miningInterval = setInterval(mineOnce, 1000);
+          mineButton.disabled = false;
         } else {
           clearInterval(miningInterval);
           miningInterval = null;
           mineButton.textContent = 'Start Mining';
         }
       });
-    }
 
-    function setupCodeSubmission() {
-      document.getElementById('submitCodeButton').addEventListener('click', async () => {
-        const inputCode = document.getElementById('submitCodeInput').value.toUpperCase();
+      async function mineOnce() {
+        try {
+          if (!currentUser) return;
 
-        if (inputCode === currentUser.daily_code) {
-          const newBalance = currentUser.balance + 500;
+          const newBalance = currentUser.balance + (0.1 * currentUser.mining_power);
 
           await databases.updateDocument(
             DATABASE_ID,
@@ -184,17 +175,97 @@
             currentUser.$id,
             {
               balance: newBalance,
-              daily_code: generateDailyCode()
+              last_mine: new Date().toISOString()
             }
           );
 
-          currentUser.balance = newBalance;
-          currentUser.daily_code = generateDailyCode();
+          // Refresh user data
+          currentUser = await databases.getDocument(
+            DATABASE_ID,
+            COLLECTION_ID,
+            currentUser.$id
+          );
+
           updateUI();
-          tg.showAlert('Code accepted! +500 $BLACK');
-          document.getElementById('submitCodeInput').value = '';
-        } else {
-          tg.showAlert('Invalid code!');
+        } catch (error) {
+          console.error('Mining error:', error);
+          clearInterval(miningInterval);
+          miningInterval = null;
+          document.getElementById('mineButton').textContent = 'Start Mining';
+          tg.showAlert('Mining failed. Please try again.');
+        }
+      }
+    }
+
+    function setupCodeSubmission() {
+      const submitButton = document.getElementById('submitCodeButton');
+      const codeInput = document.getElementById('submitCodeInput');
+
+      submitButton.addEventListener('click', async () => {
+        const inputCode = codeInput.value.toUpperCase().trim();
+
+        if (!inputCode || inputCode.length !== 10) {
+          tg.showAlert('Please enter a valid 10-digit code');
+          return;
+        }
+
+        if (!currentUser) {
+          tg.showAlert('User not initialized');
+          return;
+        }
+
+        if (inputCode === currentUser.daily_code) {
+          tg.showAlert("You can't use your own code!");
+          return;
+        }
+
+        try {
+          // Find code owner
+          const codeOwner = await databases.listDocuments(
+            DATABASE_ID,
+            COLLECTION_ID,
+            [Query.equal('daily_code', inputCode)]
+          );
+
+          if (codeOwner.documents.length === 0) {
+            tg.showAlert('Invalid code! No user found with this code.');
+            return;
+          }
+
+          const owner = codeOwner.documents[0];
+
+          // Update both users
+          await Promise.all([
+            databases.updateDocument(
+              DATABASE_ID,
+              COLLECTION_ID,
+              currentUser.$id,
+              { balance: currentUser.balance + 500 }
+            ),
+            databases.updateDocument(
+              DATABASE_ID,
+              COLLECTION_ID,
+              owner.$id,
+              { 
+                balance: owner.balance + 500,
+                daily_code: generateDailyCode() // Reset owner's code
+              }
+            )
+          ]);
+
+          // Refresh current user
+          currentUser = await databases.getDocument(
+            DATABASE_ID,
+            COLLECTION_ID,
+            currentUser.$id
+          );
+
+          updateUI();
+          tg.showAlert('Code accepted! +500 $BLACK for both users');
+          codeInput.value = '';
+        } catch (error) {
+          console.error('Code submission error:', error);
+          tg.showAlert('Error processing code. Please try again.');
         }
       });
     }
@@ -202,10 +273,15 @@
     function setupCountdown() {
       function update() {
         const now = new Date();
-        const midnight = new Date();
-        midnight.setHours(24, 0, 0, 0);
+        const nextUTCMidnight = new Date();
+        nextUTCMidnight.setUTCHours(24, 0, 0, 0);
 
-        const diff = midnight - now;
+        let diff = nextUTCMidnight - now;
+        if (diff < 0) {
+          nextUTCMidnight.setUTCDate(nextUTCMidnight.getUTCDate() + 1);
+          diff = nextUTCMidnight - now;
+        }
+
         const hours = Math.floor(diff / 3600000).toString().padStart(2, '0');
         const minutes = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
         const seconds = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
@@ -219,7 +295,9 @@
     }
 
     // Initialize the app
-    initApp();
+    document.addEventListener('DOMContentLoaded', () => {
+      initApp();
+    });
   </script>
 </body>
 </html>
