@@ -1,4 +1,67 @@
-// Firebase Configuration and Initialization
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>$BLACK</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <div class="header">
+    <h1 class="logo">$BLACK</h1>
+  </div>
+
+  <div class="container">
+    <div class="card global-stats">
+      <div class="stats-row">
+        <div>Total Mined</div>
+        <div><span id="mined">0.00</span> / 100,000,000 $BLACK</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">User</h2>
+      <div class="stats-row">
+        <div>Username</div>
+        <div>@<span id="username">loading...</span></div>
+      </div>
+      <div class="stats-row">
+        <div>Balance</div>
+        <div><span id="balance">0.000</span> $BLACK</div>
+      </div>
+      <div class="stats-row">
+        <div>Mining Power</div>
+        <div>x<span id="power">1.0</span></div>
+      </div>
+      <button class="button" id="mineButton">Start Mining</button>
+    </div>
+
+    <div class="card">
+      <div class="stats-row">
+        <div>Your Daily Code</div>
+        <div><span id="dailyCode">Not generated</span></div>
+      </div>
+      <h2 class="card-title">Submit a Code</h2>
+      <input type="text" id="submitCodeInput" placeholder="Enter 10-digit code" maxlength="10">
+      <button class="button" id="submitCodeButton">Submit Code</button>
+    </div>
+
+    <div class="countdown" id="countdown">Daily reset in 00:00:00</div>
+  </div>
+
+  <nav class="nav-menu" id="nav-menu">
+    <ul class="nav-list">
+      <li><a href="index.html" class="active"><i class="fas fa-user"></i> MINE</a></li>
+      <li><a href="leaders.html"><i class="fas fa-trophy"></i> LEADERS</a></li>          
+      <li><a href="earn.html"><i class="fas fa-coins"></i> EARN</a></li>
+      <li><a href="friends.html"><i class="fas fa-users"></i> FRIENDS</a></li>
+      <li><a href="wallet.html"><i class="fas fa-wallet"></i> WALLET</a></li>
+    </ul>
+  </nav>
+  
+  <script>
+  // Firebase Configuration and Initialization
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs } from "firebase/firestore";
 
@@ -184,3 +247,8 @@ setInterval(function() {
 
 // Call this function on page load to ensure mining power is updated
 updateMiningInfo();
+  </script>
+  
+  
+</body>
+</html>
