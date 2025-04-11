@@ -1,52 +1,63 @@
 :root {
-    --bg-color: #000000;
-    --text-color: #ffffff;
-    --secondary-bg: #121212;
-    --hint-color: #888888;
-    --accent-color: #ffffff;
-    --border-color: rgba(255, 255, 255, 0.1);
-    --card-radius: 12px;
-    --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    --input-button-width: calc(100% - 32px);
-    --input-button-padding: 14px 16px;
-    --input-button-margin: 8px 16px;
-    --ton-blue: #0088cc;
-  }
+  --bg-color: #000000;
+  --text-color: #ffffff;
+  --secondary-bg: #121212;
+  --hint-color: #888888;
+  --accent-color: #ffffff;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --card-radius: 12px;
+  --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --input-button-width: calc(100% - 32px);
+  --input-button-padding: 14px 16px;
+  --input-button-margin: 8px 16px;
+  --header-height: 60px;
+  --nav-height: 70px;
+}
 
-  body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    line-height: 1.5;
-  }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  margin: 0;
+  padding: 0;
+  line-height: 1.5;
+  /* Use Telegram's viewport */
+  height: 100vh;
+  height: -webkit-fill-available;
+  overflow: hidden;
+}
 
-  .header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    background-color: var(--bg-color);
-    padding: 18px 16px;
-    text-align: center;
-    border-bottom: 1px solid var(--border-color);
-    z-index: 100;
-  }
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--header-height);
+  background-color: var(--bg-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--border-color);
+  z-index: 100;
+}
 
-  .logo {
-    font-size: 1.5em;
-    font-weight: 700;
-    margin: 0;
-    letter-spacing: 1px;
-  }
+.logo {
+  font-size: 1.5em;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 1px;
+}
 
-  .container {
-    margin-top: 80px;
-    padding: 16px;
-    padding-bottom: 80px;
-  }
+.container {
+  position: fixed;
+  top: var(--header-height);
+  bottom: var(--nav-height);
+  left: 0;
+  right: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px;
+}
 
   .card {
     background-color: var(--secondary-bg);
@@ -176,19 +187,22 @@
     bottom: 0;
     left: 0;
     right: 0;
+    height: var(--nav-height);
     background: var(--secondary-bg);
     border-top: 1px solid var(--border-color);
     z-index: 100;
-    padding: 25px 0;
-  }
-  
-  .nav-list {
+    display: flex;
+    align-items: center;
+}
+
+.nav-list {
     display: flex;
     justify-content: space-around;
     list-style: none;
     padding: 0;
     margin: 0;
-  }
+    width: 100%;
+}
   
   .nav-list li a {
     color: var(--hint-color);
