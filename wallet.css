@@ -179,11 +179,7 @@
     background: var(--secondary-bg);
     border-top: 1px solid var(--border-color);
     z-index: 100;
-    padding: 12px 0;
-  }
-  
-  .logotxt {
-    display: none;
+    padding: 25px 0;
   }
   
   .nav-list {
@@ -197,10 +193,11 @@
   .nav-list li a {
     color: var(--hint-color);
     text-decoration: none;
-    font-size: 0.7em;
+    font-size: 15px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    font-weight: bold;
   }
   
   .nav-list li a i {

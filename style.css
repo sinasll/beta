@@ -122,11 +122,7 @@
     background: var(--secondary-bg);
     border-top: 1px solid var(--border-color);
     z-index: 100;
-    padding: 20px 0;
-  }
-  
-  .logotxt {
-    display: none;
+    padding: 25px 0;
   }
   
   .nav-list {

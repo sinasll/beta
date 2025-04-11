@@ -129,36 +129,34 @@
     }
 
     .nav-menu {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: var(--secondary-bg);
-        border-top: 1px solid var(--border-color);
-        z-index: 100;
-        padding: 12px 0;
-      }
-      
-      .logotxt {
-        display: none;
-      }
-      
-      .nav-list {
-        display: flex;
-        justify-content: space-around;
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
-      
-      .nav-list li a {
-        color: var(--hint-color);
-        text-decoration: none;
-        font-size: 0.7em;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--secondary-bg);
+      border-top: 1px solid var(--border-color);
+      z-index: 100;
+      padding: 25px 0;
+    }
+    
+    .nav-list {
+      display: flex;
+      justify-content: space-around;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .nav-list li a {
+      color: var(--hint-color);
+      text-decoration: none;
+      font-size: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-weight: bold;
+    }
+    
       
       .nav-list li a i {
         font-size: 1.2em;

@@ -6,8 +6,11 @@
   <title>$BLACK</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
+
 <body>
+  
   <div class="header">
     <h1 class="logo">$BLACK</h1>
   </div>
@@ -18,13 +21,17 @@
         <div>Total Mined</div>
         <div><span id="mined">0.00</span> / 100,000,000 $BLACK</div>
       </div>
+      <div class="stats-row">
+        <div>Total Miners</div>
+        <div><span id="totalminers">1,180</span></div>
+      </div>
     </div>
 
     <div class="card">
       <h2 class="card-title">User</h2>
       <div class="stats-row">
         <div>Username</div>
-        <div>@<span id="username">loading...</span></div>
+        <div>@<span id="username">username</span></div>
       </div>
       <div class="stats-row">
         <div>Balance</div>
@@ -39,10 +46,10 @@
 
     <div class="card">
       <div class="stats-row">
-        <div>Your Daily Code</div>
-        <div><span id="dailyCode">Not generated</span></div>
+        <h2 class="card-title">Daily Code</h2>
+      <div><span id="dailyCode">Not generated</span></div>
       </div>
-      <h2 class="card-title">Submit a Code</h2>
+      <button class="button" id="copyCodeButton">Copy Code</button>
       <input type="text" id="submitCodeInput" placeholder="Enter 10-digit code" maxlength="10">
       <button class="button" id="submitCodeButton">Submit Code</button>
     </div>
@@ -59,6 +66,50 @@
       <li><a href="wallet.html"></i> WALLET</a></li>
     </ul>
   </nav>
-  
+
+  <script>
+       // Check if running in Telegram WebApp
+       if (window.Telegram && Telegram.WebApp.initData) {
+      // Hide error message and show app
+      document.getElementById('errorMessage').style.display = 'none';
+      document.getElementById('appContent').style.display = 'block';
+      
+      // Initialize Telegram WebApp
+      Telegram.WebApp.expand();
+      Telegram.WebApp.enableClosingConfirmation();
+      
+      // Generate username
+      const generateUsername = () => {
+        const tgUser = Telegram.WebApp.initDataUnsafe.user;
+        
+        // If Telegram username exists, use it
+        if (tgUser?.username) {
+          return tgUser.username;
+        }
+        
+        // Generate unique username starting with "blackminer"
+        const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+        return `blackminer${randomSuffix}`;
+      };
+      
+      // Set the username
+      document.getElementById('username').textContent = generateUsername();
+      
+      // Load main app script
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = 'app1.js';
+      document.body.appendChild(script);
+    } else {
+      // Not in Telegram - keep error message visible
+      document.getElementById('errorMessage').style.display = 'flex';
+      
+      // Prevent any interaction
+      document.body.style.pointerEvents = 'none';
+      document.body.style.userSelect = 'none';
+    }
+  </script>
+
 </body>
+
 </html>
