@@ -21,7 +21,6 @@ body {
   margin: 0;
   padding: 0;
   line-height: 1.5;
-  /* Use Telegram's viewport */
   height: 100vh;
   height: -webkit-fill-available;
   overflow: hidden;
@@ -83,6 +82,7 @@ body {
       border-bottom: 1px solid var(--border-color);
       margin-bottom: 8px;
       font-weight: 600;
+      font-size: 12px;
     }
 
     .leaderboard-row {

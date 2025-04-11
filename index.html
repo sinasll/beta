@@ -24,7 +24,11 @@
       </div>
       <div class="stats-row">
         <div>Total Miners</div>
-        <div><span id="totalminers">1,180</span> BLACKers</div>
+        <div><span id="totalminers">0</span></div>
+      </div>
+      <div class="stats-row">
+        <div>Active Miners</div>
+        <div><span id="totalminers">0</span></div>
       </div>
     </div>
 
@@ -237,9 +241,9 @@ buyButtons.forEach(button => {
   });
 });
 
-// Load saved power on page load
+// Load saved power on page load (only if it exists and is higher than 1.0)
 const savedPower = localStorage.getItem('miningPower');
-if (savedPower) {
+if (savedPower && parseFloat(savedPower) > 1.0) {
   powerElement.textContent = savedPower;
   
   // Update purchased button state on load
@@ -251,6 +255,7 @@ if (savedPower) {
     }
   });
 }
+
     </script>
 
 </body>
