@@ -140,10 +140,11 @@
   .nav-list li a {
     color: var(--hint-color);
     text-decoration: none;
-    font-size: 0.7em;
+    font-size: 15px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    font-weight: bold;
   }
   
   .nav-list li a i {
