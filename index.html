@@ -1,64 +1,186 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>$BLACK</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-<body>
-  <div class="header">
-    <h1 class="logo">$BLACK</h1>
-  </div>
+// Firebase Configuration and Initialization
+import { initializeApp } from "firebase/app";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs } from "firebase/firestore";
 
-  <div class="container">
-    <div class="card global-stats">
-      <div class="stats-row">
-        <div>Total Mined</div>
-        <div><span id="mined">0.00</span> / 100,000,000 $BLACK</div>
-      </div>
-    </div>
+// Your Firebase Configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAzXSCn_QL2XeyRZD71By443sl4wOtXf2Y",
+  authDomain: "pipcore-8844f.firebaseapp.com",
+  databaseURL: "https://pipcore-8844f-default-rtdb.firebaseio.com",
+  projectId: "pipcore-8844f",
+  storageBucket: "pipcore-8844f.firebasestorage.app",
+  messagingSenderId: "921115337984",
+  appId: "1:921115337984:web:17161651342ad78017bfe5",
+  measurementId: "G-RKL37B0B7N"
+};
 
-    <div class="card">
-      <h2 class="card-title">User</h2>
-      <div class="stats-row">
-        <div>Username</div>
-        <div>@<span id="username">loading...</span></div>
-      </div>
-      <div class="stats-row">
-        <div>Balance</div>
-        <div><span id="balance">0.000</span> $BLACK</div>
-      </div>
-      <div class="stats-row">
-        <div>Mining Power</div>
-        <div>x<span id="power">1.0</span></div>
-      </div>
-      <button class="button" id="mineButton">Start Mining</button>
-    </div>
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    <div class="card">
-      <div class="stats-row">
-        <div>Your Daily Code</div>
-        <div><span id="dailyCode">Not generated</span></div>
-      </div>
-      <h2 class="card-title">Submit a Code</h2>
-      <input type="text" id="submitCodeInput" placeholder="Enter 10-digit code" maxlength="10">
-      <button class="button" id="submitCodeButton">Submit Code</button>
-    </div>
+// Generate a unique 10-digit code for the user
+function generateDailyCode() {
+  return Math.floor(1000000000 + Math.random() * 9000000000).toString();
+}
 
-    <div class="countdown" id="countdown">Daily reset in 00:00:00</div>
-  </div>
+// Start mining and create the user document if they don't exist
+async function startMining(userId) {
+  const userRef = doc(db, "users", userId);
+  const userSnap = await getDoc(userRef);
 
-  <nav class="nav-menu" id="nav-menu">
-    <ul class="nav-list">
-      <li><a href="index.html" class="active"><i class="fas fa-user"></i> MINE</a></li>
-      <li><a href="leaders.html"><i class="fas fa-trophy"></i> LEADERS</a></li>          
-      <li><a href="earn.html"><i class="fas fa-coins"></i> EARN</a></li>
-      <li><a href="friends.html"><i class="fas fa-users"></i> FRIENDS</a></li>
-      <li><a href="wallet.html"><i class="fas fa-wallet"></i> WALLET</a></li>
-    </ul>
-  </nav>
-  
-</body>
-</html>
+  if (!userSnap.exists()) {
+    const dailyCode = generateDailyCode();
+    await setDoc(userRef, {
+      telegramId: userId,
+      username: "YourUsername", // Replace with actual username
+      basePower: 1.0,
+      boostPower: 0.0,
+      bonusFromSubmission: 0.0,
+      dailyCode: dailyCode,
+      codeGeneratedAt: serverTimestamp(),
+      codeSubmissionsToday: 0,
+      submittedCodeToday: false,
+      submittedTo: "",
+      lastReset: serverTimestamp(),
+      balance: 0.0,
+      mined: 0.0,
+      lastActive: serverTimestamp()
+    });
+  } else {
+    const data = userSnap.data();
+    const lastReset = data.lastReset.toDate();
+    const now = new Date();
+
+    if (now.toDateString() !== lastReset.toDateString()) {
+      const newDailyCode = generateDailyCode();
+      await updateDoc(userRef, {
+        boostPower: 0.0,
+        bonusFromSubmission: 0.0,
+        codeSubmissionsToday: 0,
+        submittedCodeToday: false,
+        submittedTo: "",
+        dailyCode: newDailyCode,
+        codeGeneratedAt: serverTimestamp(),
+        lastReset: serverTimestamp()
+      });
+    }
+  }
+}
+
+// Submit a referral code and increase the mining power of the user
+async function submitCode(userId, code) {
+  const usersRef = collection(db, "users");
+  const q = query(usersRef, where("dailyCode", "==", code));
+  const querySnapshot = await getDocs(q);
+
+  if (querySnapshot.empty) {
+    console.log("Invalid code.");
+    return;
+  }
+
+  const codeOwnerDoc = querySnapshot.docs[0];
+  const codeOwnerData = codeOwnerDoc.data();
+
+  if (codeOwnerData.codeSubmissionsToday >= 10) {
+    console.log("Code submission limit reached.");
+    return;
+  }
+
+  if (codeOwnerData.submittedCodeToday) {
+    console.log("You have already submitted a code today.");
+    return;
+  }
+
+  // Update the code owner (User A)
+  await updateDoc(codeOwnerDoc.ref, {
+    codeSubmissionsToday: codeOwnerData.codeSubmissionsToday + 1,
+    bonusFromSubmission: codeOwnerData.bonusFromSubmission + 0.1,
+  });
+
+  // Update the submitter (User B)
+  const userRef = doc(db, "users", userId);
+  const userSnap = await getDoc(userRef);
+  const userData = userSnap.data();
+
+  await updateDoc(userRef, {
+    boostPower: userData.boostPower + 0.5,
+    submittedCodeToday: true,
+    submittedTo: codeOwnerData.telegramId
+  });
+
+  console.log("Code submitted successfully!");
+}
+
+// Calculate the user's total mining power based on their base power and bonuses
+async function calculateMiningPower(userId) {
+  const userRef = doc(db, "users", userId);
+  const userSnap = await getDoc(userRef);
+
+  if (userSnap.exists()) {
+    const userData = userSnap.data();
+    const totalPower = userData.basePower + userData.boostPower + userData.bonusFromSubmission;
+    const minedPerMinute = totalPower * 0.003472;
+
+    // Calculate how many tokens the user can mine in a day (max 5 tokens per day)
+    const dailyMined = Math.min(minedPerMinute * 60 * 24, 5);
+    console.log(`User can mine ${dailyMined} $BLACK tokens today.`);
+    return dailyMined;
+  }
+
+  console.log("User not found.");
+  return 0;
+}
+
+// Reset daily data and generate a new daily code for the user
+async function resetDailyData(userId) {
+  const userRef = doc(db, "users", userId);
+  const userSnap = await getDoc(userRef);
+
+  if (userSnap.exists()) {
+    const now = new Date();
+    const lastReset = userSnap.data().lastReset.toDate();
+
+    if (now.toDateString() !== lastReset.toDateString()) {
+      await updateDoc(userRef, {
+        boostPower: 0.0,
+        bonusFromSubmission: 0.0,
+        codeSubmissionsToday: 0,
+        submittedCodeToday: false,
+        submittedTo: "",
+        dailyCode: generateDailyCode(),
+        codeGeneratedAt: serverTimestamp(),
+        lastReset: serverTimestamp()
+      });
+
+      console.log("Daily reset completed.");
+    }
+  }
+}
+
+// Example: Start mining when the button is clicked
+document.getElementById("mineButton").addEventListener("click", function() {
+  const userId = "userTelegramId"; // Replace with the actual Telegram ID
+  startMining(userId);
+});
+
+// Example: Submit a code when the button is clicked
+document.getElementById("submitCodeButton").addEventListener("click", function() {
+  const userId = "userTelegramId"; // Replace with the actual Telegram ID
+  const code = document.getElementById("submitCodeInput").value;
+  submitCode(userId, code);
+});
+
+// Calculate mining power
+async function updateMiningInfo() {
+  const userId = "userTelegramId"; // Replace with the actual Telegram ID
+  const miningPower = await calculateMiningPower(userId);
+  document.getElementById("mined").textContent = `${miningPower}`;
+}
+
+// Periodically check if a reset is needed
+setInterval(function() {
+  const userId = "userTelegramId"; // Replace with the actual Telegram ID
+  resetDailyData(userId);
+}, 1000 * 60 * 60 * 24); // 24-hour interval for reset
+
+// Call this function on page load to ensure mining power is updated
+updateMiningInfo();
