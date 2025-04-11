@@ -171,3 +171,250 @@ body {
     text-align: center;
     font-weight: 600;
   }
+
+   /* Modal styles */
+   .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .modal-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal {
+    background-color: var(--secondary-bg);
+    border-radius: var(--card-radius);
+    width: 90%;
+    max-width: 400px;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--box-shadow);
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+  }
+
+  .modal-overlay.active .modal {
+    transform: translateY(0);
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .modal-title {
+    font-size: 1.2em;
+    font-weight: 600;
+    margin: 0;
+    color: var(--accent-color);
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    color: var(--hint-color);
+    font-size: 1.5em;
+    cursor: pointer;
+  }
+
+ /* Power Upgrade Modal Styles */
+.power-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  margin-bottom: 12px;
+  background-color: var(--secondary-bg);
+  border-radius: var(--card-radius);
+  border: 1px solid var(--border-color);
+  transition: transform 0.2s ease;
+}
+
+/* Elite Highlight Option */
+.power-option.elite-highlight {
+  position: relative;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+  overflow: hidden;
+  z-index: 1;
+  margin: 20px 0;
+}
+
+.elite-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: radial-gradient(
+    circle at center,
+    rgba(212, 175, 55, 0.1) 0%,
+    transparent 70%
+  );
+  z-index: -1;
+  animation: elitePulse 4s infinite alternate;
+}
+
+@keyframes elitePulse {
+  0% { opacity: 0.3; }
+  100% { opacity: 0.7; }
+}
+
+.power-option.elite-highlight .power-name {
+  font-size: 1.2em;
+  font-weight: 700;
+  color: #d4af37; /* Gold color */
+  text-shadow: 0 0 5px rgba(212, 175, 55, 0.3);
+  position: relative;
+  display: inline-block;
+}
+
+.power-option.elite-highlight .power-name::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #d4af37, transparent);
+}
+
+.power-option.elite-highlight .power-desc {
+  color: #aaaaaa;
+  font-size: 0.9em;
+}
+
+.power-option.elite-highlight .power-price {
+  font-weight: 700;
+  color: #d4af37;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.power-option.elite-highlight .power-price i {
+  color: #d4af37;
+  text-shadow: 0 0 8px rgba(212, 175, 55, 0.5);
+  animation: starTwinkle 2s infinite;
+}
+
+@keyframes starTwinkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; transform: scale(1.1); }
+}
+
+.power-buy.elite-btn {
+  background: linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%);
+  color: #d4af37;
+  font-weight: 700;
+  border: 1px solid #d4af37;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.power-buy.elite-btn::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to bottom right,
+    rgba(212, 175, 55, 0) 0%,
+    rgba(212, 175, 55, 0.1) 50%,
+    rgba(212, 175, 55, 0) 100%
+  );
+  transform: rotate(30deg);
+  animation: eliteShine 4s infinite linear;
+}
+
+@keyframes eliteShine {
+  0% { transform: translateX(-100%) rotate(30deg); }
+  100% { transform: translateX(100%) rotate(30deg); }
+}
+
+.power-buy.elite-btn:hover {
+  background: linear-gradient(135deg, #3a3a3a 0%, #1a1a1a 100%);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+}
+
+.power-buy.elite-btn:active {
+  transform: scale(0.97);
+  box-shadow: 0 0 5px rgba(212, 175, 55, 0.4);
+}
+
+.power-info {
+  flex: 1;
+}
+
+.power-badge {
+  font-size: 0.7em;
+  font-weight: 600;
+  color: var(--ton-blue);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.power-name {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.power-desc {
+  font-size: 0.9em;
+  color: var(--hint-color);
+  margin-bottom: 8px;
+}
+
+.power-price {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.power-price i {
+  color: gold;
+}
+
+.power-buy {
+  background-color: var(--ton-blue);
+  color: white;
+  border: none;
+  border-radius: var(--card-radius);
+  padding: 10px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 80px;
+  text-align: center;
+}
+
+.power-note {
+  font-size: 0.8em;
+  color: var(--hint-color);
+  text-align: center;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}

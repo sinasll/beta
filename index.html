@@ -49,7 +49,7 @@
     <div class="card">
       <div class="stats-row">
         <h2 class="card-title">Daily Code</h2>
-      <div><span id="dailyCode">Not generated</span></div>
+      <div><span id="dailyCode">12Fgh90Bvv</span></div>
       </div>
       <button class="button" id="copyCodeButton">Copy Code</button>
       <input type="text" id="submitCodeInput" placeholder="Enter 10-digit code" maxlength="10">
@@ -58,6 +58,49 @@
 
     <div class="countdown" id="countdown">Daily reset in 00:00:00</div>
   </div>
+
+ <!-- Upgrade Power Modal -->
+<div class="modal-overlay" id="upgradeModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">Upgrade Mining Power</h3>
+      <button class="modal-close" id="closeModal">&times;</button>
+    </div>
+    
+    <div class="power-option">
+      <div class="power-info">
+        <div class="power-name">Advanced Miner</div>
+        <div class="power-desc">2x mining acceleration</div>
+        <div class="power-price"><i class="fas fa-star"></i> 250 Stars</div>
+      </div>
+      <button class="power-buy" data-power="2" data-price="250">Upgrade</button>
+    </div>
+    
+    <div class="power-option premium">
+      <div class="power-info">
+        <div class="power-badge">RECOMMENDED</div>
+        <div class="power-name">Pro Miner</div>
+        <div class="power-desc">5x mining acceleration</div>
+        <div class="power-price"><i class="fas fa-star"></i> 500 Stars</div>
+      </div>
+      <button class="power-buy premium-btn" data-power="5" data-price="500">Upgrade</button>
+    </div>
+    
+    <div class="power-option elite-highlight">
+      <div class="elite-glow"></div>
+      <div class="power-info">
+        <div class="power-name">Elite Miner</div>
+        <div class="power-desc">10x mining acceleration</div>
+        <div class="power-price"><i class="fas fa-star"></i> 1000 Stars</div>
+      </div>
+      <button class="power-buy elite-btn" data-power="10" data-price="1000">Upgrade</button>
+    </div>
+    
+    <div class="power-note">
+      <i class="fas fa-info-circle"></i> Higher mining power = More $BLACK per minute
+    </div>
+  </div>
+</div>
 
   <nav class="nav-menu" id="nav-menu">
     <ul class="nav-list">
@@ -101,6 +144,113 @@
     } else {
       usernameElement.textContent = `@${generateRandomUsername()}`;
     }
+
+    // Modal functionality
+const upgradeButton = document.getElementById('upgradeButton');
+const upgradeModal = document.getElementById('upgradeModal');
+const closeModal = document.getElementById('closeModal');
+const buyButtons = document.querySelectorAll('.power-buy');
+const powerElement = document.getElementById('power');
+
+// Show modal when upgrade button is clicked
+upgradeButton.addEventListener('click', () => {
+  upgradeModal.classList.add('active');
+});
+
+// Hide modal when close button is clicked
+closeModal.addEventListener('click', () => {
+  upgradeModal.classList.remove('active');
+});
+
+// Hide modal when clicking outside
+upgradeModal.addEventListener('click', (e) => {
+  if (e.target === upgradeModal) {
+    upgradeModal.classList.remove('active');
+  }
+});
+
+// Handle power purchases
+buyButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    const power = button.dataset.power;
+    const price = button.dataset.price;
+    const powerName = button.closest('.power-option').querySelector('.power-name').textContent;
+    
+    if (tg) {
+      // Open Telegram payment interface
+      tg.showPopup({
+        title: 'Confirm Purchase',
+        message: `Do you want to buy ${powerName} (${power}x power) for ${price} Stars?`,
+        buttons: [
+          {id: 'cancel', type: 'cancel'},
+          {id: 'buy', type: 'default', text: 'Buy'}
+        ]
+      }, (buttonId) => {
+        if (buttonId === 'buy') {
+          // Process the purchase
+          powerElement.textContent = power;
+          localStorage.setItem('miningPower', power);
+          
+          // Update button states to show purchased status
+          buyButtons.forEach(btn => {
+            if (btn.dataset.power === power) {
+              btn.textContent = 'Purchased';
+              btn.disabled = true;
+              btn.classList.add('purchased');
+            } else {
+              btn.textContent = 'Upgrade';
+              btn.disabled = false;
+              btn.classList.remove('purchased');
+            }
+          });
+          
+          // Show success message
+          tg.showAlert(`Success! You've unlocked ${powerName} (${power}x power).`);
+          
+          // Close modal
+          upgradeModal.classList.remove('active');
+        }
+      });
+    } else {
+      // Fallback for non-Telegram environment
+      if (confirm(`Do you want to buy ${powerName} (${power}x power) for ${price} Stars?`)) {
+        powerElement.textContent = power;
+        localStorage.setItem('miningPower', power);
+        
+        // Update button states
+        buyButtons.forEach(btn => {
+          if (btn.dataset.power === power) {
+            btn.textContent = 'Purchased';
+            btn.disabled = true;
+            btn.classList.add('purchased');
+          } else {
+            btn.textContent = 'Upgrade';
+            btn.disabled = false;
+            btn.classList.remove('purchased');
+          }
+        });
+        
+        upgradeModal.classList.remove('active');
+        alert(`Success! You've unlocked ${powerName} (${power}x power).`);
+      }
+    }
+  });
+});
+
+// Load saved power on page load
+const savedPower = localStorage.getItem('miningPower');
+if (savedPower) {
+  powerElement.textContent = savedPower;
+  
+  // Update purchased button state on load
+  buyButtons.forEach(btn => {
+    if (btn.dataset.power === savedPower) {
+      btn.textContent = 'Purchased';
+      btn.disabled = true;
+      btn.classList.add('purchased');
+    }
+  });
+}
     </script>
 
 </body>

@@ -203,6 +203,7 @@ body {
     color: var(--accent-color);
   }
 
+
   /* Task specific icons */
   .icon-daily::before {
     content: "\f783";
