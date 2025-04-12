@@ -3,11 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>$BLACK</title>
+  <title>$BLACK Mining</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Firebase SDKs (using compat libraries) -->
+  <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-functions-compat.js"></script>
 </head>
 <body>
   <div class="header">
@@ -15,6 +20,7 @@
   </div>
 
   <div class="container">
+    <!-- Global Stats -->
     <div class="card global-stats">
       <div class="stats-row">
         <div>Total Mined</div>
@@ -30,6 +36,7 @@
       </div>
     </div>
 
+    <!-- User Stats -->
     <div class="card">
       <h2 class="card-title">User</h2>
       <div class="stats-row">
@@ -52,6 +59,7 @@
       <button class="button" id="mineButton">Start Mining</button>
     </div>
 
+    <!-- Daily Code Section -->
     <div class="card">
       <div class="stats-row">
         <h2 class="card-title">Daily Code</h2>
@@ -104,6 +112,7 @@
     </div>
   </div>
 
+  <!-- Navigation Menu -->
   <nav class="nav-menu" id="nav-menu">
     <ul class="nav-list">
       <li><a href="index.html" class="active">MINE</a></li>
@@ -115,232 +124,222 @@
   </nav>
 
   <script>
-    // -------------------------------
-    // Utility and Daily Data Functions
-    // -------------------------------
+    // -------------------------------------------------
+    // Firebase Initialization
+    // -------------------------------------------------
+    const firebaseConfig = {
+        apiKey: "AIzaSyAzXSCn_QL2XeyRZD71By443sl4wOtXf2Y",
+        authDomain: "pipcore-8844f.firebaseapp.com",
+        projectId: "pipcore-8844f",
+        storageBucket: "pipcore-8844f.appspot.com",
+        messagingSenderId: "921115337984",
+        appId: "1:921115337984:web:17161651342ad78017bfe5"
+      };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+    const functions = firebase.functions();
+
+    // -------------------------------------------------
+    // Telegram WebApp SDK
+    // -------------------------------------------------
     const tg = window.Telegram?.WebApp;
     if (tg) {
       tg.expand();
       tg.enableClosingConfirmation();
     }
 
-    // Generate a random 10-digit code as a string.
+    // -------------------------------------------------
+    // Utility Functions
+    // -------------------------------------------------
     function generateDailyCode() {
       return Math.floor(1000000000 + Math.random() * 9000000000).toString();
     }
-
-    // Check if a timestamp is within 24 hours.
     function isWithin24Hours(timestamp) {
       return Date.now() - timestamp < 24 * 60 * 60 * 1000;
     }
-
-    // Reset daily mining data if expired or not yet set.
-    function refreshDailyData() {
-      let dailyCode = localStorage.getItem('dailyCode');
-      let codeTimestamp = parseInt(localStorage.getItem('dailyCodeTimestamp'), 10);
-
-      // If no valid daily code, reset daily data.
-      if (!dailyCode || !codeTimestamp || !isWithin24Hours(codeTimestamp)) {
-        dailyCode = generateDailyCode();
-        localStorage.setItem('dailyCode', dailyCode);
-        localStorage.setItem('dailyCodeTimestamp', Date.now().toString());
-        localStorage.setItem('myCodeSubmissionsReceived', '0');
-        updateSubmissionCountUI(0);
-        localStorage.removeItem('hasSubmittedToday');
-        // Also clear mining state so the user must click Start Mining again.
-        localStorage.removeItem('miningStarted');
-        localStorage.removeItem('lastMiningUpdate');
-      }
-      document.getElementById('dailyCode').textContent = dailyCode;
-    }
-
-    // Get today's string for daily comparisons.
     function getTodayString() {
       return new Date().toDateString();
     }
 
-    // Update submission count UI.
-    function updateSubmissionCountUI(count) {
-      document.getElementById('submissionCount').textContent = count;
-    }
-
-    // -------------------------------
-    // User Identity and Persistence
-    // -------------------------------
-    function generateRandomUsername() {
-      const storedUsername = localStorage.getItem('generatedUsername');
-      if (storedUsername) return storedUsername;
-      const randomSuffix = Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
-      const newUsername = `blackminer${randomSuffix}`;
-      localStorage.setItem('generatedUsername', newUsername);
-      return newUsername;
-    }
-
-    function getUsername() {
-      if (tg?.initDataUnsafe?.user?.username) {
-        return `@${tg.initDataUnsafe.user.username}`;
-      }
-      return `@${generateRandomUsername()}`;
-    }
-    document.getElementById('username').textContent = getUsername();
-
-    // -------------------------------
-    // Effective Mining Power Calculation
-    // -------------------------------
-    function getEffectivePower() {
-      // Base power is 1.0. If the user submitted someone else’s code today, add a +0.5 bonus.
-      const submitFlag = localStorage.getItem('hasSubmittedToday');
-      const submitBonus = (submitFlag === getTodayString()) ? 0.5 : 0;
-      // Bonus from how many times the user’s own code was submitted.
-      const received = parseInt(localStorage.getItem('myCodeSubmissionsReceived') || '0', 10);
-      return (1.0 + submitBonus) + (received * 0.1);
-    }
-
-    function updateMiningPowerUI() {
-      document.getElementById('power').textContent = getEffectivePower().toFixed(1);
-    }
-
-    // -------------------------------
-    // Mining Functionality with Persistence
-    // -------------------------------
-    const baseMiningRate = 0.003472; // per minute
-    let balance = parseFloat(localStorage.getItem('balance')) || 0;
-    document.getElementById('balance').textContent = balance.toFixed(3);
-    document.getElementById('mined').textContent = balance.toFixed(2);
-
-    // When mining is active, we store a flag and a timestamp so we can continue offline.
+    // -------------------------------------------------
+    // UI References and Global Variables
+    // -------------------------------------------------
     let miningInterval = null;
+    const baseMiningRate = 0.003472; // mined per minute
+    const usernameDisplay = document.getElementById('username');
+    const balanceDisplay = document.getElementById('balance');
+    const minedDisplay = document.getElementById('mined');
+    const powerDisplay = document.getElementById('power');
+    const submissionCountDisplay = document.getElementById('submissionCount');
+    const dailyCodeDisplay = document.getElementById('dailyCode');
     const mineButton = document.getElementById('mineButton');
+    const submitCodeButton = document.getElementById('submitCodeButton');
+    const submitCodeInput = document.getElementById('submitCodeInput');
 
-    // On page load, refresh daily data and restore mining if it was active.
-    refreshDailyData();
-    updateMiningPowerUI();
+    // Global data for current user
+    let currentUserDoc = null;
+    let userData = null;
+    let userId = null;
 
-    // If a mining session was started earlier today, restore its offline progress.
-    if (localStorage.getItem('miningStarted') === "true" && localStorage.getItem('lastMiningUpdate')) {
-      // Calculate offline progress.
-      const lastUpdate = parseInt(localStorage.getItem('lastMiningUpdate'), 10);
-      const elapsedSeconds = Math.floor((Date.now() - lastUpdate) / 1000);
-      // Use the current effective power for simplicity.
-      const offlineIncrement = (baseMiningRate * getEffectivePower() / 60) * elapsedSeconds;
-      balance += offlineIncrement;
-      localStorage.setItem('balance', balance.toString());
-      document.getElementById('balance').textContent = balance.toFixed(3);
-      document.getElementById('mined').textContent = balance.toFixed(2);
-      // Update last mining timestamp.
-      localStorage.setItem('lastMiningUpdate', Date.now().toString());
-      mineButton.textContent = "Mining...";
-      startMining();
+    // -------------------------------------------------
+    // Effective Mining Power Calculation & UI Update
+    // -------------------------------------------------
+    function getEffectivePower() {
+      // Base power: 1.0
+      // Bonus: +0.5 if the user has submitted a code today
+      // Plus +0.1 for each time your daily code has been submitted (max 10 submissions)
+      let bonus = 0;
+      if (userData.hasSubmittedToday) bonus += 0.5;
+      bonus += (userData.submissionsReceived || 0) * 0.1;
+      return 1.0 + bonus;
+    }
+    function updateMiningPowerUI() {
+      if (userData) {
+        powerDisplay.textContent = getEffectivePower().toFixed(1);
+      }
+    }
+    function updateUI() {
+      if (!userData) return;
+      balanceDisplay.textContent = userData.balance.toFixed(3);
+      minedDisplay.textContent = userData.balance.toFixed(2);
+      powerDisplay.textContent = getEffectivePower().toFixed(1);
+      dailyCodeDisplay.textContent = userData.dailyCode;
+      submissionCountDisplay.textContent = userData.submissionsReceived || 0;
+      usernameDisplay.textContent = userData.username || "anonymous";
     }
 
-    // When user clicks Start Mining.
-    mineButton.addEventListener('click', () => {
-      refreshDailyData();
-      updateMiningPowerUI();
-      // If not already mining, set the flag and record the time.
-      if (localStorage.getItem('miningStarted') !== "true") {
-        localStorage.setItem('miningStarted', "true");
-        localStorage.setItem('lastMiningUpdate', Date.now().toString());
-        mineButton.textContent = "Mining...";
-        startMining();
+    // -------------------------------------------------
+    // Firebase Authentication (Anonymous)
+    // -------------------------------------------------
+    auth.signInAnonymously().catch((error) => {
+      console.error("Authentication error:", error);
+    });
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        userId = user.uid;
+        const userRef = db.collection("users").doc(userId);
+        userRef.get().then((docSnapshot) => {
+          if (docSnapshot.exists) {
+            currentUserDoc = userRef;
+            userData = docSnapshot.data();
+            // Daily reset: if daily code is not valid, reset daily data.
+            if (!userData.dailyCode || !userData.codeTimestamp || !isWithin24Hours(userData.codeTimestamp)) {
+              userData.dailyCode = generateDailyCode();
+              userData.codeTimestamp = Date.now();
+              userData.submissionsReceived = 0;
+              userData.hasSubmittedToday = false;
+              userData.lastMiningUpdate = Date.now();
+              userData.miningPower = 1.0;
+              userRef.set(userData);
+            }
+            updateUI();
+          } else {
+            // New user setup
+            const initialData = {
+              username: (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) ? 
+                        "@" + tg.initDataUnsafe.user.username : "anonymous",
+              balance: 0,
+              miningPower: 1.0,
+              dailyCode: generateDailyCode(),
+              codeTimestamp: Date.now(),
+              submissionsReceived: 0,
+              hasSubmittedToday: false,
+              lastMiningUpdate: Date.now()
+            };
+            userRef.set(initialData);
+            currentUserDoc = userRef;
+            userData = initialData;
+            updateUI();
+          }
+          // Listen for real-time updates to the user's data.
+          userRef.onSnapshot((doc) => {
+            userData = doc.data();
+            updateUI();
+          });
+        });
       }
     });
 
-    // The mining process accumulates balance every second.
-    function startMining() {
-      // Clear any existing interval.
-      if (miningInterval) clearInterval(miningInterval);
-      miningInterval = setInterval(() => {
-        const now = Date.now();
-        const lastUpdate = parseInt(localStorage.getItem('lastMiningUpdate'), 10);
-        // Calculate elapsed time in seconds (in case the interval was delayed).
-        const elapsedSeconds = (now - lastUpdate) / 1000;
-        // Increment based on effective power.
-        const increment = (baseMiningRate * getEffectivePower() / 60) * elapsedSeconds;
-        balance += increment;
-        document.getElementById('balance').textContent = balance.toFixed(3);
-        document.getElementById('mined').textContent = balance.toFixed(2);
-        localStorage.setItem('balance', balance.toString());
-        // Save this update time.
-        localStorage.setItem('lastMiningUpdate', now.toString());
-        updateMiningPowerUI();
-      }, 1000);
+    // -------------------------------------------------
+    // Mining Functionality
+    // -------------------------------------------------
+    function updateMiningProgress() {
+      if (!userData || !currentUserDoc) return;
+      const now = Date.now();
+      const elapsedSeconds = (now - userData.lastMiningUpdate) / 1000;
+      const increment = (baseMiningRate * getEffectivePower() / 60) * elapsedSeconds;
+      // Update Firestore with the new balance and update timestamp.
+      currentUserDoc.update({
+        balance: firebase.firestore.FieldValue.increment(increment),
+        lastMiningUpdate: now
+      }).catch((error) => {
+        console.error("Error updating mining progress:", error);
+      });
     }
+    function startMining() {
+      if (miningInterval) clearInterval(miningInterval);
+      miningInterval = setInterval(updateMiningProgress, 1000);
+      mineButton.textContent = "Mining...";
+    }
+    mineButton.addEventListener('click', () => {
+      if (!currentUserDoc) return;
+      // Restart the mining process by updating the timestamp.
+      currentUserDoc.update({ lastMiningUpdate: Date.now() });
+      startMining();
+    });
 
-    // -------------------------------
-    // Code Submission Functionality
-    // -------------------------------
-    const submitCodeButton = document.getElementById('submitCodeButton');
+    // -------------------------------------------------
+    // Code Submission via Cloud Function
+    // -------------------------------------------------
     submitCodeButton.addEventListener('click', () => {
-      const inputField = document.getElementById('submitCodeInput');
-      const submittedCode = inputField.value.trim();
+      const submittedCode = submitCodeInput.value.trim();
       if (!/^\d{10}$/.test(submittedCode)) {
         alert("Please enter a valid 10-digit code.");
         return;
       }
-      // Prevent submitting your own code.
-      const myDailyCode = localStorage.getItem('dailyCode');
-      if (submittedCode === myDailyCode) {
+      if (submittedCode === userData.dailyCode) {
         alert("You cannot submit your own code.");
         return;
       }
-      // Check if you have already submitted a code today.
-      if (localStorage.getItem('hasSubmittedToday') === getTodayString()) {
+      if (userData.hasSubmittedToday) {
         alert("You have already submitted a code today.");
         return;
       }
-      // Get global registry of codes.
-      let globalCodes = JSON.parse(localStorage.getItem('globalCodes') || '{}');
-      if (!globalCodes[submittedCode]) {
-        alert("Invalid or expired code.");
-        return;
-      }
-      if (!isWithin24Hours(globalCodes[submittedCode].timestamp)) {
-        alert("This code has expired.");
-        return;
-      }
-      if (globalCodes[submittedCode].submissions >= 10) {
-        alert("This code has reached the maximum submissions.");
-        return;
-      }
-      // Increase the owner's submission count.
-      globalCodes[submittedCode].submissions++;
-      localStorage.setItem('globalCodes', JSON.stringify(globalCodes));
-      if (myDailyCode && submittedCode === myDailyCode) {
-        localStorage.setItem('myCodeSubmissionsReceived', globalCodes[submittedCode].submissions.toString());
-        updateSubmissionCountUI(globalCodes[submittedCode].submissions);
-      }
-      localStorage.setItem('hasSubmittedToday', getTodayString());
-      alert("Code submitted successfully! You've earned a +0.5x bonus for today.");
-      updateMiningPowerUI();
-      inputField.value = "";
+      // Call the Cloud Function "submitCode" securely.
+      const submitCodeFunction = functions.httpsCallable('submitCode');
+      submitCodeFunction({ code: submittedCode })
+        .then((result) => {
+          alert(result.data.message);
+          submitCodeInput.value = "";
+        })
+        .catch((error) => {
+          console.error("Error calling submitCode function:", error);
+          alert(error.message);
+        });
     });
 
-    // -------------------------------
+    // -------------------------------------------------
     // Upgrade Modal Functionality
-    // -------------------------------
+    // -------------------------------------------------
     const upgradeButton = document.getElementById('upgradeButton');
     const upgradeModal = document.getElementById('upgradeModal');
     const closeModal = document.getElementById('closeModal');
     const buyButtons = document.querySelectorAll('.power-buy');
-
     upgradeButton.addEventListener('click', () => {
       upgradeModal.classList.add('active');
     });
-
     closeModal.addEventListener('click', () => {
       upgradeModal.classList.remove('active');
     });
-
     upgradeModal.addEventListener('click', (e) => {
       if (e.target === upgradeModal) {
         upgradeModal.classList.remove('active');
       }
     });
-
     buyButtons.forEach(button => {
       button.addEventListener('click', () => {
-        const power = button.dataset.power;
+        const power = parseFloat(button.dataset.power);
         const price = button.dataset.price;
         const powerName = button.closest('.power-option').querySelector('.power-name').textContent;
         if (tg) {
@@ -348,15 +347,15 @@
             title: 'Confirm Purchase',
             message: `Do you want to buy ${powerName} (${power}x power) for ${price} Stars?`,
             buttons: [
-              {id: 'cancel', type: 'cancel'},
-              {id: 'buy', type: 'default', text: 'Buy'}
+              { id: 'cancel', type: 'cancel' },
+              { id: 'buy', type: 'default', text: 'Buy' }
             ]
           }, (buttonId) => {
             if (buttonId === 'buy') {
-              localStorage.setItem('miningPower', power);
-              document.getElementById('power').textContent = power;
+              // Update the user's mining power.
+              currentUserDoc.update({ miningPower: power });
               buyButtons.forEach(btn => {
-                if (btn.dataset.power === power) {
+                if (parseFloat(btn.dataset.power) === power) {
                   btn.textContent = 'Purchased';
                   btn.disabled = true;
                   btn.classList.add('purchased');
@@ -372,10 +371,9 @@
           });
         } else {
           if (confirm(`Do you want to buy ${powerName} (${power}x power) for ${price} Stars?`)) {
-            localStorage.setItem('miningPower', power);
-            document.getElementById('power').textContent = power;
+            currentUserDoc.update({ miningPower: power });
             buyButtons.forEach(btn => {
-              if (btn.dataset.power === power) {
+              if (parseFloat(btn.dataset.power) === power) {
                 btn.textContent = 'Purchased';
                 btn.disabled = true;
                 btn.classList.add('purchased');
