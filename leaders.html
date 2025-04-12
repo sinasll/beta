@@ -6,8 +6,13 @@
   <title>$BLACK | Leaders</title>
   <link rel="stylesheet" href="leaders.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 </head>
 <body>
+  <!-- Your existing HTML content -->
   <div class="header">
     <h1 class="logo">$BLACK</h1>
   </div>
@@ -23,107 +28,171 @@
       </div>
       
       <!-- Leaderboard Rows -->
-      <div class="leaderboard-row">
-        <div class="rank">1</div>
-        <div class="user-info">
-          <div class="avatar">👑</div>
-          <div class="username">cryptoking</div>
-        </div>
-        <div class="amount">1,245,000</div>
-      </div>
-      
-      <div class="leaderboard-row">
-        <div class="rank">2</div>
-        <div class="user-info">
-          <div class="avatar">🦍</div>
-          <div class="username">bitcoin_ape</div>
-        </div>
-        <div class="amount">987,500</div>
-      </div>
-      
-      <div class="leaderboard-row">
-        <div class="rank">3</div>
-        <div class="user-info">
-          <div class="avatar">🐋</div>
-          <div class="username">whalecoin</div>
-        </div>
-        <div class="amount">876,200</div>
-      </div>
-      
-      <div class="leaderboard-row">
-        <div class="rank">4</div>
-        <div class="user-info">
-          <div class="avatar">🦊</div>
-          <div class="username">fox_miner</div>
-        </div>
-        <div class="amount">765,300</div>
-      </div>
-      
-      <div class="leaderboard-row">
-        <div class="rank">5</div>
-        <div class="user-info">
-          <div class="avatar">👽</div>
-          <div class="username">alienminer</div>
-        </div>
-        <div class="amount">654,100</div>
-      </div>
-      
-      <div class="leaderboard-row">
-        <div class="rank">6</div>
-        <div class="user-info">
-          <div class="avatar">🤖</div>
-          <div class="username">robotminer</div>
-        </div>
-        <div class="amount">543,200</div>
-      </div>
-      
-      <div class="leaderboard-row">
-        <div class="rank">7</div>
-        <div class="user-info">
-          <div class="avatar">🐉</div>
-          <div class="username">dragonminer</div>
-        </div>
-        <div class="amount">432,500</div>
-      </div>
-      
-      <div class="leaderboard-row">
-        <div class="rank">8</div>
-        <div class="user-info">
-          <div class="avatar">🦅</div>
-          <div class="username">eagleminer</div>
-        </div>
-        <div class="amount">321,700</div>
-      </div>
-      
-      <div class="leaderboard-row">
-        <div class="rank">9</div>
-        <div class="user-info">
-          <div class="avatar">🦉</div>
-          <div class="username">owlminer</div>
-        </div>
-        <div class="amount">210,900</div>
-      </div>
-      
-      <div class="leaderboard-row">
-        <div class="rank">10</div>
-        <div class="user-info">
-          <div class="avatar">🦄</div>
-          <div class="username">blackminer <span class="you-indicator">YOU</span></div>
-        </div>
-        <div class="amount">109,500</div>
+      <div id="leaderboard-rows">
+        <div class="loading">Loading leaderboard...</div>
       </div>
     </div>
   </div>
 
   <nav class="nav-menu" id="nav-menu">
     <ul class="nav-list">
-      <li><a href="index.html"></i> MINE</a></li>
-      <li><a href="leaders.html" class="active"></i> LEADERS</a></li>          
-      <li><a href="earn.html"></i> EARN</a></li>
-      <li><a href="friends.html"></i> FRIENDS</a></li>
-      <li><a href="wallet.html"></i> WALLET</a></li>
+      <li><a href="index.html">MINE</a></li>
+      <li><a href="leaders.html" class="active">LEADERS</a></li>          
+      <li><a href="earn.html">EARN</a></li>
+      <li><a href="friends.html">FRIENDS</a></li>
+      <li><a href="wallet.html">WALLET</a></li>
     </ul>
   </nav>
 
+  <script>
+    // Firebase Initialization
+    const firebaseConfig = {
+      apiKey: "AIzaSyAzXSCn_QL2XeyRZD71By443sl4wOtXf2Y",
+      authDomain: "pipcore-8844f.firebaseapp.com",
+      projectId: "pipcore-8844f",
+      storageBucket: "pipcore-8844f.appspot.com",
+      messagingSenderId: "921115337984",
+      appId: "1:921115337984:web:17161651342ad78017bfe5"
+    };
+
+    try {
+      firebase.initializeApp(firebaseConfig);
+      console.log("Firebase initialized successfully");
+    } catch (error) {
+      console.error("Firebase initialization error:", error);
+      showError("Failed to initialize Firebase");
+    }
+
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    // Display error message to user
+    function showError(message) {
+      const leaderboard = document.getElementById('leaderboard-rows');
+      leaderboard.innerHTML = `
+        <div class="error">
+          <i class="fas fa-exclamation-triangle"></i>
+          ${message}
+          <button onclick="window.location.reload()">Retry</button>
+        </div>
+      `;
+    }
+
+    // Format numbers with commas
+    function formatNumber(num) {
+      return Number(num || 0).toLocaleString();
+    }
+
+    // Get emoji based on rank
+    function getAvatarEmoji(rank) {
+      const emojis = ['👑', '🦍', '🐋', '🦊', '👽', '🤖', '🐉', '🦅', '🦉', '🦄'];
+      return emojis[rank - 1] || '👤';
+    }
+
+    // Load leaderboard data
+    async function loadLeaderboard() {
+      try {
+        console.log("Loading leaderboard...");
+        const leaderboard = document.getElementById('leaderboard-rows');
+        
+        // Show loading state
+        leaderboard.innerHTML = '<div class="loading">Loading data...</div>';
+        
+        // Get current user if logged in
+        const currentUser = auth.currentUser;
+        let currentUserId = null;
+        if (currentUser) {
+          currentUserId = currentUser.uid;
+          console.log("Current user:", currentUserId);
+        }
+
+        // Query top 10 miners
+        const querySnapshot = await db.collection('users')
+          .orderBy('mined', 'desc')
+          .limit(10)
+          .get();
+
+        console.log(`Found ${querySnapshot.size} miners`);
+        
+        if (querySnapshot.empty) {
+          leaderboard.innerHTML = '<div class="empty">No miners found</div>';
+          return;
+        }
+
+        // Build leaderboard HTML
+        let html = '';
+        let rank = 1;
+        
+        querySnapshot.forEach((doc) => {
+          const user = doc.data();
+          const isCurrentUser = currentUserId && doc.id === currentUserId;
+          
+          html += `
+            <div class="leaderboard-row">
+              <div class="rank">${rank}</div>
+              <div class="user-info">
+                <div class="avatar">${getAvatarEmoji(rank)}</div>
+                <div class="username">
+                  ${user.username || 'anonymous'}
+                  ${isCurrentUser ? '<span class="you-indicator">YOU</span>' : ''}
+                </div>
+              </div>
+              <div class="amount">${formatNumber(user.mined)}</div>
+            </div>
+          `;
+          
+          rank++;
+        });
+
+        leaderboard.innerHTML = html;
+        
+      } catch (error) {
+        console.error("Leaderboard error:", error);
+        showError(`Failed to load leaderboard: ${error.message}`);
+      }
+    }
+
+    // Initialize when auth state is known
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        console.log("User authenticated:", user.uid);
+      } else {
+        console.log("No authenticated user - loading public data");
+      }
+      loadLeaderboard();
+    });
+
+    // Optional: Add a retry button for errors
+    window.retryLeaderboard = loadLeaderboard;
+  </script>
+
+  <style>
+    /* Add these styles to your leaders.css or here */
+    .loading, .error, .empty {
+      padding: 20px;
+      text-align: center;
+      color: #666;
+    }
+    
+    .error {
+      color: #ff4444;
+    }
+    
+    .error button {
+      background: #4285f4;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    
+    .you-indicator {
+      color: #4285f4;
+      font-size: 0.8em;
+      margin-left: 5px;
+    }
+  </style>
 </body>
 </html>
