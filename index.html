@@ -6,13 +6,8 @@
   <title>$BLACK Mining</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-  <!-- Telegram WebApp SDK -->
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- Firebase SDKs (using compat libraries) -->
-  <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-functions-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/appwrite@17.0.1"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
   <div class="header">
@@ -29,10 +24,6 @@
       <div class="stats-row">
         <div>Total Miners</div>
         <div><span id="totalminers">0</span></div>
-      </div>
-      <div class="stats-row">
-        <div>Active Miners</div>
-        <div><span id="activeminers">0</span></div>
       </div>
     </div>
 
@@ -59,21 +50,7 @@
       <button class="button" id="mineButton">Start Mining</button>
     </div>
 
-    <!-- Daily Code Section -->
-    <div class="card">
-      <div class="stats-row">
-        <h2 class="card-title">Daily Code</h2>
-        <div><span id="dailyCode">XXXXXXXXXX</span></div>
-      </div>
-      <button class="button" id="copyCodeButton">Copy Code</button>
-      <input type="text" id="submitCodeInput" placeholder="Enter 10-digit code" maxlength="10" />
-      <button class="button" id="submitCodeButton">Submit Code</button>
-    </div>
-
-    <div class="countdown" id="countdown">Daily reset in 00:00:00</div>
-  </div>
-
-  <!-- Upgrade Power Modal -->
+     <!-- Upgrade Power Modal -->
 <div class="modal-overlay" id="upgradeModal">
   <div class="modal">
     <div class="modal-header">
@@ -111,6 +88,20 @@
     </div>
   </div>
 </div>
+
+    <!-- Daily Code Section -->
+    <div class="card">
+      <div class="stats-row">
+        <h2 class="card-title">Daily Code</h2>
+        <div><span id="dailyCode">XXXXXXXXXX</span></div>
+      </div>
+      <button class="button" id="copyCodeButton">Copy Code</button>
+      <input type="text" id="submitCodeInput" placeholder="Enter 10-digit code" maxlength="10" />
+      <button class="button" id="submitCodeButton">Submit Code</button>
+    </div>
+
+    <div class="countdown" id="countdown">Daily reset in 00:00:00</div>
+  </div>
 
   <!-- Navigation Menu -->
   <nav class="nav-menu" id="nav-menu">
