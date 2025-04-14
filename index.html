@@ -77,288 +77,211 @@
     </ul>
   </nav>
 
-  <!-- Inline JavaScript -->
   <script>
-    // Global variables
-    let miningInterval;
-    let currentUser = null;
-    let userBalance = 0;
-    let miningPower = 1.0;
-
-    // Wait until the DOM content is fully loaded
     document.addEventListener('DOMContentLoaded', async () => {
       try {
         // Initialize Telegram WebApp
-        if (!window.Telegram || !Telegram.WebApp) {
-          throw new Error("Telegram WebApp SDK not loaded");
-        }
-        
         Telegram.WebApp.ready();
         Telegram.WebApp.expand();
-        Telegram.WebApp.enableClosingConfirmation();
+        Telegram.WebApp.MainButton.hide();
+        Telegram.WebApp.BackButton.hide();
 
-        // Initialize user data
-        currentUser = Telegram.WebApp.initDataUnsafe.user;
-        if (!currentUser || !currentUser.id) {
-          throw new Error("User not authenticated");
+        // Check if user is authenticated
+        if (!Telegram.WebApp.initDataUnsafe?.user) {
+          showError('Please open this app through Telegram');
+          return;
         }
-
-        document.getElementById('username').textContent = 
-          currentUser.username || `${currentUser.first_name}${currentUser.last_name ? ' ' + currentUser.last_name : ''}`;
 
         // Initialize Appwrite client
-        if (!window.Appwrite) {
-          throw new Error("Appwrite SDK not loaded");
-        }
-
-        const client = new Appwrite.Client()
+        const client = new Appwrite.Client();
+        client
           .setEndpoint('https://cloud.appwrite.io/v1')
           .setProject('67fc2c5c002c9c00f778');
 
-        // Load initial user data
+        // Set username from Telegram data
+        const user = Telegram.WebApp.initDataUnsafe.user;
+        document.getElementById('username').textContent = 
+          user.username || `${user.first_name}${user.last_name ? ' ' + user.last_name : ''}`;
+
+        // Load initial data
         await loadUserData();
 
-        // Button event listeners
-        document.getElementById('mineButton').addEventListener('click', toggleMining);
-        document.getElementById('upgradeButton').addEventListener('click', upgradePower);
+        // Setup button event listeners
+        document.getElementById('mineButton').addEventListener('click', startMining);
         document.getElementById('copyCodeButton').addEventListener('click', copyDailyCode);
         document.getElementById('submitCodeButton').addEventListener('click', submitCode);
-
-        // Start countdown timer
-        updateCountdown();
-        setInterval(updateCountdown, 1000);
+        document.getElementById('upgradeButton').addEventListener('click', upgradePower);
 
       } catch (error) {
-        console.error("Initialization error:", error);
-        showError(error.message);
+        console.error('Initialization error:', error);
+        showError(`Initialization failed: ${error.message}`);
       }
     });
 
-    // Load user data from Appwrite
     async function loadUserData() {
       try {
-        const response = await fetch('https://67fc399b4d05399fae0f.appwrite.global/', {
+        const response = await fetch('https://cloud.appwrite.io/v1/functions/67fc53f00dd975eb7c7f/exec', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-Appwrite-Project': '67fc2c5c002c9c00f778',
-            'X-Appwrite-Key': 'standard_61995e5422f330e2eb0d95c43552731e8d6c8400cf78414f05e53f9d0360e722d60a982595bc26dd4381a26cfdcf03ccf803e4d6687c878424eacf9fbe94dede144b6d6f450dc02e054bbdca42954652081ba5dd626c713dd6fac896246ffb75d1a82789fd520fed01bb098db7b7ba0214b5d5b83e06f9be916f2be2bc5e8848'
+            'X-Telegram-Init-Data': Telegram.WebApp.initData
           },
           body: JSON.stringify({ 
-            userId: currentUser.id.toString(),
-            action: 'getUserData'
+            action: 'getUserData',
+            userId: Telegram.WebApp.initDataUnsafe.user.id.toString() 
           })
         });
 
         if (!response.ok) {
-          throw new Error(`Server error: ${response.status}`);
+          throw new Error(`HTTP error: ${response.status}`);
         }
 
-        const result = await response.json();
+        const data = await response.json();
         
-        if (result.success) {
-          updateUI(result.data);
+        if (data.success) {
+          // Update UI with received data
+          document.getElementById('balance').textContent = data.balance.toFixed(3);
+          document.getElementById('power').textContent = data.power.toFixed(1);
+          document.getElementById('submissionCount').textContent = data.submissions;
+          document.getElementById('dailyCode').textContent = data.dailyCode || 'XXXXXXXXXX';
+          document.getElementById('mined').textContent = data.totalMined.toFixed(2);
+          document.getElementById('totalminers').textContent = data.totalMiners;
         } else {
-          throw new Error(result.error || "Failed to load user data");
+          throw new Error(data.error || 'Failed to load data');
         }
+
       } catch (error) {
-        console.error("Load user data error:", error);
-        showError(error.message);
+        console.error('Load data error:', error);
+        showError(`Failed to load data: ${error.message}`);
       }
     }
 
-    // Toggle mining state
-    async function toggleMining() {
-      const mineButton = document.getElementById('mineButton');
-      
-      if (miningInterval) {
-        // Stop mining
-        clearInterval(miningInterval);
-        miningInterval = null;
-        mineButton.textContent = 'Start Mining';
-        Telegram.WebApp.showAlert("Mining stopped");
-      } else {
-        // Start mining
-        mineButton.textContent = 'Stop Mining';
+    async function startMining() {
+      try {
         Telegram.WebApp.MainButton.showProgress();
         
-        try {
-          const response = await fetch('https://67fc399b4d05399fae0f.appwrite.global/', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Appwrite-Project': '67fc2c5c002c9c00f778',
-              'X-Appwrite-Key': 'standard_61995e5422f330e2eb0d95c43552731e8d6c8400cf78414f05e53f9d0360e722d60a982595bc26dd4381a26cfdcf03ccf803e4d6687c878424eacf9fbe94dede144b6d6f450dc02e054bbdca42954652081ba5dd626c713dd6fac896246ffb75d1a82789fd520fed01bb098db7b7ba0214b5d5b83e06f9be916f2be2bc5e8848'
-            },
-            body: JSON.stringify({ 
-              userId: currentUser.id.toString(),
-              action: 'startMining'
-            })
-          });
-
-          if (!response.ok) {
-            throw new Error(`Server error: ${response.status}`);
-          }
-
-          const result = await response.json();
-          
-          if (result.success) {
-            updateUI(result.data);
-            miningInterval = setInterval(updateMining, 1000);
-            Telegram.WebApp.showAlert("Mining started successfully!");
-          } else {
-            throw new Error(result.error || "Failed to start mining");
-          }
-        } catch (error) {
-          console.error("Mining error:", error);
-          showError(error.message);
-          mineButton.textContent = 'Start Mining';
-        } finally {
-          Telegram.WebApp.MainButton.hideProgress();
-        }
-      }
-    }
-
-    // Update mining progress
-    async function updateMining() {
-      try {
-        const response = await fetch('https://67fc399b4d05399fae0f.appwrite.global/', {
+        const response = await fetch('https://cloud.appwrite.io/v1/functions/67fc53f00dd975eb7c7f/exec', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-Appwrite-Project': '67fc2c5c002c9c00f778',
-            'X-Appwrite-Key': 'standard_61995e5422f330e2eb0d95c43552731e8d6c8400cf78414f05e53f9d0360e722d60a982595bc26dd4381a26cfdcf03ccf803e4d6687c878424eacf9fbe94dede144b6d6f450dc02e054bbdca42954652081ba5dd626c713dd6fac896246ffb75d1a82789fd520fed01bb098db7b7ba0214b5d5b83e06f9be916f2be2bc5e8848'
+            'X-Telegram-Init-Data': Telegram.WebApp.initData
           },
           body: JSON.stringify({ 
-            userId: currentUser.id.toString(),
-            action: 'updateMining'
+            action: 'startMining',
+            userId: Telegram.WebApp.initDataUnsafe.user.id.toString() 
           })
         });
 
-        if (!response.ok) {
-          throw new Error(`Server error: ${response.status}`);
-        }
-
         const result = await response.json();
-        
-        if (result.success) {
-          updateUI(result.data);
-        } else {
-          throw new Error(result.error || "Mining update failed");
+        if (!result.success) {
+          throw new Error(result.error || 'Mining failed');
         }
+
+        Telegram.WebApp.showAlert('Mining started successfully!');
+        document.getElementById('dailyCode').textContent = result.dailyCode;
+        await loadUserData(); // Refresh data
+
       } catch (error) {
-        console.error("Update mining error:", error);
-        showError(error.message);
-      }
-    }
-
-    // Upgrade mining power
-    async function upgradePower() {
-      const upgradeButton = document.getElementById('upgradeButton');
-      upgradeButton.disabled = true;
-      Telegram.WebApp.MainButton.showProgress();
-
-      try {
-        const response = await fetch('https://67fc399b4d05399fae0f.appwrite.global/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Appwrite-Project': '67fc2c5c002c9c00f778',
-            'X-Appwrite-Key': 'standard_61995e5422f330e2eb0d95c43552731e8d6c8400cf78414f05e53f9d0360e722d60a982595bc26dd4381a26cfdcf03ccf803e4d6687c878424eacf9fbe94dede144b6d6f450dc02e054bbdca42954652081ba5dd626c713dd6fac896246ffb75d1a82789fd520fed01bb098db7b7ba0214b5d5b83e06f9be916f2be2bc5e8848'
-          },
-          body: JSON.stringify({ 
-            userId: currentUser.id.toString(),
-            action: 'upgradePower'
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error(`Server error: ${response.status}`);
-        }
-
-        const result = await response.json();
-        
-        if (result.success) {
-          updateUI(result.data);
-          Telegram.WebApp.showAlert("Power upgraded successfully!");
-        } else {
-          throw new Error(result.error || "Failed to upgrade power");
-        }
-      } catch (error) {
-        console.error("Upgrade error:", error);
+        console.error('Mining error:', error);
         showError(error.message);
       } finally {
-        upgradeButton.disabled = false;
         Telegram.WebApp.MainButton.hideProgress();
       }
     }
 
-    // Copy daily code to clipboard
     function copyDailyCode() {
       const code = document.getElementById('dailyCode').textContent;
-      navigator.clipboard.writeText(code)
-        .then(() => Telegram.WebApp.showAlert("Code copied to clipboard!"))
-        .catch(err => showError("Failed to copy code: " + err.message));
+      if (code && code !== 'XXXXXXXXXX') {
+        navigator.clipboard.writeText(code);
+        Telegram.WebApp.showAlert('Code copied to clipboard!');
+      } else {
+        showError('No active mining code available');
+      }
     }
 
-    // Submit a friend's code
     async function submitCode() {
-      const codeInput = document.getElementById('submitCodeInput');
-      const code = codeInput.value.trim();
-      
+      const code = document.getElementById('submitCodeInput').value.trim();
       if (!code || code.length !== 10) {
-        showError("Please enter a valid 10-digit code");
+        showError('Please enter a valid 10-digit code');
         return;
       }
 
-      const submitButton = document.getElementById('submitCodeButton');
-      submitButton.disabled = true;
-      Telegram.WebApp.MainButton.showProgress();
-
       try {
-        const response = await fetch('https://67fc399b4d05399fae0f.appwrite.global/', {
+        Telegram.WebApp.MainButton.showProgress();
+        
+        const response = await fetch('https://cloud.appwrite.io/v1/functions/67fc53f00dd975eb7c7f/exec', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-Appwrite-Project': '67fc2c5c002c9c00f778',
-            'X-Appwrite-Key': 'standard_61995e5422f330e2eb0d95c43552731e8d6c8400cf78414f05e53f9d0360e722d60a982595bc26dd4381a26cfdcf03ccf803e4d6687c878424eacf9fbe94dede144b6d6f450dc02e054bbdca42954652081ba5dd626c713dd6fac896246ffb75d1a82789fd520fed01bb098db7b7ba0214b5d5b83e06f9be916f2be2bc5e8848'
+            'X-Telegram-Init-Data': Telegram.WebApp.initData
           },
           body: JSON.stringify({ 
-            userId: currentUser.id.toString(),
             action: 'submitCode',
+            userId: Telegram.WebApp.initDataUnsafe.user.id.toString(),
             code: code
           })
         });
 
-        if (!response.ok) {
-          throw new Error(`Server error: ${response.status}`);
+        const result = await response.json();
+        if (!result.success) {
+          throw new Error(result.error || 'Code submission failed');
         }
 
-        const result = await response.json();
-        
-        if (result.success) {
-          updateUI(result.data);
-          codeInput.value = '';
-          Telegram.WebApp.showAlert("Code submitted successfully!");
-        } else {
-          throw new Error(result.error || "Failed to submit code");
-        }
+        Telegram.WebApp.showAlert('Code submitted successfully!');
+        document.getElementById('submitCodeInput').value = '';
+        await loadUserData(); // Refresh data
+
       } catch (error) {
-        console.error("Submit code error:", error);
+        console.error('Submit code error:', error);
         showError(error.message);
       } finally {
-        submitButton.disabled = false;
         Telegram.WebApp.MainButton.hideProgress();
       }
     }
 
-    // Update countdown timer
+    async function upgradePower() {
+      try {
+        const result = await Telegram.WebApp.openInvoice({
+          title: 'Upgrade Mining Power',
+          description: 'Purchase a 2x mining power boost',
+          currency: 'USD',
+          prices: [
+            { label: 'Power Boost', amount: '499' }
+          ],
+          payload: JSON.stringify({
+            userId: Telegram.WebApp.initDataUnsafe.user.id.toString(),
+            type: 'powerUpgrade'
+          })
+        });
+
+        if (result.status === 'paid') {
+          Telegram.WebApp.showAlert('Upgrade successful! Your mining power has been doubled.');
+          await loadUserData();
+        }
+
+      } catch (error) {
+        console.error('Upgrade error:', error);
+        showError(`Upgrade failed: ${error.message}`);
+      }
+    }
+
+    function showError(message) {
+      Telegram.WebApp.showPopup({
+        title: 'Error',
+        message: message,
+        buttons: [{ type: 'default', text: 'OK' }]
+      }, () => {
+        // Callback after popup is closed
+      });
+    }
+
+    // Countdown timer for daily reset
     function updateCountdown() {
       const now = new Date();
-      const midnight = new Date();
-      midnight.setHours(24, 0, 0, 0);
+      const resetTime = new Date();
+      resetTime.setHours(24, 0, 0, 0); // Midnight reset
       
-      const diff = midnight - now;
+      const diff = resetTime - now;
       const hours = Math.floor(diff / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
@@ -367,35 +290,9 @@
         `Daily reset in ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
 
-    // Update UI with new data
-    function updateUI(data) {
-      if (data.balance !== undefined) {
-        userBalance = data.balance;
-        document.getElementById('balance').textContent = userBalance.toFixed(3);
-      }
-      
-      if (data.power !== undefined) {
-        miningPower = data.power;
-        document.getElementById('power').textContent = miningPower.toFixed(1);
-      }
-      
-      if (data.dailyCode) {
-        document.getElementById('dailyCode').textContent = data.dailyCode;
-      }
-      
-      if (data.submissionCount !== undefined) {
-        document.getElementById('submissionCount').textContent = data.submissionCount;
-      }
-    }
-
-    // Show error message
-    function showError(message) {
-      Telegram.WebApp.showPopup({
-        title: 'Error',
-        message: message,
-        buttons: [{ id: 'ok', type: 'default' }]
-      });
-    }
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
   </script>
+  
 </body>
 </html>
