@@ -115,27 +115,26 @@
     }
 
     async function callAPI(action, payload = {}) {
-      try {
-        const response = await fetch(API_ENDPOINT, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Telegram-Init-Data': Telegram.WebApp.initData
-          },
-          body: JSON.stringify({ action, ...payload })
-        });
+  try {
+    const response = await fetch(API_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Telegram-Init-Data': Telegram.WebApp.initData  // Must match exactly
+      },
+      body: JSON.stringify({ action, ...payload })
+    });
 
-        if (!response.ok) {
-          const errorResponse = await response.json();
-          throw new Error(errorResponse.error || 'API request failed');
-        }
-
-        return await response.json();
-      } catch (error) {
-        console.error('API Error:', error);
-        throw error;
-      }
+    if (!response.ok) {
+      const errorResponse = await response.json();
+      throw new Error(errorResponse.error || 'API request failed');
     }
+    return await response.json();
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+}
 
     async function loadUserData() {
       try {
