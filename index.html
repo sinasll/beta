@@ -4,11 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>$BLACK Mining</title>
-  <link rel="stylesheet" href="style.css"/>
-  <!-- Font Awesome for icons if needed -->
+  <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-  <!-- Appwrite Web SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/appwrite@17.0.1"></script>
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -22,7 +19,7 @@
     <div class="card global-stats">
       <div class="stats-row">
         <div>Total Mined</div>
-        <div><span id="mined">0.00</span> / 100,000,000 $BLACK</div>
+        <div><span id="mined">0.000</span> / 100,000,000 $BLACK</div>
       </div>
       <div class="stats-row">
         <div>Total Miners</div>
@@ -45,26 +42,55 @@
         <div>Mining Power</div>
         <div>x<span id="power">1.0</span></div>
       </div>
-      <div class="stats-row">
-        <div>Your Code Submissions</div>
-        <div><span id="submissionCount">0</span>/10</div>
-      </div>
       <button class="button" id="upgradeButton">Upgrade Power</button>
       <button class="button" id="mineButton">Start Mining</button>
     </div>
 
-    <!-- Daily Code Section -->
-    <div class="card">
-      <div class="stats-row">
-        <h2 class="card-title">Daily Code</h2>
-        <div><span id="dailyCode">XXXXXXXXXX</span></div>
-      </div>
-      <button class="button" id="copyCodeButton">Copy Code</button>
-      <input type="text" id="submitCodeInput" placeholder="Enter 10-digit code" maxlength="10" />
-      <button class="button" id="submitCodeButton">Submit Code</button>
-    </div>
-
+<!-- countdown -->
     <div class="countdown" id="countdown">Daily reset in 00:00:00</div>
+  </div>
+
+  <!-- Upgrade Power Modal -->
+  <div class="modal-overlay" id="upgradeModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Upgrade Mining Power</h3>
+        <button class="modal-close" id="closeModal">&times;</button>
+      </div>
+      
+      <div class="power-option">
+        <div class="power-info">
+          <div class="power-name">Basic Miner</div>
+          <div class="power-desc">+0.5x mining acceleration</div>
+          <div class="power-price"><i class="fas fa-coins"></i> 50 $BLACK</div>
+        </div>
+        <button class="power-buy" data-power="0.5" data-price="50">Upgrade</button>
+      </div>
+      
+      <div class="power-option">
+        <div class="power-info">
+          <div class="power-name">Standard Miner</div>
+          <div class="power-desc">+1.0x mining acceleration</div>
+          <div class="power-price"><i class="fas fa-coins"></i> 100 $BLACK</div>
+        </div>
+        <button class="power-buy" data-power="1.0" data-price="100">Upgrade</button>
+      </div>
+      
+      <div class="power-option elite-highlight">
+        <div class="elite-glow"></div>
+        <div class="power-info">
+          <div class="power-badge">RECOMMENDED</div>
+          <div class="power-name">Advanced Miner</div>
+          <div class="power-desc">+1.5x mining acceleration</div>
+          <div class="power-price"><i class="fas fa-coins"></i> 150 $BLACK</div>
+        </div>
+        <button class="power-buy elite-btn" data-power="1.5" data-price="150">Upgrade</button>
+      </div>
+      
+      <div class="power-note">
+        <i class="fas fa-info-circle"></i> Higher mining power = More $BLACK per minute
+      </div>
+    </div>
   </div>
 
   <!-- Navigation Menu -->
@@ -79,133 +105,67 @@
   </nav>
 
   <script>
-    // Replace with your actual Appwrite Cloud Function endpoint
-    const API_ENDPOINT = 'https://cloud.appwrite.io/v1/functions/67fc53f00dd975eb7c7f/exec';
-
-    document.addEventListener('DOMContentLoaded', async () => {
-      try {
-        Telegram.WebApp.ready();
-        Telegram.WebApp.expand();
-
-        if (!Telegram.WebApp.initDataUnsafe?.user) {
-          showError('Please open through Telegram');
-          return;
-        }
-
-        // Set username from Telegram data
-        const user = Telegram.WebApp.initDataUnsafe.user;
-        document.getElementById('username').textContent =
-          user.username || `${user.first_name}${user.last_name ? ' ' + user.last_name : ''}`;
-
-        await loadUserData();
-
-        // Button event listeners
-        document.getElementById('mineButton').addEventListener('click', startMining);
-        document.getElementById('copyCodeButton').addEventListener('click', copyDailyCode);
-        document.getElementById('submitCodeButton').addEventListener('click', submitCode);
-        document.getElementById('upgradeButton').addEventListener('click', upgradePower);
-
-      } catch (error) {
-        showError(`Init error: ${error.message}`);
-      }
-    });
-
-    function showError(message) {
-      alert(message);
-    }
-
-    async function callAPI(action, payload = {}) {
-  try {
-    const response = await fetch(API_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Telegram-Init-Data': Telegram.WebApp.initData  // Must match exactly
-      },
-      body: JSON.stringify({ action, ...payload })
-    });
-
-    if (!response.ok) {
-      const errorResponse = await response.json();
-      throw new Error(errorResponse.error || 'API request failed');
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('API Error:', error);
-    throw error;
-  }
-}
-
-    async function loadUserData() {
-      try {
-        const data = await callAPI('getUserData');
-
-        document.getElementById('balance').textContent = parseFloat(data.balance).toFixed(3);
-        document.getElementById('power').textContent = parseFloat(data.power).toFixed(1);
-        document.getElementById('submissionCount').textContent = data.submissions;
-        document.getElementById('dailyCode').textContent = data.dailyCode || 'XXXXXXXXXX';
-        document.getElementById('mined').textContent = parseFloat(data.totalMined).toFixed(2);
-        document.getElementById('totalminers').textContent = data.totalMiners;
-      } catch (error) {
-        showError(`Load failed: ${error.message}`);
-      }
-    }
-
-    async function startMining() {
-      try {
-        if (Telegram.WebApp.MainButton) {
-          Telegram.WebApp.MainButton.showProgress();
-        }
-        const response = await callAPI('startMining');
-        Telegram.WebApp.showAlert('Mining started!');
-        await loadUserData();
-      } catch (error) {
-        showError(error.message);
-      } finally {
-        if (Telegram.WebApp.MainButton) {
-          Telegram.WebApp.MainButton.hideProgress();
-        }
-      }
-    }
-
-    async function copyDailyCode() {
-      const code = document.getElementById('dailyCode').textContent;
-      try {
-        await navigator.clipboard.writeText(code);
-        Telegram.WebApp.showAlert('Daily code copied!');
-      } catch (error) {
-        showError('Failed to copy code');
-      }
-    }
-
-    async function submitCode() {
-      const codeInput = document.getElementById('submitCodeInput').value;
-      try {
-        const response = await callAPI('submitCode', { code: codeInput });
-        if (response.success) {
-          Telegram.WebApp.showAlert('Code submitted successfully!');
-        } else {
-          throw new Error(response.error);
-        }
-        await loadUserData();
-      } catch (error) {
-        showError(error.message);
-      }
-    }
-
-    async function upgradePower() {
-      try {
-        const response = await callAPI('upgradePower');
-        if (response.success) {
-          Telegram.WebApp.showAlert('Power upgraded!');
-        } else {
-          throw new Error(response.error);
-        }
-        await loadUserData();
-      } catch (error) {
-        showError(error.message);
-      }
+    // Initialize Telegram WebApp
+    const tg = window.Telegram?.WebApp;
+    
+    if (tg) {
+      // Initialize and expand the WebApp
+      tg.expand();
+      tg.ready();
+      tg.enableClosingConfirmation();
+      
+      // Set the username from Telegram
+      document.addEventListener('DOMContentLoaded', function() {
+        const user = tg.initDataUnsafe?.user;
+        document.getElementById('username').textContent = 
+          user?.username || 
+          `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || 
+          'miner';
+      });
+    } else {
+      console.log('Not running in Telegram WebApp');
+      document.getElementById('username').textContent = 'miner';
     }
   </script>
+
+  <script>
+     // Modal functionality
+ const upgradeModal = document.getElementById('upgradeModal');
+ const upgradeButton = document.getElementById('upgradeButton');
+ const closeModal = document.getElementById('closeModal');
+ 
+ // Open modal
+ function openUpgradeModal() {
+   upgradeModal.classList.add('active');
+   document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+ }
+ 
+ // Close modal
+ function closeUpgradeModal() {
+   upgradeModal.classList.remove('active');
+   document.body.style.overflow = ''; // Re-enable scrolling
+ }
+ 
+ // Event listeners
+ upgradeButton.addEventListener('click', openUpgradeModal);
+ closeModal.addEventListener('click', closeUpgradeModal);
+ 
+ // Close when clicking outside modal
+ upgradeModal.addEventListener('click', (e) => {
+   if (e.target === upgradeModal) {
+     closeUpgradeModal();
+   }
+ });
+ 
+ // Close with Escape key
+ document.addEventListener('keydown', (e) => {
+   if (e.key === 'Escape' && upgradeModal.classList.contains('active')) {
+     closeUpgradeModal();
+   }
+ });
+  </script>
+
+  <script src="main.js"></script>
+
 </body>
 </html>
