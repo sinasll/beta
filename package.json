@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "firebase": "^11.6.0"
+    "appwrite": "^17.0.1"
   }
 }
