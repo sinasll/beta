@@ -1,21 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>$BLACK Mining</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <!-- Basic meta tags -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>$BLACK</title>
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
+
 <body>
+  <!-- Main header with logo -->
   <div class="header">
     <h1 class="logo">$BLACK</h1>
   </div>
 
+  <!-- Main content container -->
   <div class="container">
-    <!-- Global Stats -->
+    <!-- Global statistics section -->
     <div class="card global-stats">
       <div class="stats-row">
         <div>Total Mined</div>
@@ -27,145 +34,149 @@
       </div>
     </div>
 
-    <!-- User Stats -->
+    <!-- User statistics and controls -->
     <div class="card">
-      <h2 class="card-title">User</h2>
+      <h2 class="card-title">Miner</h2>
+      
       <div class="stats-row">
         <div>Username</div>
         <div><span id="username">username</span></div>
       </div>
+      
       <div class="stats-row">
         <div>Balance</div>
         <div><span id="balance">0.000</span> $BLACK</div>
       </div>
+      
       <div class="stats-row">
         <div>Mining Power</div>
         <div>x<span id="power">1.0</span></div>
       </div>
+      
       <button class="button" id="upgradeButton">Upgrade Power</button>
       <button class="button" id="mineButton">Start Mining</button>
     </div>
 
-<!-- countdown -->
+    <!-- Daily countdown timer -->
     <div class="countdown" id="countdown">Daily reset in 00:00:00</div>
-  </div>
 
-  <!-- Upgrade Power Modal -->
-  <div class="modal-overlay" id="upgradeModal">
-    <div class="modal">
-      <div class="modal-header">
-        <h3 class="modal-title">Upgrade Mining Power</h3>
-        <button class="modal-close" id="closeModal">&times;</button>
-      </div>
-      
-      <div class="power-option">
-        <div class="power-info">
-          <div class="power-name">Basic Miner</div>
-          <div class="power-desc">+0.5x mining acceleration</div>
-          <div class="power-price"><i class="fas fa-coins"></i> 50 $BLACK</div>
+    <!-- Spacer div -->
+    <div class="card2"></div>
+
+    <!-- Upgrade Power Modal (hidden by default) -->
+    <div class="modal-overlay" id="upgradeModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>Boost Your Mining</h3>
+          <button class="modal-close" id="closeModal">&times;</button>
         </div>
-        <button class="power-buy" data-power="0.5" data-price="50">Upgrade</button>
-      </div>
-      
-      <div class="power-option">
-        <div class="power-info">
-          <div class="power-name">Standard Miner</div>
-          <div class="power-desc">+1.0x mining acceleration</div>
-          <div class="power-price"><i class="fas fa-coins"></i> 100 $BLACK</div>
+        
+        <!-- Upgrade options -->
+        <div class="power-option">
+          <div class="power-info">
+            <div class="power-name">Basic Miner</div>
+            <div class="power-desc">+0.5x mining speed</div>
+            <div class="power-price"><i class="fas fa-coins"></i> 50 $BLACK</div>
+          </div>
+          <button class="power-buy" data-power="0.5" data-price="50">Upgrade</button>
         </div>
-        <button class="power-buy" data-power="1.0" data-price="100">Upgrade</button>
-      </div>
-      
-      <div class="power-option elite-highlight">
-        <div class="elite-glow"></div>
-        <div class="power-info">
-          <div class="power-badge">RECOMMENDED</div>
-          <div class="power-name">Advanced Miner</div>
-          <div class="power-desc">+1.5x mining acceleration</div>
-          <div class="power-price"><i class="fas fa-coins"></i> 150 $BLACK</div>
+        
+        <div class="power-option">
+          <div class="power-info">
+            <div class="power-name">Standard Miner</div>
+            <div class="power-desc">+1.0x mining speed</div>
+            <div class="power-price"><i class="fas fa-coins"></i> 100 $BLACK</div>
+          </div>
+          <button class="power-buy" data-power="1.0" data-price="100">Upgrade</button>
         </div>
-        <button class="power-buy elite-btn" data-power="1.5" data-price="150">Upgrade</button>
-      </div>
-      
-      <div class="power-note">
-        <i class="fas fa-info-circle"></i> Higher mining power = More $BLACK per minute
+        
+        <div class="power-option elite-highlight">
+          <div class="elite-glow"></div>
+          <div class="power-info">
+            <div class="power-badge">RECOMMENDED</div>
+            <div class="power-name">Advanced Miner</div>
+            <div class="power-desc">+1.5x mining speed</div>
+            <div class="power-price"><i class="fas fa-coins"></i> 150 $BLACK</div>
+          </div>
+          <button class="power-buy elite-btn" data-power="1.5" data-price="150">Upgrade</button>
+        </div>
+        
+        <div class="power-note">
+          <i class="fas fa-info-circle"></i> Higher power = More coins per minute
+        </div>
       </div>
     </div>
+
+    <!-- Bottom navigation menu -->
+    <nav class="nav-menu" id="nav-menu">
+      <ul class="nav-list">
+        <li><a href="index.html" class="active">MINE</a></li>
+        <li><a href="leaders.html">LEADERS</a></li>
+        <li><a href="earn.html">EARN</a></li>
+        <li><a href="friends.html">FRIENDS</a></li>
+        <li><a href="wallet.html">WALLET</a></li>
+      </ul>
+    </nav>
   </div>
 
-  <!-- Navigation Menu -->
-  <nav class="nav-menu" id="nav-menu">
-    <ul class="nav-list">
-      <li><a href="index.html" class="active">MINE</a></li>
-      <li><a href="leaders.html">LEADERS</a></li>
-      <li><a href="earn.html">EARN</a></li>
-      <li><a href="friends.html">FRIENDS</a></li>
-      <li><a href="wallet.html">WALLET</a></li>
-    </ul>
-  </nav>
-
+  <!-- Telegram WebApp initialization -->
   <script>
-    // Initialize Telegram WebApp
     const tg = window.Telegram?.WebApp;
     
     if (tg) {
-      // Initialize and expand the WebApp
       tg.expand();
       tg.ready();
       tg.enableClosingConfirmation();
       
-      // Set the username from Telegram
+      // Set username from Telegram
       document.addEventListener('DOMContentLoaded', function() {
         const user = tg.initDataUnsafe?.user;
-        document.getElementById('username').textContent = 
-          user?.username || 
-          `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || 
-          'miner';
+        const username = user?.username || 
+                        `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || 
+                        'miner';
+        document.getElementById('username').textContent = username;
       });
     } else {
-      console.log('Not running in Telegram WebApp');
+      console.log('Running outside Telegram');
       document.getElementById('username').textContent = 'miner';
     }
   </script>
 
+  <!-- Modal control logic -->
   <script>
-     // Modal functionality
- const upgradeModal = document.getElementById('upgradeModal');
- const upgradeButton = document.getElementById('upgradeButton');
- const closeModal = document.getElementById('closeModal');
- 
- // Open modal
- function openUpgradeModal() {
-   upgradeModal.classList.add('active');
-   document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
- }
- 
- // Close modal
- function closeUpgradeModal() {
-   upgradeModal.classList.remove('active');
-   document.body.style.overflow = ''; // Re-enable scrolling
- }
- 
- // Event listeners
- upgradeButton.addEventListener('click', openUpgradeModal);
- closeModal.addEventListener('click', closeUpgradeModal);
- 
- // Close when clicking outside modal
- upgradeModal.addEventListener('click', (e) => {
-   if (e.target === upgradeModal) {
-     closeUpgradeModal();
-   }
- });
- 
- // Close with Escape key
- document.addEventListener('keydown', (e) => {
-   if (e.key === 'Escape' && upgradeModal.classList.contains('active')) {
-     closeUpgradeModal();
-   }
- });
+    const upgradeModal = document.getElementById('upgradeModal');
+    const upgradeButton = document.getElementById('upgradeButton');
+    const closeModal = document.getElementById('closeModal');
+    
+    function openUpgradeModal() {
+      upgradeModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    
+    function closeUpgradeModal() {
+      upgradeModal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+    
+    // Event setup
+    upgradeButton.addEventListener('click', openUpgradeModal);
+    closeModal.addEventListener('click', closeUpgradeModal);
+    
+    // Close modal when clicking outside
+    upgradeModal.addEventListener('click', (e) => {
+      if (e.target === upgradeModal) closeUpgradeModal();
+    });
+    
+    // Close with Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && upgradeModal.classList.contains('active')) {
+        closeUpgradeModal();
+      }
+    });
   </script>
 
-<script type="module" src="app.js"></script>
-
+  <!-- Main app script -->
+  <script type="module" src="app.js"></script>
+  
 </body>
 </html>

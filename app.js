@@ -32,7 +32,15 @@ function startMining() {
   mineInterval = setInterval(async () => {
     try {
       const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify({}));
-      const data = JSON.parse(execution.responseBody);
+
+      // Avoid JSON.parse errors by falling back to an empty object if parsing fails
+      let data = {};
+      try {
+        data = JSON.parse(execution.responseBody || '{}');
+      } catch (e) {
+        console.warn('Failed to parse responseBody:', execution.responseBody);
+      }
+
       const increment = data.mined || 0;
 
       userBalance += increment;

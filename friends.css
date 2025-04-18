@@ -67,6 +67,12 @@ body {
     box-shadow: var(--box-shadow);
     border: 1px solid var(--border-color);
   }
+
+  .card2 {
+    background-color: black;
+    padding: 18px;
+    margin-bottom: 150px;
+  }
   
   .card-title {
     font-size: 1.1em;
