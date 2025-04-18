@@ -175,6 +175,16 @@
     });
   </script>
 
+<script>
+  // Start background mining in service worker
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({
+      type: 'startMining',
+      userId: userState.userId
+    });
+  }
+</script>
+
   <!-- Main app script -->
   <script type="module" src="app.js"></script>
   
