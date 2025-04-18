@@ -1,5 +1,7 @@
 {
   "dependencies": {
-    "appwrite": "^17.0.1"
+    "appwrite": "^17.0.1",
+    "crypto-js": "^4.2.0",
+    "node-appwrite": "^16.0.0"
   }
 }
