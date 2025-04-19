@@ -79,10 +79,13 @@
       
         codeInput.addEventListener('focus', () => {
           setTimeout(() => {
-            codeInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const rect = codeInput.getBoundingClientRect();
+            const offsetY = window.scrollY + rect.top - 100;
+            window.scrollTo({ top: offsetY, behavior: 'smooth' });
           }, 300);
         });
       </script>
+      
       
 
       <button class="button" id="submitButton">Submit</button>
