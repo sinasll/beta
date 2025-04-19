@@ -19,34 +19,39 @@ const usernameEl = document.getElementById('username');
 const powerEl = document.getElementById('power');
 const mineBtn = document.getElementById('mineButton');
 const totalMinersEl = document.getElementById('totalminers');
+const appContent = document.getElementById('app-content');
+const errorMessage = document.getElementById('error-message');
 
-// Initialize user data from localStorage or generate new
-function initializeUser() {
+// Check if running on Telegram mobile
+function isTelegramMobile() {
   const tg = window.Telegram?.WebApp;
-  const user = tg?.initDataUnsafe?.user;
+  if (!tg) return false;
+  
+  const platform = tg.platform?.toLowerCase();
+  return platform === 'android' || platform === 'ios';
+}
 
-  // Check if we have a Telegram user
-  if (user) {
-    const username = user?.username || `${user?.first_name || ''} ${user?.last_name || ''}`.trim();
-    localStorage.setItem('username', username);
-    localStorage.setItem('telegramId', user.id.toString());
-    return {
-      username,
-      telegramId: user.id.toString(),
-      referralCode: localStorage.getItem('referral') || ''
-    };
+// Initialize user data from Telegram
+function initializeUser() {
+  if (!isTelegramMobile()) return null;
+  
+  const tg = window.Telegram.WebApp;
+  const user = tg.initDataUnsafe?.user;
+  
+  if (!user) {
+    console.error('No Telegram user data found');
+    return null;
   }
 
-  // For non-Telegram users, generate or retrieve guest username
-  let username = localStorage.getItem('guestUsername');
-  if (!username) {
-    username = 'guest_' + Math.random().toString(36).substring(2, 7);
-    localStorage.setItem('guestUsername', username);
-  }
-
+  const username = user?.username || `${user?.first_name || ''} ${user?.last_name || ''}`.trim();
+  const telegramId = user.id.toString();
+  
+  localStorage.setItem('username', username);
+  localStorage.setItem('telegramId', telegramId);
+  
   return {
     username,
-    telegramId: '',
+    telegramId,
     referralCode: localStorage.getItem('referral') || ''
   };
 }
@@ -99,8 +104,12 @@ function checkSavedMiningStatus() {
 }
 
 async function fetchUserData() {
+  if (!isTelegramMobile()) return;
+  
   try {
     const body = initializeUser();
+    if (!body) return;
+    
     usernameEl.textContent = body.username;
 
     const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(body));
@@ -120,7 +129,6 @@ async function fetchUserData() {
     minedEl.textContent = totalMined.toFixed(3);
     powerEl.textContent = miningPower.toFixed(1);
 
-    // Update total miners (simplified - in a real app you'd fetch this from backend)
     if (data.total_miners) {
       totalMinersEl.textContent = data.total_miners;
     }
@@ -133,28 +141,27 @@ async function fetchUserData() {
 }
 
 async function startMining() {
-  if (isMining || isResetTime()) return;
+  if (!isTelegramMobile() || isMining || isResetTime()) return;
   
   isMining = true;
   mineBtn.textContent = 'Mining . . .';
   mineBtn.disabled = true;
   localStorage.setItem('miningStatus', 'active');
 
-  // Initial mining call
   await mineCoins();
-
-  // Set up interval for continuous mining
-  mineInterval = setInterval(mineCoins, 60000); // Mine every minute
+  mineInterval = setInterval(mineCoins, 60000);
 }
 
 async function mineCoins() {
-  if (isResetTime()) {
+  if (!isTelegramMobile() || isResetTime()) {
     stopMining();
     return;
   }
 
   try {
     const body = initializeUser();
+    if (!body) return;
+    
     const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(body));
 
     let data = {};
@@ -188,6 +195,8 @@ function stopMining() {
 
 // Handle mining button click
 mineBtn.addEventListener('click', () => {
+  if (!isTelegramMobile()) return;
+  
   if (!isMining && !isResetTime()) {
     startMining();
   } else if (isResetTime()) {
@@ -199,6 +208,8 @@ mineBtn.addEventListener('click', () => {
 // Handle power upgrades
 document.querySelectorAll('.power-buy').forEach(button => {
   button.addEventListener('click', async () => {
+    if (!isTelegramMobile()) return;
+    
     const power = parseFloat(button.dataset.power);
     const price = parseFloat(button.dataset.price);
     
@@ -220,7 +231,6 @@ document.querySelectorAll('.power-buy').forEach(button => {
           balanceEl.textContent = userBalance.toFixed(3);
           powerEl.textContent = miningPower.toFixed(1);
           alert('Upgrade successful!');
-          closeUpgradeModal();
         } else {
           alert('Upgrade failed: ' + (data.message || 'Unknown error'));
         }
@@ -236,12 +246,22 @@ document.querySelectorAll('.power-buy').forEach(button => {
 
 // Initialize the app
 document.addEventListener('DOMContentLoaded', () => {
+  if (!isTelegramMobile()) {
+    appContent.style.display = 'none';
+    errorMessage.style.display = 'block';
+    return;
+  }
+
+  const tg = window.Telegram.WebApp;
+  tg.expand();
+  tg.ready();
+  tg.enableClosingConfirmation();
+
   initializeUser();
   fetchUserData();
   startCountdown();
   checkSavedMiningStatus();
   
-  // Check if it's reset time and disable mining if needed
   if (isResetTime()) {
     stopMining();
   }
