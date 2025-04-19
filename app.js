@@ -94,7 +94,7 @@ function updateUI() {
   balanceEl.textContent = userData.balance.toFixed(3);
   minedEl.textContent = userData.totalMined.toFixed(3);
   powerEl.textContent = userData.miningPower.toFixed(1);
-  mineBtn.textContent = userData.isMining ? 'Mining...' : 'Start Mining';
+  mineBtn.textContent = userData.isMining ? 'mining . . .' : 'Start Mining';
   mineBtn.disabled = userData.isMining || isAfterResetTime();
 }
 
