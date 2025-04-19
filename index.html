@@ -73,21 +73,7 @@
       <div class="stats-row">
         <input type="text" id="codeInput" placeholder="enter code . . ." class="input" />
       </div>
-
-      <script>
-        const codeInput = document.getElementById('codeInput');
       
-        codeInput.addEventListener('focus', () => {
-          setTimeout(() => {
-            const rect = codeInput.getBoundingClientRect();
-            const offsetY = window.scrollY + rect.top - 100;
-            window.scrollTo({ top: offsetY, behavior: 'smooth' });
-          }, 300);
-        });
-      </script>
-      
-      
-
       <button class="button" id="submitButton">Submit</button>
     </div>
 
