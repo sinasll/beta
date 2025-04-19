@@ -7,23 +7,40 @@ const client = new Client()
 const functions = new Functions(client);
 const FUNCTION_ID = "6800d0a4001cb28a32f5";
 
-let isMining     = false;
-let userBalance  = 0;
-let totalMined   = 0;
+let isMining = false;
+let userBalance = 0;
+let totalMined = 0;
 let mineInterval = null;
 
-const minedEl        = document.getElementById('mined');
-const balanceEl      = document.getElementById('balance');
-const totalMinersEl  = document.getElementById('totalminers');
-const mineBtn        = document.getElementById('mineButton');
+const minedEl = document.getElementById('mined');
+const balanceEl = document.getElementById('balance');
+const usernameEl = document.getElementById('username');
+const mineBtn = document.getElementById('mineButton');
 
-mineBtn.addEventListener('click', () => {
-  if (!isMining) {
-    startMining();
+let generatedGuestUsername = null;
+
+function getUserPayload() {
+  const tg = window.Telegram?.WebApp;
+  const user = tg?.initDataUnsafe?.user;
+
+  let username = 'miner';
+  let telegramId = '';
+  if (user) {
+    telegramId = user?.id?.toString();
+    username = user?.username || `${user?.first_name || ''} ${user?.last_name || ''}`.trim();
   } else {
-    stopMining();
+    if (!generatedGuestUsername) {
+      generatedGuestUsername = 'guest_' + Math.random().toString(36).substring(2, 7);
+    }
+    username = generatedGuestUsername;
   }
-});
+
+  return {
+    username,
+    telegramId,
+    referralCode: localStorage.getItem('referral') || ''
+  };
+}
 
 function startMining() {
   isMining = true;
@@ -31,9 +48,14 @@ function startMining() {
 
   mineInterval = setInterval(async () => {
     try {
-      const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify({}));
+      const body = getUserPayload();
 
-      // Avoid JSON.parse errors by falling back to an empty object if parsing fails
+      if (!usernameEl.textContent || usernameEl.textContent === 'username') {
+        usernameEl.textContent = body.username;
+      }
+
+      const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(body));
+
       let data = {};
       try {
         data = JSON.parse(execution.responseBody || '{}');
@@ -44,10 +66,10 @@ function startMining() {
       const increment = data.mined || 0;
 
       userBalance += increment;
-      totalMined  += increment;
+      totalMined += increment;
 
       balanceEl.textContent = userBalance.toFixed(3);
-      minedEl.textContent   = totalMined.toFixed(3);
+      minedEl.textContent = totalMined.toFixed(3);
     } catch (err) {
       console.error('Mining error:', err);
       stopMining();
@@ -58,6 +80,14 @@ function startMining() {
 function stopMining() {
   clearInterval(mineInterval);
   mineInterval = null;
-  isMining     = false;
+  isMining = false;
   mineBtn.textContent = 'Start Mining';
 }
+
+mineBtn.addEventListener('click', () => {
+  if (!isMining) {
+    startMining();
+  } else {
+    stopMining();
+  }
+});
