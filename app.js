@@ -1,5 +1,6 @@
-import { Client, Functions } from "https://esm.sh/appwrite@13.0.0"; 
+import { Client, Functions } from "https://esm.sh/appwrite@13.0.0";
 
+// Initialize Appwrite client
 const client = new Client()
   .setEndpoint("https://fra.cloud.appwrite.io/v1")
   .setProject("6800cf6c0038c2026f07");
@@ -7,262 +8,251 @@ const client = new Client()
 const functions = new Functions(client);
 const FUNCTION_ID = "6800d0a4001cb28a32f5";
 
-let isMining = false;
-let userBalance = 0;
-let totalMined = 0;
-let mineInterval = null;
-let miningPower = 1.0;
-
+// DOM Elements
 const minedEl = document.getElementById('mined');
 const balanceEl = document.getElementById('balance');
 const usernameEl = document.getElementById('username');
 const powerEl = document.getElementById('power');
 const mineBtn = document.getElementById('mineButton');
 const totalMinersEl = document.getElementById('totalminers');
-const appContent = document.getElementById('app-content');
-const errorMessage = document.getElementById('error-message');
+const countdownEl = document.getElementById('countdown');
 
-// Check if running on Telegram mobile
-function isTelegramMobile() {
-  const tg = window.Telegram?.WebApp;
-  if (!tg) return false;
-  
-  const platform = tg.platform?.toLowerCase();
-  return platform === 'android' || platform === 'ios';
+// State
+let userData = {
+  isMining: false,
+  balance: 0,
+  totalMined: 0,
+  miningPower: 1.0,
+  nextReset: null
+};
+
+let mineInterval = null;
+
+// Get default 12:00 UTC reset
+function getDefaultResetTime() {
+  const now = new Date();
+  const resetTime = new Date(now);
+  resetTime.setUTCHours(12, 0, 0, 0);
+  if (now >= resetTime) resetTime.setUTCDate(resetTime.getUTCDate() + 1);
+  return resetTime.toISOString();
 }
 
-// Initialize user data from Telegram
+// Check if it's after reset
+function isAfterResetTime() {
+  if (!userData.nextReset) return false;
+  return new Date() >= new Date(userData.nextReset);
+}
+
+// Save mining state persistently
+function saveMiningState() {
+  localStorage.setItem('isMining', JSON.stringify(userData.isMining));
+  localStorage.setItem('nextReset', userData.nextReset);
+}
+
+// Load persistent mining state
+function loadMiningState() {
+  const storedReset = localStorage.getItem('nextReset');
+  const storedIsMining = localStorage.getItem('isMining') === 'true';
+
+  if (storedReset && new Date() < new Date(storedReset)) {
+    userData.isMining = storedIsMining;
+    userData.nextReset = storedReset;
+  } else {
+    localStorage.removeItem('isMining');
+    localStorage.removeItem('nextReset');
+  }
+}
+
+// Initialize user (Telegram or guest)
 function initializeUser() {
-  if (!isTelegramMobile()) return null;
-  
-  const tg = window.Telegram.WebApp;
-  const user = tg.initDataUnsafe?.user;
-  
-  if (!user) {
-    console.error('No Telegram user data found');
-    return null;
+  const tg = window.Telegram?.WebApp;
+  if (tg?.initDataUnsafe?.user) {
+    const user = tg.initDataUnsafe.user;
+    const username = user.username || `${user.first_name || ''} ${user.last_name || ''}`.trim();
+    return {
+      username,
+      telegramId: user.id.toString(),
+      referralCode: new URLSearchParams(window.location.search).get('ref') || ''
+    };
   }
 
-  const username = user?.username || `${user?.first_name || ''} ${user?.last_name || ''}`.trim();
-  const telegramId = user.id.toString();
-  
-  localStorage.setItem('username', username);
-  localStorage.setItem('telegramId', telegramId);
-  
+  let username = localStorage.getItem('guestUsername');
+  if (!username) {
+    username = 'guest_' + Math.random().toString(36).substring(2, 7);
+    localStorage.setItem('guestUsername', username);
+  }
+
   return {
     username,
-    telegramId,
-    referralCode: localStorage.getItem('referral') || ''
+    telegramId: '',
+    referralCode: new URLSearchParams(window.location.search).get('ref') || ''
   };
 }
 
-// Check if it's time to reset mining (after 12:00 UTC)
-function isResetTime() {
-  const now = new Date();
-  const currentUTCHours = now.getUTCHours();
-  return currentUTCHours >= 12;
+// Update the UI
+function updateUI() {
+  balanceEl.textContent = userData.balance.toFixed(3);
+  minedEl.textContent = userData.totalMined.toFixed(3);
+  powerEl.textContent = userData.miningPower.toFixed(1);
+  mineBtn.textContent = userData.isMining ? 'Mining...' : 'Start Mining';
+  mineBtn.disabled = userData.isMining || isAfterResetTime();
 }
 
-// Calculate time until next reset (12:00 UTC)
-function getTimeUntilReset() {
-  const now = new Date();
-  const nextReset = new Date(now);
-  
-  if (now.getUTCHours() >= 12) {
-    nextReset.setUTCDate(nextReset.getUTCDate() + 1);
-  }
-  
-  nextReset.setUTCHours(12, 0, 0, 0);
-  
-  return nextReset - now;
-}
-
-// Update countdown timer
+// Countdown timer to reset
 function updateCountdown() {
-  const countdownEl = document.getElementById('countdown');
-  const timeUntilReset = getTimeUntilReset();
-  
-  const hours = Math.floor((timeUntilReset / (1000 * 60 * 60)) % 24);
+  if (!userData.nextReset) return;
+
+  const now = new Date();
+  const nextReset = new Date(userData.nextReset);
+  const timeUntilReset = nextReset - now;
+
+  if (timeUntilReset <= 0) {
+    countdownEl.textContent = 'Reset time!';
+    if (userData.isMining) stopMining();
+    return;
+  }
+
+  const hours = Math.floor(timeUntilReset / (1000 * 60 * 60));
   const minutes = Math.floor((timeUntilReset / (1000 * 60)) % 60);
   const seconds = Math.floor((timeUntilReset / 1000) % 60);
-  
-  countdownEl.textContent = `Daily reset in ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+  countdownEl.textContent = `Next reset: ${hours}h ${minutes}m ${seconds}s`;
 }
 
-// Start countdown timer
-function startCountdown() {
-  updateCountdown();
-  setInterval(updateCountdown, 1000);
-}
-
-// Check mining status from localStorage
-function checkSavedMiningStatus() {
-  const savedStatus = localStorage.getItem('miningStatus');
-  if (savedStatus === 'active' && !isResetTime()) {
-    startMining();
-  }
-}
-
+// Fetch user data
 async function fetchUserData() {
-  if (!isTelegramMobile()) return;
-  
   try {
-    const body = initializeUser();
-    if (!body) return;
-    
-    usernameEl.textContent = body.username;
+    const payload = initializeUser();
+    usernameEl.textContent = payload.username;
 
-    const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(body));
-    let data = {};
+    const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
+    const data = JSON.parse(execution.responseBody || '{}');
 
-    try {
-      data = JSON.parse(execution.responseBody || '{}');
-    } catch (e) {
-      console.warn('Failed to parse responseBody:', execution.responseBody);
+    if (data.error) {
+      console.error('Backend error:', data.message);
+      return;
     }
 
-    userBalance = data.balance || 0;
-    totalMined = data.total_mined || 0;
-    miningPower = data.mining_power || 1.0;
+    userData.balance = data.balance || 0;
+    userData.totalMined = data.total_mined || 0;
+    userData.miningPower = data.mining_power || 1.0;
+    userData.nextReset = data.next_reset || getDefaultResetTime();
 
-    balanceEl.textContent = userBalance.toFixed(3);
-    minedEl.textContent = totalMined.toFixed(3);
-    powerEl.textContent = miningPower.toFixed(1);
+    if (data.total_miners) totalMinersEl.textContent = data.total_miners;
 
-    if (data.total_miners) {
-      totalMinersEl.textContent = data.total_miners;
-    }
-
+    updateUI();
     return data;
   } catch (err) {
     console.error('Failed to fetch user data:', err);
-    return {};
   }
 }
 
+// Call mining backend
+async function mineCoins() {
+  if (isAfterResetTime()) {
+    stopMining();
+    return;
+  }
+
+  try {
+    const payload = initializeUser();
+    const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
+    const data = JSON.parse(execution.responseBody || '{}');
+
+    if (data.error) {
+      console.error('Mining error:', data.message);
+      stopMining();
+      return;
+    }
+
+    userData.balance = data.balance;
+    userData.totalMined = data.total_mined;
+    userData.miningPower = data.mining_power;
+    userData.nextReset = data.next_reset || userData.nextReset;
+
+    updateUI();
+  } catch (err) {
+    console.error('Mining failed:', err);
+    stopMining();
+  }
+}
+
+// Start mining process
 async function startMining() {
-  if (!isTelegramMobile() || isMining || isResetTime()) return;
-  
-  isMining = true;
-  mineBtn.textContent = 'Mining . . .';
-  mineBtn.disabled = true;
-  localStorage.setItem('miningStatus', 'active');
+  if (userData.isMining || isAfterResetTime()) return;
+
+  userData.isMining = true;
+  saveMiningState(); // 🔧 UPDATED
+  updateUI();
 
   await mineCoins();
   mineInterval = setInterval(mineCoins, 60000);
 }
 
-async function mineCoins() {
-  if (!isTelegramMobile() || isResetTime()) {
-    stopMining();
+// Stop mining process
+function stopMining() {
+  clearInterval(mineInterval);
+  mineInterval = null;
+  userData.isMining = false;
+  saveMiningState(); // 🔧 UPDATED
+  updateUI();
+}
+
+// Handle power upgrade
+async function handleUpgrade(power, price) {
+  if (userData.balance < price) {
+    alert('Not enough balance for this upgrade');
     return;
   }
 
   try {
-    const body = initializeUser();
-    if (!body) return;
-    
-    const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(body));
+    const payload = {
+      ...initializeUser(),
+      action: 'upgrade',
+      power: power,
+      price: price
+    };
 
-    let data = {};
-    try {
-      data = JSON.parse(execution.responseBody || '{}');
-    } catch (e) {
-      console.warn('Failed to parse responseBody:', execution.responseBody);
+    const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
+    const data = JSON.parse(execution.responseBody || '{}');
+
+    if (data.success) {
+      userData.balance = data.balance;
+      userData.miningPower = data.mining_power;
+      updateUI();
+      alert('Upgrade successful!');
+    } else {
+      alert('Upgrade failed: ' + (data.message || 'Unknown error'));
     }
-
-    const increment = data.mined || 0;
-
-    userBalance += increment;
-    totalMined += increment;
-
-    balanceEl.textContent = userBalance.toFixed(3);
-    minedEl.textContent = totalMined.toFixed(3);
   } catch (err) {
-    console.error('Mining error:', err);
-    stopMining();
+    console.error('Upgrade error:', err);
+    alert('Failed to process upgrade');
   }
 }
 
-function stopMining() {
-  clearInterval(mineInterval);
-  mineInterval = null;
-  isMining = false;
-  mineBtn.textContent = 'Start Mining';
-  mineBtn.disabled = false;
-  localStorage.removeItem('miningStatus');
-}
-
-// Handle mining button click
+// Events
 mineBtn.addEventListener('click', () => {
-  if (!isTelegramMobile()) return;
-  
-  if (!isMining && !isResetTime()) {
+  if (!userData.isMining && !isAfterResetTime()) {
     startMining();
-  } else if (isResetTime()) {
-    alert('Mining has reset for the day. You can start mining again now!');
-    stopMining();
+  } else if (isAfterResetTime()) {
+    alert('Mining reset — please start again!');
   }
 });
 
-// Handle power upgrades
 document.querySelectorAll('.power-buy').forEach(button => {
-  button.addEventListener('click', async () => {
-    if (!isTelegramMobile()) return;
-    
+  button.addEventListener('click', () => {
     const power = parseFloat(button.dataset.power);
     const price = parseFloat(button.dataset.price);
-    
-    if (userBalance >= price) {
-      try {
-        const body = {
-          ...initializeUser(),
-          action: 'upgrade',
-          power: power,
-          price: price
-        };
-        
-        const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(body));
-        const data = JSON.parse(execution.responseBody || '{}');
-        
-        if (data.success) {
-          userBalance -= price;
-          miningPower += power;
-          balanceEl.textContent = userBalance.toFixed(3);
-          powerEl.textContent = miningPower.toFixed(1);
-          alert('Upgrade successful!');
-        } else {
-          alert('Upgrade failed: ' + (data.message || 'Unknown error'));
-        }
-      } catch (err) {
-        console.error('Upgrade error:', err);
-        alert('Failed to process upgrade');
-      }
-    } else {
-      alert('Not enough $BLACK for this upgrade');
-    }
+    handleUpgrade(power, price);
   });
 });
 
-// Initialize the app
-document.addEventListener('DOMContentLoaded', () => {
-  if (!isTelegramMobile()) {
-    appContent.style.display = 'none';
-    errorMessage.style.display = 'block';
-    return;
+// Init app
+document.addEventListener('DOMContentLoaded', async () => {
+  loadMiningState(); // 🔧 UPDATED
+  await fetchUserData();
+  if (userData.isMining && !isAfterResetTime()) {
+    startMining();
   }
-
-  const tg = window.Telegram.WebApp;
-  tg.expand();
-  tg.ready();
-  tg.enableClosingConfirmation();
-
-  initializeUser();
-  fetchUserData();
-  startCountdown();
-  checkSavedMiningStatus();
-  
-  if (isResetTime()) {
-    stopMining();
-  }
+  setInterval(updateCountdown, 1000);
 });
