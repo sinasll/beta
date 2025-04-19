@@ -67,15 +67,6 @@ body {
     box-shadow: var(--box-shadow);
     border: 1px solid var(--border-color);
   }
-
-  .space {
-    background-color: var(--secondary-bg);
-    border-radius: var(--card-radius);
-    padding: 200px;
-    margin-bottom: 16px;
-    box-shadow: var(--box-shadow);
-    border: 1px solid var(--border-color);
-  }
   
   .card-title {
     font-size: 1.1em;
