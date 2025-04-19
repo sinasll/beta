@@ -5,7 +5,7 @@
   <!-- Basic meta tags -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>$BLACK Mining</title>
+  <title>$BLACK</title>
 
   <!-- Stylesheets -->
   <link rel="stylesheet" href="style.css">
@@ -53,59 +53,39 @@
         <div>Mining Power</div>
         <div>x<span id="power">1.0</span></div>
       </div>
-      
-      <button class="button" id="upgradeButton">Upgrade Power</button>
+
       <button class="button" id="mineButton">Start Mining</button>
     </div>
 
     <!-- Daily countdown timer -->
     <div class="countdown" id="countdown">Daily reset in 00:00:00</div>
 
-    <!-- Spacer div -->
-    <div class="card2"></div>
-
-    <!-- Upgrade Power Modal (hidden by default) -->
-    <div class="modal-overlay" id="upgradeModal">
-      <div class="modal">
-        <div class="modal-header">
-          <h3>Boost Your Mining</h3>
-          <button class="modal-close" id="closeModal">&times;</button>
-        </div>
-        
-        <!-- Upgrade options -->
-        <div class="power-option">
-          <div class="power-info">
-            <div class="power-name">Basic Miner</div>
-            <div class="power-desc">+0.5x mining speed</div>
-            <div class="power-price"><i class="fas fa-coins"></i> 50 $BLACK</div>
-          </div>
-          <button class="power-buy" data-power="0.5" data-price="50">Upgrade</button>
-        </div>
-        
-        <div class="power-option">
-          <div class="power-info">
-            <div class="power-name">Standard Miner</div>
-            <div class="power-desc">+1.0x mining speed</div>
-            <div class="power-price"><i class="fas fa-coins"></i> 100 $BLACK</div>
-          </div>
-          <button class="power-buy" data-power="1.0" data-price="100">Upgrade</button>
-        </div>
-        
-        <div class="power-option elite-highlight">
-          <div class="elite-glow"></div>
-          <div class="power-info">
-            <div class="power-badge">RECOMMENDED</div>
-            <div class="power-name">Advanced Miner</div>
-            <div class="power-desc">+1.5x mining speed</div>
-            <div class="power-price"><i class="fas fa-coins"></i> 150 $BLACK</div>
-          </div>
-          <button class="power-buy elite-btn" data-power="1.5" data-price="150">Upgrade</button>
-        </div>
-        
-        <div class="power-note">
-          <i class="fas fa-info-circle"></i> Higher power = More coins per minute
-        </div>
+    <div class="card">
+      <h2 class="card-title">Daily code</h2>
+      
+      <div class="stats-row">
+        <div>Your Code</div>
+        <div><span id="dailyCode"></span></div>
       </div>
+
+      <button class="button" id="copyButton">Copy</button>
+      
+      <div class="stats-row">
+        <input type="text" id="codeInput" placeholder="enter code . . ." class="input" />
+      </div>
+
+      <script>
+        const codeInput = document.getElementById('codeInput');
+      
+        codeInput.addEventListener('focus', () => {
+          setTimeout(() => {
+            codeInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 300);
+        });
+      </script>
+      
+
+      <button class="button" id="submitButton">Submit</button>
     </div>
 
     <!-- Bottom navigation menu -->
