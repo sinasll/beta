@@ -182,7 +182,7 @@ async function startMining() {
   if (userData.isMining || isAfterResetTime()) return;
 
   userData.isMining = true;
-  saveMiningState(); // 🔧 UPDATED
+  saveMiningState();
   updateUI();
 
   await mineCoins();
@@ -194,7 +194,7 @@ function stopMining() {
   clearInterval(mineInterval);
   mineInterval = null;
   userData.isMining = false;
-  saveMiningState(); // 🔧 UPDATED
+  saveMiningState();
   updateUI();
 }
 
@@ -249,7 +249,14 @@ document.querySelectorAll('.power-buy').forEach(button => {
 
 // Init app
 document.addEventListener('DOMContentLoaded', async () => {
-  loadMiningState(); // 🔧 UPDATED
+  const tg = window.Telegram?.WebApp;
+  if (tg) {
+    tg.expand();
+    tg.ready();
+    tg.enableClosingConfirmation();
+  }
+
+  loadMiningState();
   await fetchUserData();
   if (userData.isMining && !isAfterResetTime()) {
     startMining();
