@@ -72,8 +72,13 @@ function generateUserId() {
 
 // Setup UI Event Listeners
 function setupEventListeners() {
-  elements.inviteButton.addEventListener('click', shareReferralLink);
-  elements.copyButton.addEventListener('click', copyReferralLink);
+  if (elements.inviteButton) {
+    elements.inviteButton.addEventListener('click', shareReferralLink);
+  }
+  
+  if (elements.copyButton) {
+    elements.copyButton.addEventListener('click', () => copyToClipboard(elements.referralLink.textContent));
+  }
   
   if (elements.submitButton) {
     elements.submitButton.addEventListener('click', submitReferralCode);
@@ -168,6 +173,28 @@ async function submitReferralCode() {
   }
 }
 
+// Share Referral Link
+function shareReferralLink() {
+  const link = elements.referralLink.textContent;
+  const code = currentUser.referralCode || elements.referralCode.textContent;
+  
+  if (currentUser.isTelegram && window.Telegram.WebApp.share) {
+    window.Telegram.WebApp.share({
+      title: "Join My App",
+      text: `Use my referral code: ${code}`,
+      url: link
+    }).catch(() => copyToClipboard(link));
+  } else if (navigator.share) {
+    navigator.share({
+      title: "Join My App",
+      text: `Use my referral code: ${code}`,
+      url: link
+    }).catch(() => copyToClipboard(link));
+  } else {
+    copyToClipboard(link);
+  }
+}
+
 // Update UI
 function updateUI(data) {
   if (!data) return;
@@ -180,9 +207,11 @@ function updateUI(data) {
   elements.referralLink.textContent = referralLink;
 
   // Update friends list
-  elements.friendsList.innerHTML = (data.invited_friends?.length > 0)
-    ? data.invited_friends.map(id => `<li>${id}</li>`).join("")
-    : "<li>No referrals yet</li>";
+  if (elements.friendsList) {
+    elements.friendsList.innerHTML = (data.invited_friends?.length > 0)
+      ? data.invited_friends.map(id => `<li>${id}</li>`).join("")
+      : "<li>No referrals yet</li>";
+  }
 
   // Save generated referral code
   currentUser.referralCode = referralCode;
@@ -192,27 +221,7 @@ function generateReferralCode(userId) {
   return 'REF_' + userId.slice(-8).toUpperCase();
 }
 
-// Share Functions
-function shareReferralLink() {
-  const link = elements.referralLink.textContent;
-  
-  if (currentUser.isTelegram && window.Telegram.WebApp.share) {
-    window.Telegram.WebApp.share({
-      title: "Join My App",
-      text: `Use my referral code: ${currentUser.referralCode}`,
-      url: link
-    }).catch(() => copyToClipboard(link));
-  } else if (navigator.share) {
-    navigator.share({
-      title: "Join My App",
-      text: `Use my referral code: ${currentUser.referralCode}`,
-      url: link
-    }).catch(() => copyToClipboard(link));
-  } else {
-    copyToClipboard(link);
-  }
-}
-
+// Copy to Clipboard
 function copyToClipboard(text) {
   navigator.clipboard.writeText(text)
     .then(() => showAlert("Copied to clipboard!"))
@@ -229,9 +238,9 @@ function copyToClipboard(text) {
 
 // UI Helpers
 function showLoadingState() {
-  elements.referralCode.textContent = "Loading...";
-  elements.totalInvites.textContent = "0";
-  elements.friendsList.innerHTML = "<li>Loading...</li>";
+  if (elements.referralCode) elements.referralCode.textContent = "Loading...";
+  if (elements.totalInvites) elements.totalInvites.textContent = "0";
+  if (elements.friendsList) elements.friendsList.innerHTML = "<li>Loading...</li>";
 }
 
 function showAlert(message) {
@@ -246,7 +255,7 @@ function showError(message) {
   const errorEl = document.createElement("div");
   errorEl.className = "error-message";
   errorEl.textContent = message;
-  document.querySelector(".container").prepend(errorEl);
+  document.querySelector(".container")?.prepend(errorEl);
   setTimeout(() => errorEl.remove(), 5000);
 }
 
