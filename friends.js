@@ -1,18 +1,16 @@
 import { Client, Functions } from "https://esm.sh/appwrite@13.0.0";
 
-const ENDPOINT     = "https://fra.cloud.appwrite.io/v1";
-const PROJECT_ID   = "6800cf6c0038c2026f07";
-const FUNCTION_ID  = "6804e1e20023090e16fc";
+const ENDPOINT    = "https://fra.cloud.appwrite.io/v1";
+const PROJECT_ID  = "6800cf6c0038c2026f07";
+const FUNCTION_ID = "6804e1e20023090e16fc";
 
 const client    = new Client().setEndpoint(ENDPOINT).setProject(PROJECT_ID);
 const functions = new Functions(client);
 
-let tg     = null;
+let tg      = null;
 let USER_ID = null;
 
-// —————————————————————————————————————————
-// 1) Telegram WebApp Init
-// —————————————————————————————————————————
+// — Init Telegram WebApp & extract user ID —
 function initTelegramWebApp() {
   if (!window.Telegram?.WebApp) return false;
   tg = window.Telegram.WebApp;
@@ -27,7 +25,7 @@ function extractTelegramUserId() {
   if (unsafe?.user?.id) return unsafe.user.id.toString();
   try {
     const params = new URLSearchParams(tg.initData || "");
-    const raw   = params.get("user");
+    const raw = params.get("user");
     if (raw) {
       const parsed = JSON.parse(decodeURIComponent(raw));
       return parsed?.id?.toString();
@@ -36,15 +34,11 @@ function extractTelegramUserId() {
   return unsafe?.start_param || null;
 }
 
-// —————————————————————————————————————————
-// 2) Execute Appwrite Function (with wait)
-// —————————————————————————————————————————
-async function executeReferral(payload) {
-  // Pass `true` as 3rd arg to wait for completion
+// — Execute Appwrite Function synchronously —
+async function executeAppwriteFunction(payload) {
   const exec = await functions.createExecution(
     FUNCTION_ID,
-    JSON.stringify(payload),
-    true
+    JSON.stringify(payload)
   );
   if (!exec.response) {
     throw new Error("No response from function");
@@ -52,47 +46,44 @@ async function executeReferral(payload) {
   return JSON.parse(exec.response);
 }
 
-// —————————————————————————————————————————
-// 3) Fetch & Display
-// —————————————————————————————————————————
+// — Fetch data & render UI —
 async function fetchAndShow() {
   if (!USER_ID) throw new Error("Telegram user ID not found");
 
-  // build payload
   const payload = {
     telegram_id:   USER_ID,
     referral_code: tg.initDataUnsafe?.start_param || ""
   };
 
-  const result = await executeReferral(payload);
+  const result = await executeAppwriteFunction(payload);
   if (!result.success) {
     throw new Error(result.error || result.message || "Unknown error");
   }
 
-  displayUserData(result.user);
+  const user = result.user;
+  displayUserData(user);
 }
 
 function displayUserData(user) {
-  const code   = user.referral_code || "N/A";
+  const code    = user.referral_code || "N/A";
   const invites = user.total_invites || 0;
-  const link   = `https://t.me/betamineitbot?start=${code}`;
+  const link    = `https://t.me/betamineitbot?start=${code}`;
 
   document.getElementById("referralCode").textContent  = code;
   document.getElementById("totalInvites").textContent = invites;
   document.getElementById("referralLink").textContent = link;
 
-  // Share / Copy
   document.getElementById("inviteButton").onclick = () => {
     if (tg.share) {
       tg.share({ title: "Join $BLACK Mining", text: `Use my code: ${code}`, url: link })
-        .catch(() => copy(link));
+        .catch(() => copyToClipboard(link));
     } else {
-      copy(link);
+      copyToClipboard(link);
     }
   };
-  document.getElementById("copyButton").onclick = () => copy(link);
 
-  // Friends list
+  document.getElementById("copyButton").onclick = () => copyToClipboard(link);
+
   const listEl = document.getElementById("invitedFriendsList");
   if (!user.invited_friends?.length) {
     listEl.innerHTML = "<li>No friends invited yet</li>";
@@ -101,7 +92,7 @@ function displayUserData(user) {
   }
 }
 
-function copy(text) {
+function copyToClipboard(text) {
   navigator.clipboard.writeText(text)
     .then(() => showAlert("Link copied!"))
     .catch(() => {
