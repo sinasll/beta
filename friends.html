@@ -2,38 +2,60 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>$BLACK Mining - Referral Program</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>$BLACK | Friends</title>
   <link rel="stylesheet" href="friends.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
- 
 </head>
 <body>
+  <div class="header">
+    <h1 class="logo">$BLACK</h1>
+  </div>
+
   <div class="container">
+    <!-- Referral Stats -->
     <div class="card">
-      <h2 class="card-title">Your Referral Code</h2>
-      <div class="referral-code-display">
-        <span id="referralCode" class="code-value">Loading...</span>
-        <span class="total-invites"><span id="totalInvites">0</span> invites</span>
+      <h2 class="card-title">Your Referrals</h2>
+      <div class="referral-stats">
+        <p>Total invited: <span id="referralCount">0</span> friends</p>
       </div>
     </div>
-    
+
+    <!-- Friends List -->
+    <div class="card">
+      <h2 class="card-title">Your Friends</h2>
+      <ul id="invitedFriendsList" class="friends-list">
+        <li>Loading your referrals...</li>
+      </ul>
+    </div>
+
+    <!-- Invite Friends -->
     <div class="card">
       <h2 class="card-title">Invite Friends</h2>
       <div class="invite-actions">
         <button class="button" id="inviteButton">
-          <i class="fas fa-share-alt"></i> Share
+          <i class="fas fa-share-alt"></i> Invite Friends
         </button>
-        <button class="button secondary" id="copyButton">
+        <button class="button" id="copyButton">
           <i class="fas fa-copy"></i> Copy Link
         </button>
       </div>
       <div class="referral-link-container">
-        <p>Your referral link:</p>
-        <p id="referralLink" class="referral-link">Loading...</p>
+        <p>Your personal referral link:</p>
+        <p id="referralLink" class="referral-link">Generating your link...</p>
       </div>
     </div>
   </div>
+
+  <nav class="nav-menu" id="nav-menu">
+    <ul class="nav-list">
+      <li><a href="index.html"></i> MINE</a></li>
+      <li><a href="leaders.html"></i> LEADERS</a></li>          
+      <li><a href="earn.html"></i> EARN</a></li>
+      <li><a href="friends.html" class="active"></i> FRIENDS</a></li>
+      <li><a href="wallet.html"></i> WALLET</a></li>
+    </ul>
+  </nav>
 
   <script type="module" src="friends.js"></script>
 </body>
