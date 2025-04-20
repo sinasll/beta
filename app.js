@@ -104,7 +104,6 @@ function updateUI() {
   mineBtn.disabled = userData.isMining || isAfterResetTime();
   if (userData.dailyCode) dailyCodeEl.textContent = userData.dailyCode;
   
-  // Disable submit button if code is invalid
   const code = codeInput.value.trim();
   submitBtn.disabled = code.length !== 10 || 
                       code === userData.dailyCode || 
@@ -250,6 +249,8 @@ submitBtn.addEventListener('click', async () => {
   const submittedCode = codeInput.value.trim();
   if (!submittedCode) return alert('Please enter a code to submit');
 
+  codeInput.blur(); // Close keyboard
+
   try {
     const payload = {
       ...initializeUser(),
@@ -277,9 +278,25 @@ submitBtn.addEventListener('click', async () => {
   }
 });
 
-// Real-time code validation
 codeInput.addEventListener('input', () => {
   updateUI();
+});
+
+// Scroll input into view on focus
+codeInput.addEventListener('focus', () => {
+  setTimeout(() => {
+    codeInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 300);
+});
+
+// Submit on Enter key
+codeInput.addEventListener('keydown', async (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    if (!submitBtn.disabled) {
+      submitBtn.click();
+    }
+  }
 });
 
 // Initialize
