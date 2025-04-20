@@ -7,7 +7,7 @@ const referralLinkElement = document.getElementById('referralLink');
 // Function to handle generating referral code
 async function generateReferralCode() {
     try {
-        const response = await fetch('YOUR_BACKEND_URL', {
+        const response = await fetch('https://fra.cloud.appwrite.io/v1/functions/6804e1e20023090e16fc/executions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
