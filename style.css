@@ -21,7 +21,6 @@ body {
   margin: 0;
   padding: 0;
   line-height: 1.5;
-  /* Use Telegram's viewport */
   height: 100vh;
   height: -webkit-fill-available;
   overflow: hidden;
