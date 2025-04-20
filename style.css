@@ -114,10 +114,30 @@ body {
     background-color: rgba(255, 255, 255, 0.1);
   }
   
-  input[type="text"]::placeholder {
-    color: var(--hint-color);
-    opacity: 0.7;
-  }
+  input[type="text"] {
+  width: var(--input-button-width);
+  padding: var(--input-button-padding);
+  margin: var(--input-button-margin);
+  border-radius: var(--card-radius);
+  background-color: #1a1a1a;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 1em;
+  box-sizing: border-box;
+  display: block;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input[type="text"]::placeholder {
+  color: var(--hint-color);
+  opacity: 0.6;
+}
+
+input[type="text"]:focus {
+  border-color: #ffffff;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.3);
+}
   
   .countdown {
     font-size: 0.8em;
