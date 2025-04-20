@@ -2,65 +2,42 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>$BLACK | Friends</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>$BLACK Mining - Referral Program</title>
   <link rel="stylesheet" href="friends.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+ 
 </head>
 <body>
-  <div id="appContent">
-    <div class="header">
-      <h1 class="logo">$BLACK</h1>
-    </div>
-
-    <div class="container">
-      <!-- Referral Information -->
-      <div class="card">
-        <h2 class="card-title">Your Referral Code</h2>
-        <div class="referral-code-display">
-          <span id="referralCode" class="code-value">Loading...</span>
-          <span class="total-invites"><span id="totalInvites">0</span> invites</span>
-        </div>
-      </div>
-
-      <!-- Friends List -->
-      <div class="card">
-        <h2 class="card-title">Your Friends</h2>
-        <div class="friends-list-container">
-          <ul id="invitedFriendsList" class="friends-list">
-            <li class="loading-item">Loading friends list...</li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Invite Friends -->
-      <div class="card">
-        <h2 class="card-title">Invite Friends</h2>
-        <div class="invite-actions">
-          <button class="button" id="inviteButton">
-            <i class="fas fa-share-alt"></i> Invite Friends
-          </button>
-          <button class="button" id="copyButton">
-            <i class="fas fa-copy"></i> Copy Link
-          </button>
-        </div>
-        <div class="referral-link-container">
-          <p class="referral-link-label">Your referral link:</p>
-          <p id="referralLink" class="referral-link">https://t.me/betamineitbot?start=loading</p>
-        </div>
+  <div class="container">
+    <div class="card">
+      <h2 class="card-title">Your Referral Code</h2>
+      <div class="referral-code-display">
+        <span id="referralCode" class="code-value">Loading...</span>
+        <span class="total-invites"><span id="totalInvites">0</span> invites</span>
       </div>
     </div>
 
-    <nav class="nav-menu" id="nav-menu">
-      <ul class="nav-list">
-        <li><a href="index.html"></i> MINE</a></li>
-        <li><a href="leaders.html"></i> LEADERS</a></li>          
-        <li><a href="earn.html"></i> EARN</a></li>
-        <li><a href="friends.html" class="active"></i> FRIENDS</a></li>
-        <li><a href="wallet.html"></i> WALLET</a></li>
+    <div class="card">
+      <h2 class="card-title">Your Referrals</h2>
+      <ul id="invitedFriendsList" class="friends-list">
+        <li>Loading...</li>
       </ul>
-    </nav>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">Invite Friends</h2>
+      <div class="invite-actions">
+        <button class="button" id="inviteButton">
+          <i class="fas fa-share-alt"></i> Share
+        </button>
+        <button class="button" id="copyButton">
+          <i class="fas fa-copy"></i> Copy
+        </button>
+      </div>
+      <p>Your referral link:</p>
+      <p id="referralLink" class="referral-link">Loading...</p>
+    </div>
   </div>
 
   <script type="module" src="friends.js"></script>
