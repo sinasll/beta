@@ -10,7 +10,9 @@ const functions = new Functions(client);
 let tg      = null;
 let USER_ID = null;
 
-// — Init Telegram WebApp & extract user ID —
+// ——————————————————
+// 1) Telegram Init
+// ——————————————————
 function initTelegramWebApp() {
   if (!window.Telegram?.WebApp) return false;
   tg = window.Telegram.WebApp;
@@ -27,18 +29,21 @@ function extractTelegramUserId() {
     const params = new URLSearchParams(tg.initData || "");
     const raw = params.get("user");
     if (raw) {
-      const parsed = JSON.parse(decodeURIComponent(raw));
-      return parsed?.id?.toString();
+      const p = JSON.parse(decodeURIComponent(raw));
+      return p?.id?.toString();
     }
   } catch {}
   return unsafe?.start_param || null;
 }
 
-// — Execute Appwrite Function synchronously —
+// ——————————————————
+// 2) Execute Function **Synchronously**
+// ——————————————————
 async function executeAppwriteFunction(payload) {
   const exec = await functions.createExecution(
     FUNCTION_ID,
     JSON.stringify(payload)
+    // ← NO third “true” argument here
   );
   if (!exec.response) {
     throw new Error("No response from function");
@@ -46,7 +51,9 @@ async function executeAppwriteFunction(payload) {
   return JSON.parse(exec.response);
 }
 
-// — Fetch data & render UI —
+// ——————————————————
+// 3) Fetch & Display
+// ——————————————————
 async function fetchAndShow() {
   if (!USER_ID) throw new Error("Telegram user ID not found");
 
@@ -60,13 +67,12 @@ async function fetchAndShow() {
     throw new Error(result.error || result.message || "Unknown error");
   }
 
-  const user = result.user;
-  displayUserData(user);
+  displayUserData(result.user);
 }
 
 function displayUserData(user) {
   const code    = user.referral_code || "N/A";
-  const invites = user.total_invites || 0;
+  const invites = user.total_invites  || 0;
   const link    = `https://t.me/betamineitbot?start=${code}`;
 
   document.getElementById("referralCode").textContent  = code;
@@ -75,24 +81,25 @@ function displayUserData(user) {
 
   document.getElementById("inviteButton").onclick = () => {
     if (tg.share) {
-      tg.share({ title: "Join $BLACK Mining", text: `Use my code: ${code}`, url: link })
-        .catch(() => copyToClipboard(link));
+      tg.share({
+        title: "Join $BLACK Mining",
+        text:  `Use my code: ${code}`,
+        url:   link
+      }).catch(() => copy(link));
     } else {
-      copyToClipboard(link);
+      copy(link);
     }
   };
 
-  document.getElementById("copyButton").onclick = () => copyToClipboard(link);
+  document.getElementById("copyButton").onclick = () => copy(link);
 
   const listEl = document.getElementById("invitedFriendsList");
-  if (!user.invited_friends?.length) {
-    listEl.innerHTML = "<li>No friends invited yet</li>";
-  } else {
-    listEl.innerHTML = user.invited_friends.map(id => `<li>${id}</li>`).join("");
-  }
+  listEl.innerHTML = (user.invited_friends?.length > 0)
+    ? user.invited_friends.map(id => `<li>${id}</li>`).join("")
+    : "<li>No friends invited yet</li>";
 }
 
-function copyToClipboard(text) {
+function copy(text) {
   navigator.clipboard.writeText(text)
     .then(() => showAlert("Link copied!"))
     .catch(() => {
@@ -119,13 +126,11 @@ function showError(msg) {
 
 document.addEventListener("DOMContentLoaded", async () => {
   try {
-    // placeholder UI while loading
+    // Placeholder while loading
     document.getElementById("referralCode").textContent = "Loading…";
     document.getElementById("invitedFriendsList").innerHTML = "<li>Loading…</li>";
 
-    if (!initTelegramWebApp()) {
-      throw new Error("Please open in Telegram WebApp");
-    }
+    if (!initTelegramWebApp()) throw new Error("Please open in Telegram WebApp");
     await fetchAndShow();
   } catch (err) {
     console.error("App failed:", err);
