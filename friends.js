@@ -9,172 +9,183 @@ const functions = new Functions(client);
 let tg = null;
 let USER_ID = null;
 
-// Initialize Telegram WebApp
+// Robust Telegram initialization with error handling
 function initTelegramWebApp() {
   try {
-    if (window.Telegram && window.Telegram.WebApp) {
-      tg = window.Telegram.WebApp;
-      tg.expand();
-      
-      // Try to get user ID from initData or initDataUnsafe
-      const initData = tg.initData || '';
-      const initDataUnsafe = tg.initDataUnsafe || {};
-      
-      if (!initDataUnsafe.user?.id && initData) {
-        const params = new URLSearchParams(initData);
-        const userParam = params.get('user');
-        if (userParam) {
-          const user = JSON.parse(userParam);
-          USER_ID = user?.id?.toString();
-        }
-      } else {
-        USER_ID = initDataUnsafe.user?.id?.toString();
-      }
-      
-      return true;
+    // Check if running in Telegram
+    if (!window.Telegram?.WebApp) {
+      console.warn("Not running in Telegram WebApp");
+      return false;
     }
-    return false;
+
+    tg = window.Telegram.WebApp;
+    
+    // Initialize WebApp
+    try {
+      tg.expand();
+      tg.ready();
+    } catch (e) {
+      console.warn("Telegram WebApp initialization error:", e);
+    }
+
+    // Get user ID from multiple possible sources
+    USER_ID = getTelegramUserId();
+    return !!USER_ID;
+    
   } catch (error) {
-    console.error("Telegram initialization error:", error);
+    console.error("Telegram initialization failed:", error);
     return false;
   }
 }
 
-// Get DOM elements safely
-function getElement(id) {
-  const el = document.getElementById(id);
-  if (!el) {
-    console.error(`Element with ID ${id} not found`);
-    throw new Error(`UI element ${id} missing`);
+// Multiple methods to get Telegram user ID
+function getTelegramUserId() {
+  // 1. Try from initDataUnsafe
+  if (tg.initDataUnsafe?.user?.id) {
+    return tg.initDataUnsafe.user.id.toString();
   }
-  return el;
+
+  // 2. Parse initData
+  try {
+    const initData = new URLSearchParams(tg.initData || '');
+    const userJson = initData.get('user');
+    if (userJson) {
+      const user = JSON.parse(decodeURIComponent(userJson));
+      return user?.id?.toString();
+    }
+  } catch (e) {
+    console.warn("Failed to parse initData:", e);
+  }
+
+  // 3. Try from start_param
+  if (tg.initDataUnsafe?.start_param) {
+    return tg.initDataUnsafe.start_param;
+  }
+
+  return null;
 }
 
-// Fetch user data from backend
-async function fetchUserData() {
-  try {
-    if (!USER_ID) throw new Error("Telegram user ID not available");
+// Robust function execution with timeout handling
+async function executeAppwriteFunction(payload) {
+  const FUNCTION_ID = "6804e1e20023090e16fc"; // Your function ID
+  const MAX_RETRIES = 3;
+  const RETRY_DELAY = 1000;
 
-    const payload = {
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      const execution = await functions.createExecution(
+        FUNCTION_ID,
+        JSON.stringify(payload)
+      );
+
+      if (!execution?.$id) {
+        throw new Error("No execution ID returned");
+      }
+
+      // Wait for completion
+      const result = await waitForExecution(execution.$id);
+      return JSON.parse(result.response);
+      
+    } catch (error) {
+      if (attempt === MAX_RETRIES - 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+    }
+  }
+}
+
+async function waitForExecution(executionId, timeout = 5000) {
+  const start = Date.now();
+  
+  while (Date.now() - start < timeout) {
+    const result = await functions.getExecution(executionId);
+    
+    if (result.status === "completed") return result;
+    if (result.status === "failed") {
+      throw new Error("Function execution failed");
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+  
+  throw new Error("Function execution timeout");
+}
+
+// Main data fetching function
+async function fetchUserData() {
+  if (!USER_ID) throw new Error("Telegram user ID not available");
+
+  try {
+    const data = await executeAppwriteFunction({
       telegram_id: USER_ID,
       referral_code: getReferralCodeFromUrl()
-    };
+    });
 
-    const execution = await functions.createExecution(
-      "6804e1e20023090e16fc",
-      JSON.stringify(payload)
-    );
-
-    let response;
-    let attempts = 0;
-    while (attempts < 5) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const result = await functions.getExecution(execution.$id);
-      if (result.status === "completed") {
-        response = result.response;
-        break;
-      }
-      attempts++;
+    if (!data?.success) {
+      throw new Error(data?.error || "Invalid response from function");
     }
-
-    if (!response) throw new Error("Function execution timed out");
-
-    const data = JSON.parse(response);
-    if (!data.success) throw new Error(data.error || "Failed to fetch user data");
 
     return data;
   } catch (error) {
-    console.error("Error fetching user data:", error);
+    console.error("Failed to fetch user data:", error);
     throw error;
   }
 }
 
-// Get referral code from URL if present
 function getReferralCodeFromUrl() {
-  if (!tg) return '';
-  const startParam = tg.initDataUnsafe?.start_param;
-  return startParam || '';
+  return tg?.initDataUnsafe?.start_param || '';
 }
 
-// Display user data in the UI
+// UI Functions
 function displayUserData(user) {
-  try {
-    const referralLink = `https://t.me/betamineitbot?start=${user.referral_code}`;
-    getElement("referralLink").textContent = referralLink;
-    getElement("referralCode").textContent = user.referral_code;
-    getElement("totalInvites").textContent = user.total_invites;
+  // Update referral info
+  document.getElementById("referralCode").textContent = user.referral_code || "N/A";
+  document.getElementById("totalInvites").textContent = user.total_invites || "0";
+  
+  const referralLink = `https://t.me/betamineitbot?start=${user.referral_code}`;
+  document.getElementById("referralLink").textContent = referralLink;
 
-    // Setup buttons
-    getElement("inviteButton").addEventListener("click", () => {
-      shareReferralLink(user.referral_code);
-    });
+  // Setup buttons
+  setupShareButton(referralLink, user.referral_code);
+  setupCopyButton(referralLink);
 
-    getElement("copyButton").addEventListener("click", () => {
-      copyToClipboard(referralLink);
-    });
+  // Update friends list
+  updateFriendsList(user.invited_friends);
+}
 
-    // Friends list
-    const friendsList = getElement("invitedFriendsList");
-    friendsList.innerHTML = '';
-
-    if (!user.invited_friends || user.invited_friends.length === 0) {
-      friendsList.innerHTML = '<li class="no-friends">No invited friends yet</li>';
-      return;
+function setupShareButton(link, code) {
+  const btn = document.getElementById("inviteButton");
+  btn.onclick = () => {
+    if (tg?.share) {
+      tg.share({
+        title: "Join $BLACK Mining",
+        text: `Use my code: ${code}`,
+        url: link
+      }).catch(() => copyToClipboard(link));
+    } else {
+      copyToClipboard(link);
     }
-
-    user.invited_friends.forEach(friendId => {
-      const friendItem = document.createElement("li");
-      friendItem.className = "friend-item";
-      friendItem.innerHTML = `
-        <span class="friend-id">${friendId}</span>
-        <span class="friend-status">Joined</span>
-      `;
-      friendsList.appendChild(friendItem);
-    });
-  } catch (error) {
-    console.error("Error displaying user data:", error);
-    throw error;
-  }
+  };
 }
 
-// Share referral link
-function shareReferralLink(referralCode) {
-  const shareUrl = `https://t.me/betamineitbot?start=${referralCode}`;
-  const shareText = `Join me in $BLACK Mining! Use my referral code: ${referralCode}`;
-
-  if (tg?.share) {
-    tg.share({
-      title: "Join $BLACK Mining",
-      text: shareText,
-      url: shareUrl
-    });
-  } else if (navigator.share) {
-    navigator.share({
-      title: "Join $BLACK Mining",
-      text: shareText,
-      url: shareUrl
-    }).catch(() => copyToClipboard(shareUrl));
-  } else {
-    copyToClipboard(shareUrl);
-  }
+function setupCopyButton(link) {
+  const btn = document.getElementById("copyButton");
+  btn.onclick = () => copyToClipboard(link);
 }
 
-// Copy text to clipboard
 function copyToClipboard(text) {
-  navigator.clipboard.writeText(text).then(() => {
-    showAlert("Copied to clipboard!");
-  }).catch(() => {
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textarea);
-    showAlert("Copied to clipboard!");
-  });
+  navigator.clipboard.writeText(text)
+    .then(() => showAlert("Link copied!"))
+    .catch(() => {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      showAlert("Link copied!");
+    });
 }
 
-// Show alert
 function showAlert(message) {
   if (tg?.showAlert) {
     tg.showAlert(message);
@@ -183,49 +194,44 @@ function showAlert(message) {
   }
 }
 
-// Initialize the app
+function updateFriendsList(friends) {
+  const list = document.getElementById("invitedFriendsList");
+  list.innerHTML = friends?.length
+    ? friends.map(id => `<li>${id}</li>`).join('')
+    : '<li>No friends invited yet</li>';
+}
+
+// Initialize app with proper error handling
 async function initApp() {
   try {
-    // Create main container if it doesn't exist
-    if (!document.getElementById("appContent")) {
-      const appDiv = document.createElement("div");
-      appDiv.id = "appContent";
-      document.body.appendChild(appDiv);
-    }
-
-    const appContent = getElement("appContent");
-    
-    // Check if we're in Telegram
-    const isTelegram = initTelegramWebApp();
-    
-    if (!isTelegram) {
-      appContent.innerHTML = `
-        <div class="error-message">
-          Please open this page in Telegram to use all features.
-        </div>
-      `;
-      return;
-    }
-
     // Show loading state
-    appContent.classList.add("loading");
-    appContent.innerHTML = '<div class="loading-spinner">Loading...</div>';
+    document.getElementById("referralCode").textContent = "Loading...";
+    document.getElementById("invitedFriendsList").innerHTML = "<li>Loading...</li>";
+
+    // Initialize Telegram
+    const isTelegram = initTelegramWebApp();
+    if (!isTelegram) {
+      throw new Error("Please open in Telegram app");
+    }
 
     // Fetch and display data
-    const userData = await fetchUserData();
-    displayUserData(userData.user);
-    appContent.classList.remove("loading");
+    const data = await fetchUserData();
+    displayUserData(data.user);
 
   } catch (error) {
-    console.error("Initialization error:", error);
-    const appContent = document.getElementById("appContent") || document.body;
-    appContent.innerHTML = `
-      <div class="error-message">
-        Error: ${error.message}
-      </div>
-    `;
+    console.error("App initialization failed:", error);
+    showError(error.message);
   }
 }
 
-// Start the app when DOM is loaded
+function showError(message) {
+  const errorDiv = document.createElement('div');
+  errorDiv.className = 'error-message';
+  errorDiv.textContent = `Error: ${message}`;
+  
+  const container = document.querySelector('.container');
+  container.prepend(errorDiv);
+}
+
+// Start the app
 document.addEventListener("DOMContentLoaded", initApp);
