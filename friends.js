@@ -1,13 +1,13 @@
 import { Client, Functions } from "https://esm.sh/appwrite@13.0.0";
 
-const ENDPOINT    = "https://fra.cloud.appwrite.io/v1";
-const PROJECT_ID  = "6800cf6c0038c2026f07";
+const ENDPOINT = "https://fra.cloud.appwrite.io/v1";
+const PROJECT_ID = "6800cf6c0038c2026f07";
 const FUNCTION_ID = "6804e1e20023090e16fc";
 
-const client    = new Client().setEndpoint(ENDPOINT).setProject(PROJECT_ID);
+const client = new Client().setEndpoint(ENDPOINT).setProject(PROJECT_ID);
 const functions = new Functions(client);
 
-let tg      = null;
+let tg = null;
 let USER_ID = null;
 
 // ——————————————————
@@ -37,45 +37,61 @@ function extractTelegramUserId() {
 }
 
 // ——————————————————
-// 2) Execute Function **Synchronously**
+// 2) Execute Function
 // ——————————————————
 async function executeAppwriteFunction(payload) {
-  const exec = await functions.createExecution(
-    FUNCTION_ID,
-    JSON.stringify(payload)
-    // ← NO third “true” argument here
-  );
-  if (!exec.response) {
-    throw new Error("No response from function");
+  try {
+    const exec = await functions.createExecution(
+      FUNCTION_ID,
+      JSON.stringify(payload),
+      false // synchronous execution
+    );
+    
+    if (!exec.response) {
+      console.error("Execution details:", exec);
+      throw new Error("Function executed but returned no response");
+    }
+    
+    return JSON.parse(exec.response);
+  } catch (err) {
+    console.error("Function execution failed:", err);
+    throw new Error("Failed to execute function: " + err.message);
   }
-  return JSON.parse(exec.response);
 }
 
 // ——————————————————
 // 3) Fetch & Display
 // ——————————————————
 async function fetchAndShow() {
-  if (!USER_ID) throw new Error("Telegram user ID not found");
+  try {
+    if (!USER_ID) throw new Error("Telegram user ID not found");
 
-  const payload = {
-    telegram_id:   USER_ID,
-    referral_code: tg.initDataUnsafe?.start_param || ""
-  };
+    const payload = {
+      telegram_id: USER_ID,
+      referral_code: tg.initDataUnsafe?.start_param || ""
+    };
 
-  const result = await executeAppwriteFunction(payload);
-  if (!result.success) {
-    throw new Error(result.error || result.message || "Unknown error");
+    console.log("Sending payload:", payload);
+    const result = await executeAppwriteFunction(payload);
+    console.log("Received result:", result);
+
+    if (!result?.success) {
+      throw new Error(result?.error || result?.message || "Unknown error from function");
+    }
+
+    displayUserData(result.user);
+  } catch (err) {
+    console.error("fetchAndShow error:", err);
+    throw err;
   }
-
-  displayUserData(result.user);
 }
 
 function displayUserData(user) {
-  const code    = user.referral_code || "N/A";
-  const invites = user.total_invites  || 0;
-  const link    = `https://t.me/betamineitbot?start=${code}`;
+  const code = user.referral_code || "N/A";
+  const invites = user.total_invites || 0;
+  const link = `https://t.me/betamineitbot?start=${code}`;
 
-  document.getElementById("referralCode").textContent  = code;
+  document.getElementById("referralCode").textContent = code;
   document.getElementById("totalInvites").textContent = invites;
   document.getElementById("referralLink").textContent = link;
 
@@ -83,8 +99,8 @@ function displayUserData(user) {
     if (tg.share) {
       tg.share({
         title: "Join $BLACK Mining",
-        text:  `Use my code: ${code}`,
-        url:   link
+        text: `Use my code: ${code}`,
+        url: link
       }).catch(() => copy(link));
     } else {
       copy(link);
@@ -127,8 +143,8 @@ function showError(msg) {
 document.addEventListener("DOMContentLoaded", async () => {
   try {
     // Placeholder while loading
-    document.getElementById("referralCode").textContent = "Loading…";
-    document.getElementById("invitedFriendsList").innerHTML = "<li>Loading…</li>";
+    document.getElementById("referralCode").textContent = "Loading...";
+    document.getElementById("invitedFriendsList").innerHTML = "<li>Loading...</li>";
 
     if (!initTelegramWebApp()) throw new Error("Please open in Telegram WebApp");
     await fetchAndShow();
