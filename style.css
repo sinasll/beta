@@ -152,8 +152,8 @@ input[type="text"]:focus {
   left: 0;
   right: 0;
   height: 70px;
-  background: red; /* Temporary color for testing */
-  border-top: 1px solid var(--border-color);
+  background: #f1f1f1; /* Fallback to light gray */
+  border-top: 1px solid #ddd; /* Fallback to light border */
   z-index: 100;
   display: flex;
   align-items: center;
@@ -178,7 +178,7 @@ input[type="text"]:focus {
 }
 
 .nav-list li a {
-  color: var(--hint-color);
+  color: #555; /* Fallback color for links */
   text-decoration: none;
   font-size: 12px;
   display: flex;
@@ -198,7 +198,7 @@ input[type="text"]:focus {
 }
 
 .nav-list li a.active {
-  color: var(--accent-color);
+  color: #007bff; /* Fallback active color */
 }
 
 .nav-list li a.active i {
@@ -213,7 +213,7 @@ input[type="text"]:focus {
   transform: translateX(-50%);
   width: 50%;
   height: 3px;
-  background: var(--accent-color);
+  background: #007bff; /* Fallback accent color */
   border-radius: 3px 3px 0 0;
 }
 
