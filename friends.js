@@ -1,155 +1,143 @@
 import { Client, Functions } from "https://esm.sh/appwrite@13.0.0";
 
-const ENDPOINT = "https://fra.cloud.appwrite.io/v1";
-const PROJECT_ID = "6800cf6c0038c2026f07";
-const FUNCTION_ID = "6804e1e20023090e16fc";
+// Initialize Appwrite client
+const client = new Client()
+  .setEndpoint("https://fra.cloud.appwrite.io/v1")
+  .setProject("6800cf6c0038c2026f07");
 
-const client = new Client().setEndpoint(ENDPOINT).setProject(PROJECT_ID);
 const functions = new Functions(client);
 
-let tg = null;
-let USER_ID = null;
+// Telegram WebApp initialization
+let tgWebApp;
+let userId;
 
-// ——————————————————
-// 1) Telegram Init
-// ——————————————————
-function initTelegramWebApp() {
-  if (!window.Telegram?.WebApp) return false;
-  tg = window.Telegram.WebApp;
-  tg.ready?.();
-  tg.expand?.();
-  USER_ID = extractTelegramUserId();
-  return Boolean(USER_ID);
+function initTelegram() {
+  if (window.Telegram?.WebApp) {
+    tgWebApp = window.Telegram.WebApp;
+    tgWebApp.ready();
+    tgWebApp.expand();
+    
+    // Extract user ID
+    const unsafeData = tgWebApp.initDataUnsafe;
+    userId = unsafeData?.user?.id?.toString() || 
+             unsafeData?.start_param || 
+             extractUserIdFromInitData(tgWebApp.initData);
+    
+    return !!userId;
+  }
+  return false;
 }
 
-function extractTelegramUserId() {
-  const unsafe = tg.initDataUnsafe;
-  if (unsafe?.user?.id) return unsafe.user.id.toString();
+function extractUserIdFromInitData(initData) {
   try {
-    const params = new URLSearchParams(tg.initData || "");
-    const raw = params.get("user");
-    if (raw) {
-      const p = JSON.parse(decodeURIComponent(raw));
-      return p?.id?.toString();
-    }
-  } catch {}
-  return unsafe?.start_param || null;
-}
-
-// ——————————————————
-// 2) Execute Function
-// ——————————————————
-async function executeAppwriteFunction(payload) {
-  try {
-    const exec = await functions.createExecution(
-      FUNCTION_ID,
-      JSON.stringify(payload),
-      false // synchronous execution
-    );
-    
-    if (!exec.response) {
-      console.error("Execution details:", exec);
-      throw new Error("Function executed but returned no response");
-    }
-    
-    return JSON.parse(exec.response);
-  } catch (err) {
-    console.error("Function execution failed:", err);
-    throw new Error("Failed to execute function: " + err.message);
+    const params = new URLSearchParams(initData || "");
+    const userData = params.get("user");
+    return userData ? JSON.parse(decodeURIComponent(userData)).id?.toString() : null;
+  } catch {
+    return null;
   }
 }
 
-// ——————————————————
-// 3) Fetch & Display
-// ——————————————————
-async function fetchAndShow() {
+async function processReferral() {
   try {
-    if (!USER_ID) throw new Error("Telegram user ID not found");
-
-    const payload = {
-      telegram_id: USER_ID,
-      referral_code: tg.initDataUnsafe?.start_param || ""
-    };
-
-    console.log("Sending payload:", payload);
-    const result = await executeAppwriteFunction(payload);
-    console.log("Received result:", result);
-
-    if (!result?.success) {
-      throw new Error(result?.error || result?.message || "Unknown error from function");
+    if (!initTelegram()) {
+      throw new Error("Please open this page through Telegram");
     }
 
-    displayUserData(result.user);
-  } catch (err) {
-    console.error("fetchAndShow error:", err);
-    throw err;
+    const referralCode = tgWebApp.initDataUnsafe?.start_param;
+    if (!referralCode) {
+      throw new Error("No referral code found");
+    }
+
+    const response = await fetch('https://6804e1e37bd3748026ac.fra.appwrite.run', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        telegram_id: userId,
+        referral_code: referralCode
+      })
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok || !data.success) {
+      throw new Error(data.error || "Failed to process referral");
+    }
+
+    updateUI(data.data);
+  } catch (error) {
+    console.error("Referral processing failed:", error);
+    showError(error.message);
   }
 }
 
-function displayUserData(user) {
-  const code = user.referral_code || "N/A";
-  const invites = user.total_invites || 0;
-  const link = `https://t.me/betamineitbot?start=${code}`;
+function updateUI(data) {
+  document.getElementById("referralCode").textContent = data.referral_code || "N/A";
+  document.getElementById("totalInvites").textContent = data.total_invites || 0;
+  
+  const referralLink = `https://t.me/betamineitbot?start=${data.referral_code}`;
+  document.getElementById("referralLink").textContent = referralLink;
 
-  document.getElementById("referralCode").textContent = code;
-  document.getElementById("totalInvites").textContent = invites;
-  document.getElementById("referralLink").textContent = link;
+  // Setup buttons
+  document.getElementById("inviteButton").onclick = () => shareLink(referralLink);
+  document.getElementById("copyButton").onclick = () => copyToClipboard(referralLink);
 
-  document.getElementById("inviteButton").onclick = () => {
-    if (tg.share) {
-      tg.share({
-        title: "Join $BLACK Mining",
-        text: `Use my code: ${code}`,
-        url: link
-      }).catch(() => copy(link));
-    } else {
-      copy(link);
-    }
-  };
-
-  document.getElementById("copyButton").onclick = () => copy(link);
-
-  const listEl = document.getElementById("invitedFriendsList");
-  listEl.innerHTML = (user.invited_friends?.length > 0)
-    ? user.invited_friends.map(id => `<li>${id}</li>`).join("")
-    : "<li>No friends invited yet</li>";
+  // Update friends list
+  const friendsList = document.getElementById("invitedFriendsList");
+  friendsList.innerHTML = data.invited_friends?.length > 0
+    ? data.invited_friends.map(id => `<li>${id}</li>`).join("")
+    : "<li>No referrals yet</li>";
 }
 
-function copy(text) {
+function shareLink(link) {
+  if (tgWebApp?.share) {
+    tgWebApp.share({
+      title: "Join $BLACK Mining",
+      text: `Use my referral code: ${link.split('=').pop()}`,
+      url: link
+    }).catch(() => copyToClipboard(link));
+  } else {
+    copyToClipboard(link);
+  }
+}
+
+function copyToClipboard(text) {
   navigator.clipboard.writeText(text)
-    .then(() => showAlert("Link copied!"))
+    .then(() => showAlert("Copied!"))
     .catch(() => {
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
+      const tempInput = document.createElement("textarea");
+      tempInput.value = text;
+      document.body.appendChild(tempInput);
+      tempInput.select();
       document.execCommand("copy");
-      document.body.removeChild(ta);
-      showAlert("Link copied!");
+      document.body.removeChild(tempInput);
+      showAlert("Copied to clipboard!");
     });
 }
 
-function showAlert(msg) {
-  tg.showAlert ? tg.showAlert(msg) : alert(msg);
+function showAlert(message) {
+  if (tgWebApp?.showAlert) {
+    tgWebApp.showAlert(message);
+  } else {
+    alert(message);
+  }
 }
 
-function showError(msg) {
-  const e = document.createElement("div");
-  e.className = "error-message";
-  e.textContent = `Error: ${msg}`;
-  document.querySelector(".container")?.prepend(e);
+function showError(message) {
+  const errorElement = document.createElement("div");
+  errorElement.className = "error-message";
+  errorElement.textContent = message;
+  document.querySelector(".container").prepend(errorElement);
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
+// Initialize when DOM is loaded
+document.addEventListener("DOMContentLoaded", () => {
   try {
-    // Placeholder while loading
-    document.getElementById("referralCode").textContent = "Loading...";
-    document.getElementById("invitedFriendsList").innerHTML = "<li>Loading...</li>";
-
-    if (!initTelegramWebApp()) throw new Error("Please open in Telegram WebApp");
-    await fetchAndShow();
-  } catch (err) {
-    console.error("App failed:", err);
-    showError(err.message);
+    processReferral();
+  } catch (error) {
+    console.error("Initialization failed:", error);
+    showError("Failed to initialize. Please try again.");
   }
 });
