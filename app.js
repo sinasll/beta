@@ -295,8 +295,11 @@ sendBtn.addEventListener('click', () => {
   if (window.Telegram?.WebApp) {
     const tg = window.Telegram.WebApp;
     
-    // Send just the raw code as plain text
-    tg.sendData(code);
+    // Create the message in the requested format
+    const message = `Use my $BLACK code for today:\n\`${code}\``;
+    
+    // Send the formatted message
+    tg.sendData(message);
     
     // Optional: Close the WebApp after sending
     tg.close();
