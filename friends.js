@@ -1,61 +1,77 @@
-// Assuming you're using Appwrite SDK and Telegram Web App for integration
+import { Client, Functions } from 'https://esm.sh/appwrite@13.0.0';
 
-const inviteButton = document.getElementById('inviteButton');
-const copyButton = document.getElementById('copyButton');
-const referralLinkElement = document.getElementById('referralLink');
+document.addEventListener('DOMContentLoaded', async () => {
+  // Initialize Appwrite client & Functions
+  const client = new Client()
+    .setEndpoint('https://fra.cloud.appwrite.io/v1')
+    .setProject('6800cf6c0038c2026f07');
 
-// Function to handle generating referral code
-async function generateReferralCode() {
-    try {
-        const response = await fetch('https://fra.cloud.appwrite.io/v1/functions/6804e1e20023090e16fc/executions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-telegram-data': JSON.stringify(window.Telegram.WebApp.initDataUnsafe)
-            },
-            body: JSON.stringify({
-                action: 'generate_referral'
-            })
-        });
-        
-        const data = await response.json();
+  const functions = new Functions(client);
 
-        if (data.success) {
-            const referralLink = data.link;
-            referralLinkElement.textContent = referralLink;
-            referralLinkElement.href = referralLink;
-            referralLinkElement.style.display = 'block';
+  // Telegram WebApp init
+  const tg = window.Telegram.WebApp;
+  tg.expand();
+  const user = tg.initDataUnsafe.user;
+  const telegramId = user.id.toString();
 
-            // Enable Copy button
-            copyButton.disabled = false;
-        } else {
-            alert('Error generating referral code: ' + data.error);
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('An error occurred while generating the referral code.');
-    }
-}
+  // 1. Parse referral code from URL and record invite
+  const urlParams = new URLSearchParams(window.location.search);
+  const refParam = urlParams.get('ref');
+  if (refParam) {
+    await functions.createExecution('6804e1e20023090e16fc', JSON.stringify({
+      action:       'recordInvite',
+      telegramId,
+      referralCode: refParam
+    }));
+  }
 
-// Function to copy the referral link
-function copyReferralLink() {
-    const referralLink = referralLinkElement.textContent;
-    
-    if (referralLink) {
-        navigator.clipboard.writeText(referralLink).then(() => {
-            alert('Referral link copied to clipboard!');
-        }).catch((error) => {
-            console.error('Error copying referral link:', error);
-            alert('Failed to copy the referral link.');
-        });
-    } else {
-        alert('Referral link is not available.');
-    }
-}
+  // 2. Fetch this user’s referral data
+  const exec1 = await functions.createExecution('6804e1e20023090e16fc', JSON.stringify({
+    action:     'getReferral',
+    telegramId
+  }));
+  const { referralCode, referralLink, totalInvites, invitedBy } = JSON.parse(exec1.response);
 
-// Add event listeners to buttons
-inviteButton.addEventListener('click', generateReferralCode);
-copyButton.addEventListener('click', copyReferralLink);
+  // Update UI with total invites & inviter
+  document.getElementById('totalInvites').textContent = totalInvites;
+  if (invitedBy) {
+    document.getElementById('invitedBy').textContent = `You were invited by: ${invitedBy}`;
+  }
 
-// Hide referral link initially
-referralLinkElement.style.display = 'none';
+  // 3. Render referral link + buttons
+  const linkContainer = document.createElement('div');
+  linkContainer.innerHTML = `
+    <div class="referral-container">
+      <input type="text" id="refLinkInput" readonly value="${referralLink}" />
+      <button id="copyBtn">Copy</button>
+      <a id="shareBtn" href="https://t.me/share/url?url=${encodeURIComponent(referralLink)}" target="_blank">
+        Share on Telegram
+      </a>
+    </div>
+  `;
+  document
+    .getElementById('invitedFriendsList')
+    .parentNode
+    .insertBefore(linkContainer, document.getElementById('invitedFriendsList'));
+
+  document.getElementById('copyBtn').addEventListener('click', () => {
+    navigator.clipboard.writeText(referralLink);
+    alert('Referral link copied!');
+  });
+
+  // 4. Fetch and render list of friends this user has invited
+  const exec2 = await functions.createExecution('6804e1e20023090e16fc', JSON.stringify({
+    action:     'getInvitedFriends',
+    telegramId
+  }));
+  const { friends } = JSON.parse(exec2.response);
+
+  const listEl = document.getElementById('invitedFriendsList');
+  friends.forEach(fr => {
+    const li = document.createElement('li');
+    li.textContent = fr.username
+      ? `${fr.username} (${fr.telegramId})`
+      : fr.telegramId;
+    listEl.appendChild(li);
+  });
+});
