@@ -258,34 +258,9 @@ copyBtn.addEventListener('click', () => {
     .catch(() => alert('Failed to copy code.'));
 });
 
-const codeinput = document.getElementById('codeinput');
-const submitButton = document.getElementById('submitButton');
-
-submitButton.addEventListener('click', submitCode);
-
-codeInput.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    submitButton.click(); // triggers the same as button click
-  }
-});
-
-async function submitCode() {
+submitBtn.addEventListener('click', async () => {
   const submittedCode = codeInput.value.trim();
   if (!submittedCode) return alert('Please enter a code to submit');
-
-  // Your code submission logic
-  console.log('Submitting code:', submittedCode);
-}
-
-document.getElementById('pasteButton').addEventListener('click', async () => {
-  try {
-    const text = await navigator.clipboard.readText();
-    document.getElementById('codeinput').value = text;
-  } catch (err) {
-    alert('Failed to paste: Clipboard access not allowed');
-  }
-});
 
   try {
     const payload = {
@@ -317,7 +292,7 @@ document.getElementById('pasteButton').addEventListener('click', async () => {
     console.error('Code submission failed:', err);
     alert(err.message || 'Failed to submit code.');
   }
-;
+});
 
 sendBtn.addEventListener('click', () => {
   const code = userData.dailyCode || dailyCodeEl.textContent;
