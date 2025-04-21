@@ -1,77 +1,72 @@
-import { Client, Functions } from 'https://esm.sh/appwrite@13.0.0';
+import { Client, Functions } from "https://esm.sh/appwrite@13.0.0";
 
-document.addEventListener('DOMContentLoaded', async () => {
-  // Initialize Appwrite client & Functions
-  const client = new Client()
-    .setEndpoint('https://fra.cloud.appwrite.io/v1')
-    .setProject('6800cf6c0038c2026f07');
+const client = new Client()
+  .setEndpoint("https://fra.cloud.appwrite.io/v1")
+  .setProject("6800cf6c0038c2026f07");
 
-  const functions = new Functions(client);
+const functions = new Functions(client);
 
-  // Telegram WebApp init
-  const tg = window.Telegram.WebApp;
-  tg.expand();
-  const user = tg.initDataUnsafe.user;
-  const telegramId = user.id.toString();
+let telegramId = null;
+let telegramUsername = null;
+let referralLink = "";
 
-  // 1. Parse referral code from URL and record invite
-  const urlParams = new URLSearchParams(window.location.search);
-  const refParam = urlParams.get('ref');
-  if (refParam) {
-    await functions.createExecution('6804e1e20023090e16fc', JSON.stringify({
-      action:       'recordInvite',
-      telegramId,
-      referralCode: refParam
+if (Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
+  const tgUser = Telegram.WebApp.initDataUnsafe.user;
+  telegramId = tgUser.id.toString();
+  telegramUsername = tgUser.username || null;
+} else {
+  alert("Please open this app via Telegram for full functionality.");
+}
+
+async function fetchReferralData() {
+  if (!telegramId) return;
+
+  try {
+    const execution = await functions.createExecution("6804e1e20023090e16fc", JSON.stringify({
+      telegram_id: telegramId,
+      telegram_username: telegramUsername
     }));
+
+    let response;
+    try {
+      response = JSON.parse(execution.response);
+    } catch (e) {
+      console.error("Failed to parse function response:", execution.response);
+      return;
+    }
+
+    const { referral_code, total_invites, invited_friends } = response;
+
+    referralLink = `https://t.me/betamineitbot?start=${referral_code}`;
+    document.getElementById("referralLink").innerText = referralLink;
+
+    if (total_invites !== undefined) {
+      const inviteList = document.getElementById("invitedFriendsList");
+      inviteList.innerHTML = invited_friends.map(friend => `<li>${friend}</li>`).join("");
+    }
+
+  } catch (err) {
+    console.error("Referral fetch error:", err);
   }
+}
 
-  // 2. Fetch this user’s referral data
-  const exec1 = await functions.createExecution('6804e1e20023090e16fc', JSON.stringify({
-    action:     'getReferral',
-    telegramId
-  }));
-  const { referralCode, referralLink, totalInvites, invitedBy } = JSON.parse(exec1.response);
+document.addEventListener("DOMContentLoaded", () => {
+  fetchReferralData();
 
-  // Update UI with total invites & inviter
-  document.getElementById('totalInvites').textContent = totalInvites;
-  if (invitedBy) {
-    document.getElementById('invitedBy').textContent = `You were invited by: ${invitedBy}`;
-  }
-
-  // 3. Render referral link + buttons
-  const linkContainer = document.createElement('div');
-  linkContainer.innerHTML = `
-    <div class="referral-container">
-      <input type="text" id="refLinkInput" readonly value="${referralLink}" />
-      <button id="copyBtn">Copy</button>
-      <a id="shareBtn" href="https://t.me/share/url?url=${encodeURIComponent(referralLink)}" target="_blank">
-        Share on Telegram
-      </a>
-    </div>
-  `;
-  document
-    .getElementById('invitedFriendsList')
-    .parentNode
-    .insertBefore(linkContainer, document.getElementById('invitedFriendsList'));
-
-  document.getElementById('copyBtn').addEventListener('click', () => {
-    navigator.clipboard.writeText(referralLink);
-    alert('Referral link copied!');
+  document.getElementById("inviteButton").addEventListener("click", () => {
+    if (Telegram.WebApp.platform) {
+      Telegram.WebApp.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=Join $BLACK and earn rewards with me!`);
+    } else {
+      alert("Telegram share only works inside Telegram.");
+    }
   });
 
-  // 4. Fetch and render list of friends this user has invited
-  const exec2 = await functions.createExecution('6804e1e20023090e16fc', JSON.stringify({
-    action:     'getInvitedFriends',
-    telegramId
-  }));
-  const { friends } = JSON.parse(exec2.response);
-
-  const listEl = document.getElementById('invitedFriendsList');
-  friends.forEach(fr => {
-    const li = document.createElement('li');
-    li.textContent = fr.username
-      ? `${fr.username} (${fr.telegramId})`
-      : fr.telegramId;
-    listEl.appendChild(li);
+  document.getElementById("copyButton").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(referralLink);
+      alert("Referral link copied!");
+    } catch (err) {
+      alert("Failed to copy link.");
+    }
   });
 });

@@ -1,121 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  />
   <title>$BLACK | Friends</title>
-  <link rel="stylesheet" href="friends.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/appwrite@latest"></script>
+  <link rel="stylesheet" href="friends.css" />
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+  />
+
+  <!-- Telegram WebApp API -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- Telegram Login Widget for non‑Telegram browsers -->
+  <script
+    async
+    src="https://telegram.org/js/telegram-widget.js?15"
+    data-telegram-login="betamineitbot"
+    data-size="large"
+    data-userpic="false"
+    data-auth-url="https://yourdomain.com/auth"
+    data-onauth="onTelegramAuth(user)"
+    data-request-access="write"
+  ></script>
+
 </head>
 <body>
   <div class="header">
     <h1 class="logo">$BLACK</h1>
   </div>
 
-  <!-- Add these elements in the "Invite Friends" card -->
-<div class="stats-container">
-  <div class="stat-item">
-    <span class="stat-label">Total Invites</span>
-    <span class="stat-value" id="totalInvites">0</span>
-  </div>
-  <div class="stat-item">
-    <span class="stat-label" id="invitedBy"></span>
-  </div>
-</div>
+  <div class="container">
+    <!-- ========================
+         Invite Friends Card
+         ======================== -->
+    <div class="card">
+      <h2 class="card-title">Invite Friends</h2>
 
-<ul id="invitedFriendsList" class="friends-list">
-  <!-- Friends will be populated here -->
-</ul>
+      <!-- Referral stats -->
+      <div class="stats">
+        <p>Total Invites: <strong id="totalInvites">0</strong></p>
+        <p id="invitedBy" class="invited-by"></p>
+      </div>
+
+      <!-- Referral link & actions -->
+      <div class="referral-ui">
+        <input
+          type="text"
+          id="refLinkInput"
+          readonly
+          placeholder="Your referral link will appear here"
+        />
+        <button class="button" id="copyButton">
+          <i class="fa fa-copy"></i> Copy Link
+        </button>
+        <button class="button" id="inviteButton">
+          <i class="fa fa-paper-plane"></i> Invite
+        </button>
+        <button class="button" id="shareButton">
+          <i class="fa fa-share-alt"></i> Share on Telegram
+        </button>
+      </div>
+
+      <!-- Invited friends list -->
+      <ul id="invitedFriendsList" class="friends-list">
+        <!-- Populated by friends.js -->
+      </ul>
+    </div>
+
+    <!-- ========================
+         Your Friends Card
+         ======================== -->
+    <div class="card">
+      <h2 class="card-title">Your Friends</h2>
+      <ul id="friendsList" class="friends-list">
+        <!-- Optional: you can populate a separate “all friends” list here -->
+      </ul>
+    </div>
+  </div>
 
   <nav class="nav-menu" id="nav-menu">
     <ul class="nav-list">
-      <li><a href="index.html"></i> MINE</a></li>
-      <li><a href="leaders.html"></i> LEADERS</a></li>          
-      <li><a href="earn.html"></i> EARN</a></li>
-      <li><a href="friends.html" class="active"></i> FRIENDS</a></li>
-      <li><a href="wallet.html"></i> WALLET</a></li>
+      <li><a href="index.html">MINE</a></li>
+      <li><a href="leaders.html">LEADERS</a></li>
+      <li><a href="earn.html">EARN</a></li>
+      <li><a href="friends.html" class="active">FRIENDS</a></li>
+      <li><a href="wallet.html">WALLET</a></li>
     </ul>
   </nav>
 
-  <script type="module">import { Client, Functions } from 'https://esm.sh/appwrite@13.0.0';
+  <!-- Your referral logic -->
+  <script type="module" src="friends.js"></script>
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      // Initialize Appwrite client & Functions
-      const client = new Client()
-        .setEndpoint('https://fra.cloud.appwrite.io/v1')
-        .setProject('6800cf6c0038c2026f07');
-    
-      const functions = new Functions(client);
-    
-      // Telegram WebApp init
-      const tg = window.Telegram.WebApp;
-      tg.expand();
-      const user = tg.initDataUnsafe.user;
-      const telegramId = user.id.toString();
-    
-      // 1. Parse referral code from URL and record invite
-      const urlParams = new URLSearchParams(window.location.search);
-      const refParam = urlParams.get('ref');
-      if (refParam) {
-        await functions.createExecution('6804e1e20023090e16fc', JSON.stringify({
-          action:       'recordInvite',
-          telegramId,
-          referralCode: refParam
-        }));
-      }
-    
-      // 2. Fetch this user’s referral data
-      const exec1 = await functions.createExecution('6804e1e20023090e16fc', JSON.stringify({
-        action:     'getReferral',
-        telegramId
-      }));
-      const { referralCode, referralLink, totalInvites, invitedBy } = JSON.parse(exec1.response);
-    
-      // Update UI with total invites & inviter
-      document.getElementById('totalInvites').textContent = totalInvites;
-      if (invitedBy) {
-        document.getElementById('invitedBy').textContent = `You were invited by: ${invitedBy}`;
-      }
-    
-      // 3. Render referral link + buttons
-      const linkContainer = document.createElement('div');
-      linkContainer.innerHTML = `
-        <div class="referral-container">
-          <input type="text" id="refLinkInput" readonly value="${referralLink}" />
-          <button id="copyBtn">Copy</button>
-          <a id="shareBtn" href="https://t.me/share/url?url=${encodeURIComponent(referralLink)}" target="_blank">
-            Share on Telegram
-          </a>
-        </div>
-      `;
-      document
-        .getElementById('invitedFriendsList')
-        .parentNode
-        .insertBefore(linkContainer, document.getElementById('invitedFriendsList'));
-    
-      document.getElementById('copyBtn').addEventListener('click', () => {
-        navigator.clipboard.writeText(referralLink);
-        alert('Referral link copied!');
-      });
-    
-      // 4. Fetch and render list of friends this user has invited
-      const exec2 = await functions.createExecution('6804e1e20023090e16fc', JSON.stringify({
-        action:     'getInvitedFriends',
-        telegramId
-      }));
-      const { friends } = JSON.parse(exec2.response);
-    
-      const listEl = document.getElementById('invitedFriendsList');
-      friends.forEach(fr => {
-        const li = document.createElement('li');
-        li.textContent = fr.username
-          ? `${fr.username} (${fr.telegramId})`
-          : fr.telegramId;
-        listEl.appendChild(li);
-      });
-    });
-    </script>
+  <!-- Handle fallback auth from Telegram Login Widget -->
+  <script>
+    function onTelegramAuth(user) {
+      // Save Telegram username and reload so friends.js can pick it up
+      sessionStorage.setItem('betamineit_username', user.username);
+      window.location.reload();
+    }
+  </script>
 </body>
 </html>
