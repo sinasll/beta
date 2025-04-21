@@ -1,77 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>$BLACK | Earn</title>
-  <link rel="stylesheet" href="earn.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="earn.css" />
+  <script src="https://cdn.jsdelivr.net/npm/appwrite@9.0.0"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 </head>
 <body>
-    <div class="header">
-        <h1 class="logo">$BLACK</h1>
-      </div>
-    
-      <div class="container">
-        <div class="card">
-          <h2 class="card-title">Boost Your Mining Power</h2>
-          
-          <!-- Daily Bonus -->
-          <div class="task">
-            <div class="task-content">
-              <div class="task-info">
-                <div class="task-icon icon-daily"></div>
-                <div class="task-details">
-                  <div class="task-name">Daily Bonus</div>
-                  <div class="task-desc">Claim your daily mining power boost</div>
-                </div>
-              </div>
-              <div class="task-reward">+0.1x</div>
-            </div>
-            <button class="task-button" id="dailyButton">Claim Daily Bonus</button>
-            <div class="progress-text">Next bonus available in <span>00h 00m</span></div>
-          </div>
-          
-          <!-- Follow on Twitter -->
-          <div class="task">
-            <div class="task-content">
-              <div class="task-info">
-                <div class="task-icon icon-twitter"></div>
-                <div class="task-details">
-                  <div class="task-name">Follow on X</div>
-                  <div class="task-desc">Follow @blacktg</div>
-                </div>
-              </div>
-              <div class="task-reward">+0.1x</div>
-            </div>
-            <button class="task-button" id="twitterButton">Follow</button>
-          </div>
-          
-          <!-- Invite 5 Friends -->
-          <div class="task">
-            <div class="task-content">
-              <div class="task-info">
-                <div class="task-icon icon-friends"></div>
-                <div class="task-details">
-                  <div class="task-name">Invite Friends</div>
-                  <div class="task-desc">Invite friends to join $BLACK</div>
-                </div>
-              </div>
-              <div class="task-reward">+1.0x</div>
-            </div>
-            <button class="task-button" id="friends5Button">Invite Friends</button>
-            <div class="progress-text"><span>2</span> out of 5 friends invited</div>
-          </div>
-    
-        <nav class="nav-menu" id="nav-menu">
-          <ul class="nav-list">
-            <li><a href="index.html"></i> MINE</a></li>
-            <li><a href="leaders.html"></i> LEADERS</a></li>          
-            <li><a href="earn.html" class="active"></i> EARN</a></li>
-            <li><a href="friends.html"></i> FRIENDS</a></li>
-            <li><a href="wallet.html"></i> WALLET</a></li>
-          </ul>
-        </nav>
+  <div class="header">
+    <h1 class="logo">$BLACK</h1>
+  </div>
 
+  <div class="container">
+    <div class="card">
+      <h2 class="card-title">Boost Your Mining Power</h2>
+
+      <!-- Daily Bonus -->
+      <div class="task">
+        <div class="task-content">
+          <div class="task-info">
+            <div class="task-details">
+              <div class="task-name">Daily Bonus</div>
+              <div class="task-desc">Claim your daily mining power boost</div>
+            </div>
+          </div>
+          <div class="task-reward">+0.1x</div>
+        </div>
+        <button class="task-button" id="dailyButton">Claim Daily Bonus</button>
+      </div>
+
+      <!-- Follow on X -->
+      <div class="task">
+        <div class="task-content">
+          <div class="task-info">
+            <div class="task-details">
+              <div class="task-name">Follow on X</div>
+              <div class="task-desc">Follow @blacktg</div>
+            </div>
+          </div>
+          <div class="task-reward">+0.1x</div>
+        </div>
+        <button class="task-button" id="twitterButton">Follow</button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="nav-menu">
+    <ul class="nav-list">
+      <li><a href="index.html">MINE</a></li>
+      <li><a href="leaders.html">LEADERS</a></li>
+      <li><a href="earn.html" class="active">EARN</a></li>
+      <li><a href="friends.html">FRIENDS</a></li>
+      <li><a href="wallet.html">WALLET</a></li>
+    </ul>
+  </nav>
+
+  <script type="module" src="earn.js"></script>
 </body>
 </html>
