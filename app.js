@@ -280,32 +280,27 @@ submitBtn.addEventListener('click', async () => {
 // Get the send button element
 const sendBtn = document.getElementById('sendButton');
 
-// Add click event listener
 sendBtn.addEventListener('click', () => {
-  // Get the code from the dailyCode element
   const code = document.getElementById('dailyCode').textContent;
   
-  // Check if code is valid (not just dots)
   if (!code || code === '…') {
-    alert('No code available yet');
+    alert('No mining code available yet');
     return;
   }
 
-  // Check if running in Telegram WebApp
   if (window.Telegram?.WebApp) {
     const tg = window.Telegram.WebApp;
     
-    // Create the message in the requested format
-    const message = `Use my $BLACK code for today:\n\`${code}\``;
+    // Format the message exactly as requested
+    const message = `Use my $BLACK code for today: ${code}`;
     
-    // Send the formatted message
+    // Send the message through Telegram
     tg.sendData(message);
     
-    // Optional: Close the WebApp after sending
+    // Close the WebApp after sending (optional)
     tg.close();
   } else {
-    // Fallback for non-Telegram browsers
-    alert(`Your code is: ${code}\n(Sharing only works in Telegram)`);
+    alert(`Your current mining code: ${code}\n(Sharing works best in Telegram)`);
   }
 });
 
