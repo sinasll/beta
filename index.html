@@ -26,8 +26,16 @@
     <!-- Global statistics section -->
     <div class="card global-stats">
       <div class="stats-row">
-        <div>Total Mined</div>
-        <div><span id="mined">0.000</span> / 100,000,000 $BLACK</div>
+        <div>Supply</div>
+        <div>100,000,000 $BLACK</div>
+      </div>
+      <div class="stats-row">
+        <div>Allocation</div>
+        <div>30,000,000 $BLACK</div>
+      </div>
+      <div class="stats-row">
+        <div>CMS</div>
+        <div><span id="mined">0.000</span> / 70,000,000 $BLACK</div>
       </div>
       <div class="stats-row">
         <div>Total Miners</div>
@@ -67,9 +75,17 @@
     <div>Your Code</div>
     <div><span id="dailyCode">…</span></div>
   </div>
-  <button class="button" id="copyButton">Copy</button>
+
   <div class="stats-row">
-    <input type="text" id="codeInput" placeholder="Enter code..." class="input" />
+    <div>Your Code Been Submitted</div>
+    <div><span id="subsOfCode">…</span></div>
+  </div>
+
+  <button class="button" id="sendButton">Send</button>
+  <button class="button" id="copyButton">Copy</button>
+  
+  <div class="stats-row">
+    <input type="text" id="codeInput" placeholder="enter code . . ." class="input" />
   </div>
   <button class="button" id="submitButton">Submit</button>
 </div>
