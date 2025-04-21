@@ -19,6 +19,8 @@ const codeInput = document.getElementById('codeInput');
 const copyBtn = document.getElementById('copyButton');
 const submitBtn = document.getElementById('submitButton');
 const dailyCodeEl = document.getElementById('dailyCode');
+const subsOfCodeEl = document.getElementById('subsOfCode');
+const sendBtn = document.getElementById('sendButton');
 
 // State
 let userData = {
@@ -28,7 +30,8 @@ let userData = {
   miningPower: 1.0,
   nextReset: null,
   dailyCode: '',
-  submittedCodes: []
+  submittedCodes: [],
+  codeSubmissionsToday: 0
 };
 
 let mineInterval = null;
@@ -51,23 +54,28 @@ function saveMiningState() {
   localStorage.setItem('isMining', JSON.stringify(userData.isMining));
   localStorage.setItem('nextReset', userData.nextReset);
   localStorage.setItem('submittedCodes', JSON.stringify(userData.submittedCodes));
+  localStorage.setItem('codeSubmissionsToday', userData.codeSubmissionsToday.toString());
 }
 
 function loadMiningState() {
   const storedReset = localStorage.getItem('nextReset');
   const storedIsMining = localStorage.getItem('isMining') === 'true';
   const storedCodes = JSON.parse(localStorage.getItem('submittedCodes') || '[]');
+  const storedSubmissions = parseInt(localStorage.getItem('codeSubmissionsToday') || '0');
   
   if (storedReset && new Date() < new Date(storedReset)) {
     userData.isMining = storedIsMining;
     userData.nextReset = storedReset;
     userData.submittedCodes = storedCodes;
+    userData.codeSubmissionsToday = storedSubmissions;
   } else {
     localStorage.removeItem('isMining');
     localStorage.removeItem('nextReset');
     localStorage.removeItem('submittedCodes');
+    localStorage.removeItem('codeSubmissionsToday');
     userData.isMining = false;
     userData.submittedCodes = [];
+    userData.codeSubmissionsToday = 0;
   }
 }
 
@@ -103,6 +111,7 @@ function updateUI() {
   mineBtn.textContent = userData.isMining ? 'Mining...' : 'Start Mining';
   mineBtn.disabled = userData.isMining || isAfterResetTime();
   if (userData.dailyCode) dailyCodeEl.textContent = userData.dailyCode;
+  subsOfCodeEl.textContent = `${userData.codeSubmissionsToday}/10`;
   
   // Disable submit button if code is invalid
   const code = codeInput.value.trim();
@@ -150,6 +159,7 @@ async function fetchUserData() {
     userData.nextReset = data.next_reset || getDefaultResetTime();
     userData.dailyCode = data.daily_code || '';
     userData.submittedCodes = data.submitted_codes || [];
+    userData.codeSubmissionsToday = data.code_submissions_today || 0;
 
     if (data.total_miners) totalMinersEl.textContent = data.total_miners;
 
@@ -182,6 +192,7 @@ async function mineCoins() {
     userData.totalMined = data.total_mined;
     userData.miningPower = data.updated.mining_power;
     userData.nextReset = data.next_reset || userData.nextReset;
+    userData.codeSubmissionsToday = data.code_submissions_today || userData.codeSubmissionsToday;
 
     updateUI();
   } catch (err) {
@@ -209,6 +220,7 @@ async function startMining() {
 
     userData.isMining = true;
     userData.nextReset = data.next_reset || userData.nextReset;
+    userData.codeSubmissionsToday = data.code_submissions_today || 0;
     saveMiningState();
     updateUI();
     
@@ -264,6 +276,11 @@ submitBtn.addEventListener('click', async () => {
       userData.balance = data.balance;
       userData.miningPower = data.mining_power;
       userData.submittedCodes = [...userData.submittedCodes, submittedCode];
+      
+      if (data.owner_submissions !== undefined) {
+        userData.codeSubmissionsToday = data.owner_submissions;
+      }
+      
       saveMiningState();
       updateUI();
       alert(data.message || 'Code submitted successfully!');
@@ -277,11 +294,8 @@ submitBtn.addEventListener('click', async () => {
   }
 });
 
-// Get the send button element
-const sendBtn = document.getElementById('sendButton');
-
 sendBtn.addEventListener('click', () => {
-  const code = document.getElementById('dailyCode').textContent;
+  const code = userData.dailyCode || dailyCodeEl.textContent;
   
   if (!code || code === '…') {
     alert('No mining code available yet');
@@ -290,21 +304,14 @@ sendBtn.addEventListener('click', () => {
 
   if (window.Telegram?.WebApp) {
     const tg = window.Telegram.WebApp;
-    
-    // Format the message exactly as requested
     const message = `Use my $BLACK code for today: ${code}`;
-    
-    // Send the message through Telegram
     tg.sendData(message);
-    
-    // Close the WebApp after sending (optional)
     tg.close();
   } else {
     alert(`Your current mining code: ${code}\n(Sharing works best in Telegram)`);
   }
 });
 
-// Real-time code validation
 codeInput.addEventListener('input', () => {
   updateUI();
 });
