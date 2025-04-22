@@ -35,6 +35,8 @@ let userData = {
 };
 
 let mineInterval = null;
+let miningAnimationInterval = null;
+let miningAnimationState = 0;
 
 // Utilities
 function getDefaultResetTime() {
@@ -90,13 +92,13 @@ function initializeUser() {
       referralCode: new URLSearchParams(window.location.search).get('ref') || ''
     };
   }
-
+  
   let username = localStorage.getItem('guestUsername');
   if (!username) {
     username = 'guest_' + Math.random().toString(36).substring(2, 7);
     localStorage.setItem('guestUsername', username);
   }
-
+  
   return {
     username,
     telegramId: '',
@@ -104,19 +106,40 @@ function initializeUser() {
   };
 }
 
+function startMiningAnimation() {
+  miningAnimationState = 0;
+  miningAnimationInterval = setInterval(() => {
+    miningAnimationState = (miningAnimationState + 1) % 4;
+    const dots = '.'.repeat(miningAnimationState);
+    mineBtn.textContent = `Mining ${dots}`;
+  }, 500);
+}
+
+function stopMiningAnimation() {
+  clearInterval(miningAnimationInterval);
+  miningAnimationInterval = null;
+}
+
 function updateUI() {
   balanceEl.textContent = userData.balance.toFixed(3);
   minedEl.textContent = userData.totalMined.toFixed(3);
   powerEl.textContent = userData.miningPower.toFixed(1);
-  mineBtn.textContent = userData.isMining ? 'Mining...' : 'Start Mining';
+  
+  if (userData.isMining) {
+    if (!miningAnimationInterval) startMiningAnimation();
+  } else {
+    stopMiningAnimation();
+    mineBtn.textContent = 'Start Mining';
+  }
+  
   mineBtn.disabled = userData.isMining || isAfterResetTime();
   if (userData.dailyCode) dailyCodeEl.textContent = userData.dailyCode;
   subsOfCodeEl.textContent = `${userData.codeSubmissionsToday}/10`;
   
   // Disable submit button if code is invalid
   const code = codeInput.value.trim();
-  submitBtn.disabled = code.length !== 10 || 
-                      code === userData.dailyCode || 
+  submitBtn.disabled = code.length !== 10 ||
+                      code === userData.dailyCode ||
                       userData.submittedCodes.includes(code);
 }
 
@@ -125,17 +148,17 @@ function updateCountdown() {
   const now = new Date();
   const nextReset = new Date(userData.nextReset);
   const timeUntilReset = nextReset - now;
-
+  
   if (timeUntilReset <= 0) {
     countdownEl.textContent = 'Reset time!';
     if (userData.isMining) stopMining();
     return;
   }
-
+  
   const hours = Math.floor(timeUntilReset / (1000 * 60 * 60));
   const minutes = Math.floor((timeUntilReset / (1000 * 60)) % 60);
   const seconds = Math.floor((timeUntilReset / 1000) % 60);
-
+  
   countdownEl.textContent = `Next reset: ${hours}h ${minutes}m ${seconds}s`;
 }
 
@@ -143,15 +166,15 @@ async function fetchUserData() {
   try {
     const payload = initializeUser();
     usernameEl.textContent = payload.username;
-
+    
     const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
     const data = JSON.parse(execution.responseBody || '{}');
-
+    
     if (data.error) {
       console.error('Backend error:', data.message);
       return;
     }
-
+    
     userData.isMining = data.active_session || false;
     userData.balance = data.balance || 0;
     userData.totalMined = data.total_mined || 0;
@@ -160,9 +183,9 @@ async function fetchUserData() {
     userData.dailyCode = data.daily_code || '';
     userData.submittedCodes = data.submitted_codes || [];
     userData.codeSubmissionsToday = data.code_submissions_today || 0;
-
+    
     if (data.total_miners) totalMinersEl.textContent = data.total_miners;
-
+    
     saveMiningState();
     updateUI();
     return data;
@@ -176,24 +199,24 @@ async function mineCoins() {
     stopMining();
     return;
   }
-
+  
   try {
     const payload = initializeUser();
     const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
     const data = JSON.parse(execution.responseBody || '{}');
-
+    
     if (data.error || !data.updated?.active_session) {
       console.error('Mining error:', data.message);
       stopMining();
       return;
     }
-
+    
     userData.balance = data.updated.balance;
     userData.totalMined = data.total_mined;
     userData.miningPower = data.updated.mining_power;
     userData.nextReset = data.next_reset || userData.nextReset;
     userData.codeSubmissionsToday = data.code_submissions_today || userData.codeSubmissionsToday;
-
+    
     updateUI();
   } catch (err) {
     console.error('Mining failed:', err);
@@ -209,15 +232,15 @@ async function startMining() {
       ...initializeUser(),
       action: 'start_mining'
     };
-
+    
     const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
     const data = JSON.parse(execution.responseBody || '{}');
-
+    
     if (data.error || !data.started) {
-      alert(data.message || 'Failed to start mining');
+      showTemporaryMessage(mineBtn, data.message || 'Failed to start mining', 2000);
       return;
     }
-
+    
     userData.isMining = true;
     userData.nextReset = data.next_reset || userData.nextReset;
     userData.codeSubmissionsToday = data.code_submissions_today || 0;
@@ -240,38 +263,63 @@ function stopMining() {
   updateUI();
 }
 
+function showTemporaryMessage(element, message, duration) {
+  const originalText = element.textContent;
+  element.textContent = message;
+  element.disabled = true;
+  
+  setTimeout(() => {
+    element.textContent = originalText;
+    element.disabled = false;
+    updateUI();
+  }, duration);
+}
+
 // Event Listeners
 mineBtn.addEventListener('click', async () => {
   if (!userData.isMining && !isAfterResetTime()) {
     await startMining();
   } else if (isAfterResetTime()) {
-    alert('Mining reset — please start again!');
+    showTemporaryMessage(mineBtn, 'Mining reset — please start again!', 2000);
     await fetchUserData();
   }
 });
 
 copyBtn.addEventListener('click', () => {
   const text = userData.dailyCode || dailyCodeEl.textContent;
-  if (!text) return alert('No code to copy');
+  if (!text) {
+    showTemporaryMessage(copyBtn, 'No code!', 1000);
+    return;
+  }
+  
   navigator.clipboard.writeText(text)
-    .then(() => alert('Code copied to clipboard!'))
-    .catch(() => alert('Failed to copy code.'));
+    .then(() => {
+      showTemporaryMessage(copyBtn, 'Copied!', 1000);
+    })
+    .catch(() => {
+      showTemporaryMessage(copyBtn, 'Failed!', 1000);
+    });
 });
 
 submitBtn.addEventListener('click', async () => {
   const submittedCode = codeInput.value.trim();
-  if (!submittedCode) return alert('Please enter a code to submit');
-
+  if (!submittedCode) {
+    showTemporaryMessage(submitBtn, 'Enter code!', 1000);
+    return;
+  }
+  
   try {
     const payload = {
       ...initializeUser(),
       action: 'submit_code',
       code: submittedCode
     };
-
+    
+    showTemporaryMessage(submitBtn, 'Submitting...', 2000);
+    
     const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
     const data = JSON.parse(execution.responseBody || '{}');
-
+    
     if (data.success) {
       userData.balance = data.balance;
       userData.miningPower = data.mining_power;
@@ -283,14 +331,14 @@ submitBtn.addEventListener('click', async () => {
       
       saveMiningState();
       updateUI();
-      alert(data.message || 'Code submitted successfully!');
+      showTemporaryMessage(submitBtn, 'Submitted!', 2000);
       codeInput.value = '';
     } else {
-      alert(data.message || 'Code submission failed');
+      showTemporaryMessage(submitBtn, data.message || 'Failed!', 2000);
     }
   } catch (err) {
     console.error('Code submission failed:', err);
-    alert(err.message || 'Failed to submit code.');
+    showTemporaryMessage(submitBtn, 'Error!', 2000);
   }
 });
 
@@ -298,17 +346,17 @@ sendBtn.addEventListener('click', () => {
   const code = userData.dailyCode || dailyCodeEl.textContent;
   
   if (!code || code === '…') {
-    alert('No mining code available yet');
+    showTemporaryMessage(sendBtn, 'No code yet!', 1000);
     return;
   }
-
+  
   if (window.Telegram?.WebApp) {
     const tg = window.Telegram.WebApp;
     const message = `Use my $BLACK code for today: ${code}`;
     tg.sendData(message);
     tg.close();
   } else {
-    alert(`Your current mining code: ${code}\n(Sharing works best in Telegram)`);
+    showTemporaryMessage(sendBtn, `Code: ${code}`, 2000);
   }
 });
 
@@ -324,13 +372,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     tg.ready();
     tg.enableClosingConfirmation();
   }
-
+  
   loadMiningState();
   await fetchUserData();
-
+  
   if (userData.isMining && !isAfterResetTime()) {
     await startMining();
   }
-
+  
   setInterval(updateCountdown, 1000);
 });
