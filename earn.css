@@ -27,6 +27,114 @@ body {
   overflow: hidden;
 }
 
+/* Task specific styles */
+.task {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.task:last-child {
+  border-bottom: none;
+}
+
+.task-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.task-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.task-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2em;
+}
+
+.task-details {
+  flex: 1;
+}
+
+.task-name {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.task-desc {
+  font-size: 0.8em;
+  color: var(--hint-color);
+}
+
+.task-reward {
+  font-weight: 600;
+  white-space: nowrap;
+  margin-left: 10px;
+  color: var(--accent-color);
+}
+
+.task-button {
+  width: 100%;
+  padding: 10px;
+  border-radius: var(--card-radius);
+  background-color: var(--secondary-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  font-size: 0.8em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.task-button:active {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.task-button.completed {
+  background-color: rgba(0, 255, 0, 0.1);
+  color: #aaaaaa;
+  border-color: rgba(0, 255, 0, 0.3);
+}
+
+/* Task specific icons */
+.icon-daily::before {
+  content: "\f783";
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+}
+
+.icon-community::before {
+  content: "\f0c0";
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+}
+
+.icon-twitter::before {
+  content: "\f099";
+  font-family: "Font Awesome 6 Brands";
+}
+
+/* Progress indicator */
+.progress-text {
+  font-size: 0.7em;
+  color: var(--hint-color);
+  margin-top: 5px;
+}
+
+.progress-text span {
+  color: var(--accent-color);
+}
+
 .header {
   position: fixed;
   top: 0;
