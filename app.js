@@ -415,19 +415,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   setInterval(updateCountdown, 1000);
 
-  // Get elements
-  const codeInput = document.getElementById('codeinput');
-  
-  // Improved input handling
-  codeInput.addEventListener('focus', () => {
-    setTimeout(() => {
-      codeInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.expand();
-      }
-    }, 300);
-  });
-
   // Paste from clipboard
   codeInput.addEventListener('paste', (e) => {
     const pastedText = (e.clipboardData || window.clipboardData).getData('text');
