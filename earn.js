@@ -5,7 +5,7 @@ const client = new Client()
   .setProject("6800cf6c0038c2026f07");
 
 const functions = new Functions(client);
-const FUNCTION_ID = "68062657001a181032e7";
+const FUNCTION_ID = "6800d0a4001cb28a32f5";
 
 // DOM Elements
 const submissionsRewardButton = document.getElementById('submissionsRewardButton');
@@ -18,6 +18,7 @@ let userData = {
   balance: 0
 };
 
+// Initialize User Data
 function initializeUser() {
   const tg = window.Telegram?.WebApp;
   if (tg?.initDataUnsafe?.user) {
@@ -37,6 +38,7 @@ function initializeUser() {
   };
 }
 
+// Show Temporary Message
 function showTemporaryMessage(element, message, duration) {
   const originalText = element.textContent;
   element.textContent = message;
@@ -49,30 +51,39 @@ function showTemporaryMessage(element, message, duration) {
   }, duration);
 }
 
+// Update UI Based on State
 function updateUI() {
+  console.log('Current submissions:', userData.totalCodeSubmissions);
   submissionsCountEl.textContent = `${userData.totalCodeSubmissions}/100`;
   
   if (userData.claimedReward) {
     submissionsRewardButton.textContent = '✓ Reward Claimed';
     submissionsRewardButton.disabled = true;
+    submissionsRewardButton.classList.add('claimed');
   } else if (userData.totalCodeSubmissions >= 100) {
     submissionsRewardButton.textContent = 'Claim +5 $BLACK';
     submissionsRewardButton.disabled = false;
+    submissionsRewardButton.classList.remove('claimed');
   } else {
     submissionsRewardButton.textContent = `${100 - userData.totalCodeSubmissions} more needed`;
     submissionsRewardButton.disabled = true;
+    submissionsRewardButton.classList.remove('claimed');
   }
 }
 
+// Fetch User Data from Backend
 async function fetchUserData() {
   try {
     const payload = initializeUser();
+    console.log('Fetching data for user:', payload.telegramId);
     
     const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
     const data = JSON.parse(execution.responseBody || '{}');
+    console.log('Backend response:', data);
     
     if (data.error) {
       console.error('Backend error:', data.message);
+      showTemporaryMessage(submissionsRewardButton, 'Error loading data', 2000);
       return;
     }
     
@@ -82,12 +93,15 @@ async function fetchUserData() {
       balance: data.balance || 0
     };
     
+    console.log('Updated user data:', userData);
     updateUI();
   } catch (err) {
     console.error('Failed to fetch user data:', err);
+    showTemporaryMessage(submissionsRewardButton, 'Connection error', 2000);
   }
 }
 
+// Claim Submissions Reward
 async function claimSubmissionsReward() {
   try {
     const payload = {
@@ -100,6 +114,7 @@ async function claimSubmissionsReward() {
     
     const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
     const data = JSON.parse(execution.responseBody || '{}');
+    console.log('Claim reward response:', data);
     
     if (data.success) {
       userData.claimedReward = true;
@@ -113,7 +128,8 @@ async function claimSubmissionsReward() {
       showTemporaryMessage(submissionsRewardButton, data.message || 'Failed to claim', 2000);
     }
     
-    updateUI();
+    // Refresh data after claiming
+    await fetchUserData();
   } catch (err) {
     console.error('Claim reward failed:', err);
     showTemporaryMessage(submissionsRewardButton, 'Error claiming', 2000);
@@ -121,6 +137,7 @@ async function claimSubmissionsReward() {
   }
 }
 
+// Initialize App
 document.addEventListener('DOMContentLoaded', async () => {
   const tg = window.Telegram?.WebApp;
   if (tg) {
@@ -129,6 +146,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     tg.enableClosingConfirmation();
   }
 
+  // Add event listeners
   submissionsRewardButton.addEventListener('click', claimSubmissionsReward);
-  await fetchUserData();
+  
+  // Initial data load
+  try {
+    await fetchUserData();
+  } catch (err) {
+    console.error('Initialization error:', err);
+  }
+  
+  // Refresh data every 30 seconds
+  setInterval(async () => {
+    await fetchUserData();
+  }, 30000);
 });
