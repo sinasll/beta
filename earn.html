@@ -14,21 +14,37 @@
   </div>
 
   <div class="container">
-    <div class="card">
-      <h2 class="card-title">Code Submissions</h2>
-
-      <div class="task">
-        <div class="task-content">
-          <div class="task-info">
-            <div class="task-details">
-              <div class="task-name">Your Code Popularity</div>
-              <div class="task-desc">Total uses of your code: <span id="submissionsCount">0</span></div>
-            </div>
-          </div>
-          <div class="task-reward">+5 $BLACK</div>
-        </div>
-        <button class="task-button" id="submissionsRewardButton">0 more needed</button>
+    <!-- Code Submissions Task -->
+    <div class="task-card">
+      <h3>Code Popularity</h3>
+      <p>Get 100 uses of your code</p>
+      <div class="progress">
+        <span id="submissionsCount">0/100</span>
+        <span class="reward">+5 $BLACK</span>
       </div>
+      <button id="submissionsRewardButton" class="task-button">0 more needed</button>
+    </div>
+
+    <!-- Daily Bonus Task -->
+    <div class="task-card">
+      <h3>Daily Bonus</h3>
+      <p>Claim your daily reward</p>
+      <div class="progress">
+        <span>Daily</span>
+        <span class="reward">+1 $BLACK</span>
+      </div>
+      <button id="dailyButton" class="task-button">Claim Daily</button>
+    </div>
+
+    <!-- Referral Task -->
+    <div class="task-card">
+      <h3>Refer Friends</h3>
+      <p>Invite 3 friends to earn</p>
+      <div class="progress">
+        <span id="referralCount">0/3</span>
+        <span class="reward">+3 $BLACK</span>
+      </div>
+      <button id="referralButton" class="task-button">0 more needed</button>
     </div>
   </div>
 

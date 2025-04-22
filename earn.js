@@ -7,157 +7,137 @@ const client = new Client()
 const functions = new Functions(client);
 const FUNCTION_ID = "6800d0a4001cb28a32f5";
 
-// DOM Elements
-const submissionsRewardButton = document.getElementById('submissionsRewardButton');
-const submissionsCountEl = document.getElementById('submissionsCount');
-
-// User Data State
-let userData = {
-  totalCodeSubmissions: 0,
-  claimedReward: false,
-  balance: 0
+// State
+let userStats = {
+  balance: 0,
+  submissions: 0,
+  dailyClaimed: false,
+  referrals: 0,
+  claimedReward: false
 };
 
-// Initialize User Data
-function initializeUser() {
+// DOM Elements
+const elements = {
+  balance: document.getElementById('balance'),
+  submissions: {
+    count: document.getElementById('submissionsCount'),
+    button: document.getElementById('submissionsRewardButton')
+  },
+  daily: {
+    button: document.getElementById('dailyButton')
+  },
+  referral: {
+    count: document.getElementById('referralCount'),
+    button: document.getElementById('referralButton')
+  }
+};
+
+// Initialize
+function initUser() {
   const tg = window.Telegram?.WebApp;
-  if (tg?.initDataUnsafe?.user) {
-    return {
-      telegramId: tg.initDataUnsafe.user.id.toString()
-    };
-  }
-  
-  let guestId = localStorage.getItem('guestId');
-  if (!guestId) {
-    guestId = 'guest_' + Math.random().toString(36).substring(2, 7);
-    localStorage.setItem('guestId', guestId);
-  }
-  
   return {
-    telegramId: guestId
+    telegramId: tg?.initDataUnsafe?.user?.id || localStorage.getItem('guestId') || generateGuestId()
   };
 }
 
-// Show Temporary Message
-function showTemporaryMessage(element, message, duration) {
-  const originalText = element.textContent;
-  element.textContent = message;
-  element.disabled = true;
-  
-  setTimeout(() => {
-    element.textContent = originalText;
-    element.disabled = false;
-    updateUI();
-  }, duration);
+function generateGuestId() {
+  const id = 'guest_' + Math.random().toString(36).substring(2, 9);
+  localStorage.setItem('guestId', id);
+  return id;
 }
 
-// Update UI Based on State
+// Fetch Data
+async function fetchUserStats() {
+  try {
+    const execution = await functions.createExecution(
+      FUNCTION_ID,
+      JSON.stringify({ telegramId: initUser().telegramId })
+    );
+    
+    const { status, stats } = JSON.parse(execution.responseBody);
+    if (status === 'success') {
+      Object.assign(userStats, stats);
+      updateUI();
+    }
+  } catch (err) {
+    console.error('Fetch error:', err);
+  }
+}
+
+// Claim Actions
+async function claimReward(type) {
+  const button = elements[type].button;
+  try {
+    button.disabled = true;
+    button.textContent = 'Processing...';
+    
+    const execution = await functions.createExecution(
+      FUNCTION_ID,
+      JSON.stringify({
+        telegramId: initUser().telegramId,
+        action: `claim_${type}`
+      })
+    );
+    
+    const { status, amount } = JSON.parse(execution.responseBody);
+    if (status.includes('claimed')) {
+      userStats.balance += amount;
+      if (type === 'submissions') userStats.claimedReward = true;
+      if (type === 'daily') userStats.dailyClaimed = true;
+      if (type === 'referral') userStats.referrals = 0;
+      
+      showToast(`+${amount} $BLACK! Total: ${userStats.balance}`);
+    }
+  } catch (err) {
+    showToast(err.message);
+  } finally {
+    fetchUserStats(); // Refresh data
+  }
+}
+
+// UI Updates
 function updateUI() {
-  console.log('Current submissions:', userData.totalCodeSubmissions);
-  submissionsCountEl.textContent = `${userData.totalCodeSubmissions}/100`;
+  // Balance
+  elements.balance.textContent = userStats.balance.toFixed(2);
   
-  if (userData.claimedReward) {
-    submissionsRewardButton.textContent = '✓ Reward Claimed';
-    submissionsRewardButton.disabled = true;
-    submissionsRewardButton.classList.add('claimed');
-  } else if (userData.totalCodeSubmissions >= 100) {
-    submissionsRewardButton.textContent = 'Claim +5 $BLACK';
-    submissionsRewardButton.disabled = false;
-    submissionsRewardButton.classList.remove('claimed');
-  } else {
-    submissionsRewardButton.textContent = `${100 - userData.totalCodeSubmissions} more needed`;
-    submissionsRewardButton.disabled = true;
-    submissionsRewardButton.classList.remove('claimed');
-  }
+  // Submissions Task
+  elements.submissions.count.textContent = `${userStats.submissions}/100`;
+  elements.submissions.button.disabled = userStats.claimedReward || userStats.submissions < 100;
+  elements.submissions.button.textContent = userStats.claimedReward 
+    ? '✓ Claimed' 
+    : `${100 - userStats.submissions} more needed`;
+  
+  // Daily Task
+  elements.daily.button.disabled = userStats.dailyClaimed;
+  elements.daily.button.textContent = userStats.dailyClaimed 
+    ? '✓ Claimed Today' 
+    : 'Claim +1 $BLACK';
+  
+  // Referral Task
+  elements.referral.count.textContent = `${userStats.referrals}/3`;
+  elements.referral.button.disabled = userStats.referrals < 3;
+  elements.referral.button.textContent = userStats.referrals >= 3 
+    ? 'Claim +3 $BLACK' 
+    : `${3 - userStats.referrals} more needed`;
 }
 
-// Fetch User Data from Backend
-async function fetchUserData() {
-  try {
-    const payload = initializeUser();
-    console.log('Fetching data for user:', payload.telegramId);
-    
-    const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
-    const data = JSON.parse(execution.responseBody || '{}');
-    console.log('Backend response:', data);
-    
-    if (data.error) {
-      console.error('Backend error:', data.message);
-      showTemporaryMessage(submissionsRewardButton, 'Error loading data', 2000);
-      return;
-    }
-    
-    userData = {
-      totalCodeSubmissions: data.total_code_submissions || 0,
-      claimedReward: data.claimed_reward || false,
-      balance: data.balance || 0
-    };
-    
-    console.log('Updated user data:', userData);
-    updateUI();
-  } catch (err) {
-    console.error('Failed to fetch user data:', err);
-    showTemporaryMessage(submissionsRewardButton, 'Connection error', 2000);
-  }
+// Helpers
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
 }
 
-// Claim Submissions Reward
-async function claimSubmissionsReward() {
-  try {
-    const payload = {
-      ...initializeUser(),
-      action: 'claim_submissions_reward'
-    };
-    
-    submissionsRewardButton.textContent = 'Processing...';
-    submissionsRewardButton.disabled = true;
-    
-    const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
-    const data = JSON.parse(execution.responseBody || '{}');
-    console.log('Claim reward response:', data);
-    
-    if (data.success) {
-      userData.claimedReward = true;
-      userData.balance = data.balance;
-      showTemporaryMessage(
-        submissionsRewardButton, 
-        `+5 $BLACK! Total: ${data.balance.toFixed(3)}`, 
-        3000
-      );
-    } else {
-      showTemporaryMessage(submissionsRewardButton, data.message || 'Failed to claim', 2000);
-    }
-    
-    // Refresh data after claiming
-    await fetchUserData();
-  } catch (err) {
-    console.error('Claim reward failed:', err);
-    showTemporaryMessage(submissionsRewardButton, 'Error claiming', 2000);
-    updateUI();
-  }
-}
-
-// Initialize App
-document.addEventListener('DOMContentLoaded', async () => {
-  const tg = window.Telegram?.WebApp;
-  if (tg) {
-    tg.expand();
-    tg.ready();
-    tg.enableClosingConfirmation();
-  }
-
-  // Add event listeners
-  submissionsRewardButton.addEventListener('click', claimSubmissionsReward);
+// Event Listeners
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize
+  fetchUserStats();
+  setInterval(fetchUserStats, 60000); // Refresh every minute
   
-  // Initial data load
-  try {
-    await fetchUserData();
-  } catch (err) {
-    console.error('Initialization error:', err);
-  }
-  
-  // Refresh data every 30 seconds
-  setInterval(async () => {
-    await fetchUserData();
-  }, 30000);
+  // Button handlers
+  elements.submissions.button.addEventListener('click', () => claimReward('submissions'));
+  elements.daily.button.addEventListener('click', () => claimReward('daily'));
+  elements.referral.button.addEventListener('click', () => claimReward('referral'));
 });
