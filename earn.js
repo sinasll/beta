@@ -13,6 +13,8 @@ const dailyButton = document.getElementById('dailyButton');
 const twitterButton = document.getElementById('twitterButton');
 const codeSubButton = document.getElementById('codeSubButton');
 const codeSubProgress = document.getElementById('codeSubProgress');
+const loadingEl = document.getElementById('loading');
+const contentEl = document.getElementById('content');
 
 // State
 let userData = {
@@ -23,19 +25,36 @@ let userData = {
   hasFollowedTwitter: false
 };
 
-// Utilities
+// Initialize Telegram WebApp
+function initTelegramWebApp() {
+  if (window.Telegram && window.Telegram.WebApp) {
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    tg.ready();
+    tg.enableClosingConfirmation();
+    return true;
+  }
+  return false;
+}
+
+// User initialization with proper Telegram handling
 function initializeUser() {
   const tg = window.Telegram?.WebApp;
+  
+  // Debug logging
+  console.log('Telegram WebApp data:', tg);
+  console.log('Init data:', tg?.initDataUnsafe);
+  
   if (tg?.initDataUnsafe?.user) {
     const user = tg.initDataUnsafe.user;
-    const username = user.username || `${user.first_name || ''} ${user.last_name || ''}`.trim();
     return {
-      username,
+      username: user.username || `${user.first_name || ''} ${user.last_name || ''}`.trim(),
       telegramId: user.id.toString(),
       referralCode: new URLSearchParams(window.location.search).get('ref') || ''
     };
   }
   
+  // Fallback for non-Telegram browsers (development)
   let username = localStorage.getItem('guestUsername');
   if (!username) {
     username = 'guest_' + Math.random().toString(36).substring(2, 7);
@@ -44,7 +63,7 @@ function initializeUser() {
   
   return {
     username,
-    telegramId: '',
+    telegramId: 'dev_' + Math.random().toString(36).substring(2, 9),
     referralCode: new URLSearchParams(window.location.search).get('ref') || ''
   };
 }
@@ -82,11 +101,14 @@ function updateUI() {
 async function fetchUserData() {
   try {
     const payload = initializeUser();
+    console.log('Sending payload:', payload);
+    
     const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
     const data = JSON.parse(execution.responseBody || '{}');
     
     if (data.error) {
       console.error('Backend error:', data.message);
+      showTemporaryMessage(loadingEl, data.message, 2000);
       return;
     }
     
@@ -96,10 +118,13 @@ async function fetchUserData() {
     userData.hasClaimedDaily = data.has_claimed_daily || false;
     userData.hasFollowedTwitter = data.has_followed_twitter || false;
     
+    loadingEl.style.display = 'none';
+    contentEl.style.display = 'block';
     updateUI();
     return data;
   } catch (err) {
     console.error('Failed to fetch user data:', err);
+    showTemporaryMessage(loadingEl, 'Failed to load data', 2000);
   }
 }
 
@@ -181,12 +206,16 @@ codeSubButton.addEventListener('click', async () => {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
-  const tg = window.Telegram?.WebApp;
-  if (tg) {
-    tg.expand();
-    tg.ready();
-    tg.enableClosingConfirmation();
+  const isTelegram = initTelegramWebApp();
+  
+  if (isTelegram) {
+    // Give Telegram time to initialize
+    setTimeout(async () => {
+      await fetchUserData();
+    }, 500);
+  } else {
+    // Fallback for non-Telegram browsers
+    alert('This app works best in Telegram!');
+    await fetchUserData();
   }
-
-  await fetchUserData();
 });
