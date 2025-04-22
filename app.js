@@ -1,9 +1,10 @@
-import { Client, Functions } from "https://esm.sh/appwrite@13.0.0";
+import { Client, Databases, Functions } from "https://esm.sh/appwrite@13.0.0";
 
 const client = new Client()
   .setEndpoint("https://fra.cloud.appwrite.io/v1")
   .setProject("6800cf6c0038c2026f07");
 
+const databases = new Databases(client);
 const functions = new Functions(client);
 const FUNCTION_ID = "6800d0a4001cb28a32f5";
 
@@ -371,10 +372,7 @@ sendBtn.addEventListener('click', () => {
     const tg = window.Telegram.WebApp;
     const message = `Use my $BLACK code for today: ${code}`;
     
-    // Send data without closing the mini app
     tg.sendData(message);
-    
-    // Show confirmation message
     showTemporaryMessage(sendBtn, 'Sent to chat!', 2000);
   } else {
     showTemporaryMessage(sendBtn, `Code: ${code}`, 2000);
@@ -392,18 +390,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     tg.expand();
     tg.ready();
     tg.enableClosingConfirmation();
-    
-    // Handle viewport changes for mobile keyboard
-    tg.onEvent('viewportChanged', (e) => {
-      if (e.isStateStable) {
-        setTimeout(() => {
-          document.getElementById('codeinput').scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'center' 
-          });
-        }, 300);
-      }
-    });
   }
 
   loadMiningState();
@@ -415,42 +401,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   setInterval(updateCountdown, 1000);
 
-  // Paste from clipboard
-  codeInput.addEventListener('paste', (e) => {
-    const pastedText = (e.clipboardData || window.clipboardData).getData('text');
-    if (pastedText.length === 10) {
-      e.preventDefault();
-      codeInput.value = pastedText;
-      updateUI();
-      showTemporaryMessage(document.getElementById('pasteButton'), 'Pasted!', 1000);
-    } else {
-      showTemporaryMessage(document.getElementById('pasteButton'), 'Invalid code!', 1000);
-    }
-  });
-
-  // Paste button click
-  document.getElementById('pasteButton').addEventListener('click', async () => {
-    codeInput.focus();
-    try {
-      const text = await navigator.clipboard.readText();
-      if (text && text.length === 10) {
-        codeInput.value = text;
-        updateUI();
-        showTemporaryMessage(document.getElementById('pasteButton'), 'Pasted!', 1000);
-      } else {
-        showTemporaryMessage(document.getElementById('pasteButton'), 'Invalid code!', 1000);
-      }
-    } catch (err) {
-      console.error('Failed to paste:', err);
-      showTemporaryMessage(document.getElementById('pasteButton'), 'Failed!', 1000);
-    }
-  });
-
   // Submit on Enter key
   codeInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      document.getElementById('submitButton').click();
+      submitBtn.click();
     }
   });
 });
