@@ -14,41 +14,60 @@
   </div>
 
   <div class="container">
-    <!-- Code Submissions Task -->
-    <div class="task-card">
-      <h3>Code Popularity</h3>
-      <p>Get 100 uses of your code</p>
-      <div class="progress">
-        <span id="submissionsCount">0/100</span>
-        <span class="reward">+5 $BLACK</span>
-      </div>
-      <button id="submissionsRewardButton" class="task-button">0 more needed</button>
-    </div>
+    <div class="card">
+      <h2 class="card-title">Boost Your Mining Power</h2>
 
-    <!-- Daily Bonus Task -->
-    <div class="task-card">
-      <h3>Daily Bonus</h3>
-      <p>Claim your daily reward</p>
-      <div class="progress">
-        <span>Daily</span>
-        <span class="reward">+1 $BLACK</span>
+      <div><span id="username">username</span></div>
+  
+      <!-- Daily Bonus -->
+      <div class="task">
+        <div class="task-content">
+          <div class="task-info">
+            <div class="task-icon icon-daily"></div>
+            <div class="task-details">
+              <div class="task-name">Daily Bonus</div>
+              <div class="task-desc">Claim your daily mining power boost</div>
+            </div>
+          </div>
+          <div class="task-reward">+0.1x</div>
+        </div>
+        <button class="task-button" id="dailyButton">Claim Daily Bonus</button>
       </div>
-      <button id="dailyButton" class="task-button">Claim Daily</button>
-    </div>
 
-    <!-- Referral Task -->
-    <div class="task-card">
-      <h3>Refer Friends</h3>
-      <p>Invite 3 friends to earn</p>
-      <div class="progress">
-        <span id="referralCount">0/3</span>
-        <span class="reward">+3 $BLACK</span>
+      <!-- Follow on X -->
+      <div class="task">
+        <div class="task-content">
+          <div class="task-info">
+            <div class="task-icon icon-twitter"></div>
+            <div class="task-details">
+              <div class="task-name">Follow on X</div>
+              <div class="task-desc">Follow @blacktg</div>
+            </div>
+          </div>
+          <div class="task-reward">+0.1x</div>
+        </div>
+        <button class="task-button" id="twitterButton">Follow</button>
       </div>
-      <button id="referralButton" class="task-button">0 more needed</button>
+
+      <!-- Code Master -->
+      <div class="task">
+        <div class="task-content">
+          <div class="task-info">
+            <div class="task-icon icon-community"></div>
+            <div class="task-details">
+              <div class="task-name">Code Master</div>
+              <div class="task-desc">Get your code submitted 100 times</div>
+              <div class="progress-text" id="codeSubProgress">0/100</div>
+            </div>
+          </div>
+          <div class="task-reward">+5 $BLACK</div>
+        </div>
+        <button class="task-button" id="codeSubButton" disabled>Claim Reward</button>
+      </div>
     </div>
   </div>
 
-  <nav class="nav-menu">
+  <nav class="nav-menu" id="nav-menu">
     <ul class="nav-list">
       <li><a href="index.html">MINE</a></li>
       <li><a href="leaders.html">LEADERS</a></li>
