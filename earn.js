@@ -1,12 +1,11 @@
-import { Client, Databases, Functions } from "https://esm.sh/appwrite@13.0.0";
+import { Client, Databases, Query } from "appwrite";
 
+// Initialize Appwrite client
 const client = new Client()
-  .setEndpoint("https://fra.cloud.appwrite.io/v1")
-  .setProject("6800cf6c0038c2026f07");
+  .setEndpoint('https://fra.cloud.appwrite.io/v1')
+  .setProject('6800cf6c0038c2026f07');
 
 const databases = new Databases(client);
-const functions = new Functions(client);
-const FUNCTION_ID = "6800d0a4001cb28a32f5";
 
 // DOM elements
 const usernameElement = document.getElementById('username');
