@@ -68,53 +68,47 @@
     <!-- Daily countdown timer -->
     <div class="countdown" id="countdown">Daily reset in 00:00:00</div>
 
-    <div class="card">
-      <h2 class="card-title">Daily Code</h2>
-      <div class="stats-row">
-        <div>Your Code</div>
-        <div><span id="dailyCode">…</span></div>
-      </div>
-  
-      <div class="stats-row">
-        <div>Your Code Been Submitted</div>
-        <div><span id="subsOfCode">0/10</span></div>
-      </div>
-  
-      <div class="button-group">
-        <button class="button" id="sendButton">Send</button>
-        <button class="button" id="copyButton">Copy</button>
-      </div>
-      
-      <div class="daily-code-input-group">
-        <div class="daily-code-input-row">
-          <input
-            type="text"
-            id="codeinput"
-            placeholder="Enter 10-digit code"
-            class="input"
-            inputmode="text"
-            autocomplete="off"
-            autocorrect="off"
-            spellcheck="false"
-            maxlength="10"
-          />
-        </div>
-        <div class="daily-code-buttons">
-          <button class="button" id="pasteButton">Paste</button>
-          <button class="button" id="submitButton" disabled>Submit</button>
-        </div>
-      </div>
-    </div>
+ <!-- Daily code section -->
+<div class="card">
+  <h2 class="card-title">Daily Code</h2>
+  <div class="stats-row">
+    <div>Your Code</div>
+    <div><span id="dailyCode">…</span></div>
+  </div>
 
+  <div class="stats-row">
+    <div>Your Code Been Submitted</div>
+    <div><span id="subsOfCode">0/10</span></div>
+  </div>
+
+  <button class="button" id="sendButton">Send</button>
+  <button class="button" id="copyButton">Copy</button>
+  
+  <div class="stats-row">
+    <input
+    type="text"
+    id="codeinput"
+    placeholder="enter code . . ."
+    class="input"
+    inputmode="text"
+    autocomplete="off"
+    autocorrect="off"
+    spellcheck="false"
+  />
+  </div>
+  <button class="button" id="pasteButton">Paste</button>
+  <button class="button" id="submitButton">Submit</button>
+</div>
+
+    <!-- Bottom navigation menu -->
     <nav class="nav-menu" id="nav-menu">
       <ul class="nav-list">
         <li><a href="index.html" class="active">MINE</a></li>
-        <li><a href="leaders.html">LEADERS</a></li>
         <li><a href="earn.html">EARN</a></li>
         <li><a href="friends.html">FRIENDS</a></li>
-        <li><a href="wallet.html">WALLET</a></li>
       </ul>
     </nav>
+  </div>
 
   <!-- Main app script -->
   <script type="module" src="app.js"></script>
