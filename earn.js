@@ -1,4 +1,4 @@
-import { Client, Databases, Functions } from "https://esm.sh/appwrite@13.0.0";
+import { Client, Databases, Functions } from "https://cdn.jsdelivr.net/npm/appwrite@13.0.0/dist/iife/web.js";
 
 const client = new Client()
   .setEndpoint("https://fra.cloud.appwrite.io/v1")
