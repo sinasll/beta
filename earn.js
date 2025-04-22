@@ -1,76 +1,121 @@
-import { Client, Functions } from "https://cdn.jsdelivr.net/npm/appwrite@9.0.0/+esm";
+import { Client, Databases, Query } from "appwrite";
 
-// ── Appwrite Client Setup ──
+// Initialize Appwrite client
 const client = new Client()
-  .setEndpoint("https://fra.cloud.appwrite.io/v1")
-  .setProject("6800cf6c0038c2026f07");
+  .setEndpoint('https://fra.cloud.appwrite.io/v1')
+  .setProject('6800cf6c0038c2026f07');
 
-const functions = new Functions(client);
-const FUNCTION_ID = "68062657001a181032e7";
+const databases = new Databases(client);
 
-// ── UI Elements ──
-const dailyButton   = document.getElementById("dailyButton");
-const twitterButton = document.getElementById("twitterButton");
+// DOM elements
+const usernameElement = document.getElementById('username');
+const submissionCountElement = document.getElementById('submissionCount');
+const submissionProgressElement = document.getElementById('submissionProgress');
+const milestoneButton = document.getElementById('milestoneButton');
+const dailyButton = document.getElementById('dailyButton');
+const twitterButton = document.getElementById('twitterButton');
 
-// ── Get Telegram User from WebApp init data ──
-const telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-if (!telegramUser) {
-  alert("Please open this page inside the Telegram WebApp.");
-  throw new Error("Telegram user data not found");
-}
-const telegram_id       = telegramUser.id;
-const telegram_username = telegramUser.username || `anon_${telegram_id}`;
+// Telegram WebApp initialization
+let tg = window.Telegram.WebApp;
+let telegramId = tg.initDataUnsafe?.user?.id || '';
 
-// ── Toast helper ──
-function showToast(msg, isError = false) {
-  const t = document.createElement("div");
-  t.className = `toast ${isError ? "error" : "success"}`;
-  t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), 3000);
-}
+// User data
+let userData = null;
+let milestoneClaimed = false;
 
-// ── Core: claim a bonus of given type ──
-async function claimBonus(type) {
-  const payload = JSON.stringify({
-    telegram_id,
-    telegram_username,
-    type // "daily" or "follow"
-  });
-
-  // disable both buttons while working
-  dailyButton.disabled = twitterButton.disabled = true;
+// Initialize the app
+async function initApp() {
+  if (!telegramId) {
+    console.log('No Telegram ID found');
+    return;
+  }
 
   try {
-    // synchronous execution: no need to call getExecution or have extra scopes
-    const exec = await functions.createExecution(FUNCTION_ID, payload, false);
-    if (!exec.response) throw new Error("Empty response from server");
+    // Get user data
+    const response = await databases.listDocuments(
+      '6800de0c0035c758bb6f',
+      '6800df4e002aadae499f',
+      [Query.equal('telegram_id', telegramId)]
+    );
 
-    const result = JSON.parse(exec.response);
-    if (result.error) {
-      showToast(result.error, true);
+    if (response.total > 0) {
+      userData = response.documents[0];
+      updateUI();
     } else {
-      showToast(result.message);
-      // update UI
-      if (type === "daily") {
-        dailyButton.textContent = "Claimed";
-      } else {
-        twitterButton.textContent = "Followed";
-      }
+      console.log('User not found');
     }
-  } catch (err) {
-    console.error(err);
-    showToast(err.message || "Unknown error", true);
-  } finally {
-    // re-enable only the unclaimed button
-    if (dailyButton.textContent !== "Claimed")   dailyButton.disabled = false;
-    if (twitterButton.textContent !== "Followed") twitterButton.disabled = false;
+  } catch (error) {
+    console.error('Error fetching user data:', error);
   }
 }
 
-// ── Event Listeners ──
-dailyButton.addEventListener("click", () => claimBonus("daily"));
-twitterButton.addEventListener("click", () => {
-  window.open("https://x.com/blacktg", "_blank");
-  claimBonus("follow");
+// Update UI with user data
+function updateUI() {
+  if (!userData) return;
+
+  // Set username
+  if (userData.username) {
+    usernameElement.textContent = userData.username;
+  }
+
+  // Update submission milestone
+  const submissions = userData.total_code_submissions || 0;
+  submissionCountElement.textContent = submissions;
+  
+  // Calculate progress
+  const progress = Math.min((submissions / 100) * 100, 100);
+  submissionProgressElement.style.width = `${progress}%`;
+  
+  // Enable/disable milestone button
+  milestoneClaimed = submissions < 100;
+  milestoneButton.disabled = milestoneClaimed;
+  milestoneButton.textContent = milestoneClaimed ? 'In Progress' : 'Claim Reward';
+}
+
+// Claim milestone reward
+async function claimMilestoneReward() {
+  if (!userData || milestoneClaimed) return;
+
+  try {
+    // Update user balance
+    const updatedUser = await databases.updateDocument(
+      '6800de0c0035c758bb6f',
+      '6800df4e002aadae499f',
+      userData.$id,
+      {
+        balance: userData.balance + 5,
+        total_code_submissions: 0 // Reset counter after claiming
+      }
+    );
+
+    // Update local data
+    userData = updatedUser;
+    milestoneClaimed = true;
+    updateUI();
+
+    // Show success message
+    tg.showAlert('Congratulations! You earned 5 $BLACK for reaching 100 code submissions!');
+  } catch (error) {
+    console.error('Error claiming milestone:', error);
+    tg.showAlert('Failed to claim reward. Please try again.');
+  }
+}
+
+// Event listeners
+milestoneButton.addEventListener('click', claimMilestoneReward);
+dailyButton.addEventListener('click', () => tg.showAlert('Daily bonus claimed!'));
+twitterButton.addEventListener('click', () => {
+  window.open('https://twitter.com/blacktg', '_blank');
+  tg.showAlert('Followed on X! Claim your reward.');
 });
+
+// Initialize the app when Telegram is ready
+if (window.Telegram && window.Telegram.WebApp) {
+  tg.ready();
+  tg.expand();
+  initApp();
+} else {
+  // For testing outside Telegram
+  console.log('Running outside Telegram');
+  initApp();
+}
