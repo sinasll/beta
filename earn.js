@@ -1,4 +1,4 @@
-import { Client, Databases, Query } from "appwrite";
+import { Client, Functions } from "https://esm.sh/appwrite@13.0.0";
 
 // Initialize Appwrite client
 const client = new Client()
