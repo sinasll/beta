@@ -17,6 +17,7 @@ const totalMinersEl = document.getElementById('totalminers');
 const countdownEl = document.getElementById('countdown');
 const codeInput = document.getElementById('codeInput');
 const copyBtn = document.getElementById('copyButton');
+const pasteBtn = document.getElementById('pasteButton');
 const submitBtn = document.getElementById('submitButton');
 const dailyCodeEl = document.getElementById('dailyCode');
 const subsOfCodeEl = document.getElementById('subsOfCode');
@@ -301,6 +302,22 @@ copyBtn.addEventListener('click', () => {
     });
 });
 
+pasteBtn.addEventListener('click', async () => {
+  try {
+    const text = await navigator.clipboard.readText();
+    if (text && text.length === 10) {
+      codeInput.value = text;
+      updateUI();
+      showTemporaryMessage(pasteBtn, 'Pasted!', 1000);
+    } else {
+      showTemporaryMessage(pasteBtn, 'Invalid code!', 1000);
+    }
+  } catch (err) {
+    console.error('Failed to paste:', err);
+    showTemporaryMessage(pasteBtn, 'Failed!', 1000);
+  }
+});
+
 submitBtn.addEventListener('click', async () => {
   const submittedCode = codeInput.value.trim();
   if (!submittedCode) {
@@ -353,8 +370,12 @@ sendBtn.addEventListener('click', () => {
   if (window.Telegram?.WebApp) {
     const tg = window.Telegram.WebApp;
     const message = `Use my $BLACK code for today: ${code}`;
+    
+    // Send data without closing the mini app
     tg.sendData(message);
-    tg.close();
+    
+    // Show confirmation message
+    showTemporaryMessage(sendBtn, 'Sent to chat!', 2000);
   } else {
     showTemporaryMessage(sendBtn, `Code: ${code}`, 2000);
   }
