@@ -392,8 +392,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     tg.expand();
     tg.ready();
     tg.enableClosingConfirmation();
+    
+    // Add this viewportChanged handler:
+    tg.onEvent('viewportChanged', (e) => {
+      if (e.isStateStable) {
+        setTimeout(() => {
+          codeInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+      }
+    });
   }
-  
+
   loadMiningState();
   await fetchUserData();
   
@@ -402,4 +411,50 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   
   setInterval(updateCountdown, 1000);
+
+  // Add these new event listeners for improved input handling:
+  codeInput.addEventListener('focus', () => {
+    setTimeout(() => {
+      codeInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.expand();
+      }
+    }, 300);
+  });
+
+  codeInput.addEventListener('paste', (e) => {
+    const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+    if (pastedText.length === 10) {
+      e.preventDefault();
+      codeInput.value = pastedText;
+      updateUI();
+      showTemporaryMessage(pasteBtn, 'Pasted!', 1000);
+    } else {
+      showTemporaryMessage(pasteBtn, 'Invalid code!', 1000);
+    }
+  });
+
+  pasteBtn.addEventListener('click', async () => {
+    codeInput.focus();
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text && text.length === 10) {
+        codeInput.value = text;
+        updateUI();
+        showTemporaryMessage(pasteBtn, 'Pasted!', 1000);
+      } else {
+        showTemporaryMessage(pasteBtn, 'Invalid code!', 1000);
+      }
+    } catch (err) {
+      console.error('Failed to paste:', err);
+      showTemporaryMessage(pasteBtn, 'Failed!', 1000);
+    }
+  });
+
+  codeInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      submitBtn.click();
+    }
+  });
 });
