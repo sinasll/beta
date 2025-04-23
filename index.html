@@ -104,58 +104,38 @@
   </div>
 
   <!-- Earn Tab Content -->
-
   <div id="earn-tab" class="tab-content">
     <div class="card">
       <h2 class="card-title">Earn $BLACK</h2>
-      
-      <div class="stats-container">
-        <div class="stats-row">
-          <div class="stats-label">Total Code Submits:</div>
-          <div class="stats-value"><span id="totalCodeSubmits">0</span></div>
-        </div>
-        <div class="stats-row">
-          <div class="stats-label">$BLACK Earned:</div>
-          <div class="stats-value"><span id="blackEarned">0</span></div>
-        </div>
+      <div class="stats-row">
+        <div>Referral Bonus</div>
+        <div>10% of mined amount</div>
       </div>
-  
-      <div class="reward-info">
-        <h3>Reward System</h3>
-        <p>Earn $BLACK tokens by submitting code:</p>
-        <ul>
-          <li>Every 100 code submits = 5 $BLACK tokens</li>
-          <li>Current progress: <span id="progressPercentage">0</span>%</li>
-        </ul>
+      <div class="stats-row">
+        <div>Your Referrals</div>
+        <div><span id="referral-count">0</span> users</div>
       </div>
-  
-      <div class="claim-section">
-        <button class="button" id="claimButton" disabled>Claim Reward</button>
-        <p class="claim-status" id="claimStatus">Submit more code to earn rewards!</p>
+      <div class="stats-row">
+        <div>Earned from Referrals</div>
+        <div><span id="referral-earnings">0.000</span> $BLACK</div>
       </div>
+      <button class="button" id="shareButton">Share Referral Link</button>
     </div>
   </div>
-  
 
   <!-- Friends Tab Content -->
-  <div class="tab-content" id="referral-tab">
-    <div class="referral-stats">
-      <div class="stat">
-        <span class="label">People Joined</span>
-        <span id="referral-count" class="value">0</span>
+  <div id="friends-tab" class="tab-content">
+    <div class="card">
+      <h2 class="card-title">Your Friends</h2>
+      <div id="friends-list">
+        <!-- Friends will be listed here -->
+        <div class="stats-row" style="justify-content: center;">
+          <div>No friends yet</div>
+        </div>
       </div>
-      <div class="stat">
-        <span class="label">Bonus Power</span>
-        <span id="referral-earnings" class="value">0.0</span>
-      </div>
-    </div>
-    <div class="referral-box">
-      <p>Your unique referral code:</p>
-      <div class="referral-code" id="ownReferralCode">Loading...</div>
-      <button id="shareButton" class="btn">Share Referral Link</button>
-      <p class="hint">Earn +30% permanent mining power for each friend who joins!</p>
     </div>
   </div>
+</div>
 
 <!-- Tab menu -->
 <div class="tab-menu">
@@ -206,7 +186,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script src="app.js" type="module"></script>
-<script src="button.js" type="module"></script>
 
 </body>
 </html>
