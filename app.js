@@ -125,7 +125,7 @@ function updateUI() {
     mineBtn.disabled = userData.isMining || isAfterResetTime() || miningEnded;
     if (userData.dailyCode) dailyCodeEl.textContent = userData.dailyCode;
     subsOfCodeEl.textContent = `${userData.codeSubmissionsToday}/10`;
-    totalOfCodeEl.textContent = userData.totalCodeSubmissions;
+    totalOfCodeEl.textContent = userData.totalCodeSubmissions; // Updated to show total submissions
     referralCountEl.textContent = userData.referrals;
     referralEarningsEl.textContent = userData.referralEarnings.toFixed(3);
     
@@ -195,7 +195,7 @@ async function fetchUserData() {
         userData.codeSubmissionsToday = data.code_submissions_today || 0;
         userData.referrals = data.referrals || 0;
         userData.referralEarnings = data.referral_earnings || 0;
-        userData.totalCodeSubmissions = data.total_code_submissions || 0;
+        userData.totalCodeSubmissions = data.total_code_submissions || 0; // Get from backend
 
         // Store mining end date if provided
         if (data.mining_end_date) {
@@ -274,6 +274,7 @@ async function startMining() {
         userData.isMining = true;
         userData.nextReset = data.next_reset || userData.nextReset;
         userData.codeSubmissionsToday = data.code_submissions_today || 0;
+        userData.totalCodeSubmissions = data.total_code_submissions || userData.totalCodeSubmissions;
         if (data.mining_end_date) miningEndDate = data.mining_end_date;
         if (data.mining_ended) miningEnded = true;
         
@@ -367,11 +368,8 @@ function setupEventListeners() {
                 userData.balance = data.balance;
                 userData.miningPower = data.mining_power;
                 userData.submittedCodes = [...userData.submittedCodes, submittedCode];
+                userData.codeSubmissionsToday = data.owner_submissions || userData.codeSubmissionsToday;
                 userData.totalCodeSubmissions = data.total_code_submissions || userData.totalCodeSubmissions;
-                
-                if (data.owner_submissions !== undefined) {
-                    userData.codeSubmissionsToday = data.owner_submissions;
-                }
                 
                 saveMiningState();
                 updateUI();
