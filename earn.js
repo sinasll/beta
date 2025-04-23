@@ -1,76 +1,103 @@
-import { Client, Functions } from "https://cdn.jsdelivr.net/npm/appwrite@9.0.0/+esm";
+document.addEventListener('DOMContentLoaded', () => {
+    const claimButton = document.getElementById('claimButton');
+    const taskReward = document.querySelector('.task-reward');
+    const countdownElement = document.getElementById('countdown');
 
-// ── Appwrite Client Setup ──
-const client = new Client()
-  .setEndpoint("https://fra.cloud.appwrite.io/v1")
-  .setProject("6800cf6c0038c2026f07");
+    claimButton.addEventListener('click', claimDailyBonus);
 
-const functions = new Functions(client);
-const FUNCTION_ID = "68062657001a181032e7";
+    async function claimDailyBonus() {
+        try {
+            claimButton.disabled = true;
+            claimButton.textContent = 'Processing...';
 
-// ── UI Elements ──
-const dailyButton   = document.getElementById("dailyButton");
-const twitterButton = document.getElementById("twitterButton");
+            const response = await fetch('https://6806265805321db0a9e4.fra.appwrite.run/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    userId: getCurrentUserId() 
+                })
+            });
 
-// ── Get Telegram User from WebApp init data ──
-const telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-if (!telegramUser) {
-  alert("Please open this page inside the Telegram WebApp.");
-  throw new Error("Telegram user data not found");
-}
-const telegram_id       = telegramUser.id;
-const telegram_username = telegramUser.username || `anon_${telegram_id}`;
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
-// ── Toast helper ──
-function showToast(msg, isError = false) {
-  const t = document.createElement("div");
-  t.className = `toast ${isError ? "error" : "success"}`;
-  t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), 3000);
-}
+            const data = await response.json();
 
-// ── Core: claim a bonus of given type ──
-async function claimBonus(type) {
-  const payload = JSON.stringify({
-    telegram_id,
-    telegram_username,
-    type // "daily" or "follow"
-  });
-
-  // disable both buttons while working
-  dailyButton.disabled = twitterButton.disabled = true;
-
-  try {
-    // synchronous execution: no need to call getExecution or have extra scopes
-    const exec = await functions.createExecution(FUNCTION_ID, payload, false);
-    if (!exec.response) throw new Error("Empty response from server");
-
-    const result = JSON.parse(exec.response);
-    if (result.error) {
-      showToast(result.error, true);
-    } else {
-      showToast(result.message);
-      // update UI
-      if (type === "daily") {
-        dailyButton.textContent = "Claimed";
-      } else {
-        twitterButton.textContent = "Followed";
-      }
+            if (data.success) {
+                alert(data.message);
+                taskReward.textContent = `+${data.new_mining_power_bonus.toFixed(1)}x`;
+                claimButton.textContent = 'Claimed';
+                startCountdown(data.next_available_in || 24 * 60 * 60 * 1000);
+            } else {
+                if (data.timeRemaining) {
+                    startCountdown(data.timeRemaining);
+                    alert(`Daily bonus not available yet. Try again in ${formatTime(data.timeRemaining)}.`);
+                } else {
+                    alert(data.error || data.message);
+                }
+                claimButton.disabled = false;
+                claimButton.textContent = 'Claim Daily Bonus';
+            }
+        } catch (error) {
+            console.error('Error claiming daily bonus:', error);
+            alert('Error claiming daily bonus. Please try again later.');
+            claimButton.disabled = false;
+            claimButton.textContent = 'Claim Daily Bonus';
+        }
     }
-  } catch (err) {
-    console.error(err);
-    showToast(err.message || "Unknown error", true);
-  } finally {
-    // re-enable only the unclaimed button
-    if (dailyButton.textContent !== "Claimed")   dailyButton.disabled = false;
-    if (twitterButton.textContent !== "Followed") twitterButton.disabled = false;
-  }
-}
 
-// ── Event Listeners ──
-dailyButton.addEventListener("click", () => claimBonus("daily"));
-twitterButton.addEventListener("click", () => {
-  window.open("https://x.com/blacktg", "_blank");
-  claimBonus("follow");
+    function getCurrentUserId() {
+        // In a real app, you would get this from your auth system
+        // For example, from localStorage or a cookie
+        return localStorage.getItem('userId') || 'demo-user-id';
+    }
+
+    function startCountdown(duration) {
+        let timeRemaining = duration;
+        updateCountdownDisplay(timeRemaining);
+        
+        const countdownInterval = setInterval(() => {
+            timeRemaining -= 1000;
+            
+            if (timeRemaining <= 0) {
+                clearInterval(countdownInterval);
+                claimButton.disabled = false;
+                claimButton.textContent = 'Claim Daily Bonus';
+                countdownElement.textContent = 'Ready to claim!';
+                localStorage.removeItem('dailyBonusCountdown');
+            } else {
+                updateCountdownDisplay(timeRemaining);
+            }
+        }, 1000);
+    }
+
+    function updateCountdownDisplay(ms) {
+        countdownElement.textContent = formatTime(ms);
+        // Save to localStorage to persist across page refreshes
+        localStorage.setItem('dailyBonusCountdown', 
+            (Date.now() + ms).toString());
+    }
+
+    function formatTime(milliseconds) {
+        const hours = Math.floor(milliseconds / (60 * 60 * 1000));
+        const minutes = Math.floor((milliseconds % (60 * 60 * 1000)) / (60 * 1000));
+        const seconds = Math.floor((milliseconds % (60 * 1000)) / 1000);
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    // Check for existing countdown in localStorage
+    const storedCountdown = localStorage.getItem('dailyBonusCountdown');
+    if (storedCountdown) {
+        const remainingTime = parseInt(storedCountdown) - Date.now();
+        if (remainingTime > 0) {
+            startCountdown(remainingTime);
+            claimButton.disabled = true;
+            claimButton.textContent = 'Already Claimed';
+        } else {
+            localStorage.removeItem('dailyBonusCountdown');
+        }
+    }
 });

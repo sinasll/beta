@@ -129,8 +129,8 @@ body {
     text-align: center;
     font-weight: 600;
   }
-
-  .tab-menu {
+  
+  .nav-menu {
     position: fixed;
     bottom: 0;
     left: 0;
@@ -141,8 +141,8 @@ body {
     display: flex;
     align-items: center;
   }
-    
-  .tab-list {
+  
+  .nav-list {
     display: flex;
     justify-content: space-around;
     list-style: none;
@@ -151,15 +151,15 @@ body {
     width: 100%;
     height: 100%;
   }
-    
-  .tab-list li {
+  
+  .nav-list li {
     flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
   }
-    
-  .tab-list li a {
+  
+  .nav-list li a {
     color: white;
     text-decoration: none;
     font-size: 16px;
@@ -172,22 +172,22 @@ body {
     transition: all 0.3s ease;
     position: relative;
   }
-    
-  .tab-list li a i {
+  
+  .nav-list li a i {
     font-size: 1.4em;
     margin-bottom: 5px;
     transition: all 0.3s ease;
   }
-    
-  .tab-list li a.active {
+  
+  .nav-list li a.active {
     color: var(--accent-color);
   }
-    
-  .tab-list li a.active i {
+  
+  .nav-list li a.active i {
     transform: translateY(-5px);
   }
-    
-  .tab-list li a.active::after {
+  
+  .nav-list li a.active::after {
     content: '';
     position: absolute;
     bottom: 0;
@@ -198,22 +198,8 @@ body {
     background: var(--accent-color);
     border-radius: 3px 3px 0 0;
   }
-    
-  .tab-list li a span {
+  
+  .nav-list li a span {
     font-weight: 500;
     letter-spacing: 0.5px;
-  }
-    
-  .global-stats {
-    text-align: center;
-    font-weight: 600;
-  }
-  
-  /* Tab content styling */
-  .tab-content {
-    display: none;
-  }
-  
-  .tab-content.active {
-    display: block;
   }
