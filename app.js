@@ -21,6 +21,8 @@ const submitBtn = document.getElementById('submitButton');
 const dailyCodeEl = document.getElementById('dailyCode');
 const subsOfCodeEl = document.getElementById('subsOfCode');
 const sendBtn = document.getElementById('sendButton');
+const codePopularityTask = document.getElementById('codePopularityTask');
+const codePopularityRewardBtn = document.getElementById('codePopularityRewardButton');
 
 // State
 let userData = {
@@ -31,7 +33,8 @@ let userData = {
   nextReset: null,
   dailyCode: '',
   submittedCodes: [],
-  codeSubmissionsToday: 0
+  codeSubmissionsToday: 0,
+  totalCodeSubmissions: 0
 };
 
 let mineInterval = null;
@@ -113,6 +116,13 @@ function updateUI() {
   if (userData.dailyCode) dailyCodeEl.textContent = userData.dailyCode;
   subsOfCodeEl.textContent = `${userData.codeSubmissionsToday}/10`;
   
+  // Show/hide code popularity task
+  if (userData.totalCodeSubmissions >= 100) {
+    codePopularityTask.style.display = 'block';
+  } else {
+    codePopularityTask.style.display = 'none';
+  }
+  
   // Disable submit button if code is invalid
   const code = codeInput.value.trim();
   submitBtn.disabled = code.length !== 10 || 
@@ -160,6 +170,7 @@ async function fetchUserData() {
     userData.dailyCode = data.daily_code || '';
     userData.submittedCodes = data.submitted_codes || [];
     userData.codeSubmissionsToday = data.code_submissions_today || 0;
+    userData.totalCodeSubmissions = data.total_code_submissions || 0;
 
     if (data.total_miners) totalMinersEl.textContent = data.total_miners;
 
@@ -193,6 +204,7 @@ async function mineCoins() {
     userData.miningPower = data.updated.mining_power;
     userData.nextReset = data.next_reset || userData.nextReset;
     userData.codeSubmissionsToday = data.code_submissions_today || userData.codeSubmissionsToday;
+    userData.totalCodeSubmissions = data.total_code_submissions || userData.totalCodeSubmissions;
 
     updateUI();
   } catch (err) {
@@ -221,6 +233,7 @@ async function startMining() {
     userData.isMining = true;
     userData.nextReset = data.next_reset || userData.nextReset;
     userData.codeSubmissionsToday = data.code_submissions_today || 0;
+    userData.totalCodeSubmissions = data.total_code_submissions || 0;
     saveMiningState();
     updateUI();
     
@@ -276,6 +289,7 @@ submitBtn.addEventListener('click', async () => {
       userData.balance = data.balance;
       userData.miningPower = data.mining_power;
       userData.submittedCodes = [...userData.submittedCodes, submittedCode];
+      userData.totalCodeSubmissions = data.total_code_submissions || userData.totalCodeSubmissions;
       
       if (data.owner_submissions !== undefined) {
         userData.codeSubmissionsToday = data.owner_submissions;
@@ -309,6 +323,31 @@ sendBtn.addEventListener('click', () => {
     tg.close();
   } else {
     alert(`Your current mining code: ${code}\n(Sharing works best in Telegram)`);
+  }
+});
+
+codePopularityRewardBtn.addEventListener('click', async () => {
+  try {
+    const payload = {
+      ...initializeUser(),
+      action: 'claim_reward',
+      reward_type: 'code_popularity'
+    };
+
+    const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
+    const data = JSON.parse(execution.responseBody || '{}');
+
+    if (data.success) {
+      userData.balance = data.balance;
+      updateUI();
+      codePopularityTask.style.display = 'none';
+      alert('Reward claimed successfully!');
+    } else {
+      alert(data.message || 'Failed to claim reward');
+    }
+  } catch (err) {
+    console.error('Claim reward failed:', err);
+    alert('Failed to claim reward');
   }
 });
 
