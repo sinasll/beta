@@ -8,8 +8,265 @@
   <title>$BLACK</title>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-color: #000000;
+      --text-color: #ffffff;
+      --secondary-bg: #121212;
+      --hint-color: #888888;
+      --accent-color: #ffffff;
+      --border-color: rgba(255, 255, 255, 0.1);
+      --card-radius: 12px;
+      --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      --input-button-width: calc(100% - 32px);
+      --input-button-padding: 14px 16px;
+      --input-button-margin: 8px 16px;
+      --header-height: 60px;
+      --nav-height: 70px;
+      --ton-blue: #0088cc;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 0;
+      line-height: 1.5;
+      height: 100vh;
+      height: -webkit-fill-available;
+      overflow: hidden;
+    }
+
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--header-height);
+      background-color: var(--bg-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .logo {
+      font-size: 1.5em;
+      font-weight: 700;
+      margin: 0;
+      letter-spacing: 1px;
+    }
+
+    .container {
+      position: fixed;
+      top: var(--header-height);
+      bottom: 0;
+      left: 0;
+      right: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 16px;
+    }
+
+    /* Nav-style toggle */
+    .nav-toggle {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: var(--nav-height);
+      background: var(--secondary-bg);
+      z-index: 100;
+      display: flex;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .nav-toggle-button {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-color);
+      text-decoration: none;
+      font-size: 0.9em;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .nav-toggle-button.active {
+      color: var(--accent-color);
+    }
+
+    .nav-toggle-button.active::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50%;
+      height: 3px;
+      background: var(--accent-color);
+      border-radius: 0 0 3px 3px;
+    }
+
+    .nav-toggle-button i {
+      font-size: 1.4em;
+      margin-bottom: 4px;
+      transition: all 0.3s ease;
+    }
+
+    .nav-toggle-button.active i {
+      transform: translateY(-5px);
+    }
+
+    /* Page containers */
+    .page-container {
+      display: none;
+      padding-bottom: var(--nav-height);
+    }
+
+    .page-container.active {
+      display: block;
+    }
+
+    /* Rest of your existing styles */
+    .card {
+      background-color: var(--secondary-bg);
+      border-radius: var(--card-radius);
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: var(--box-shadow);
+      border: 1px solid var(--border-color);
+    }
+
+    .card-title {
+      font-size: 1.1em;
+      font-weight: 600;
+      margin-top: 0;
+      margin-bottom: 16px;
+      color: var(--accent-color);
+    }
+
+    .stats-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 0;
+      font-size: 0.9em;
+    }
+
+    .stats-row div:first-child {
+      color: var(--hint-color);
+    }
+
+    .button, 
+    input[type="text"],
+    input[type="submit"] {
+      width: var(--input-button-width);
+      padding: var(--input-button-padding);
+      margin: var(--input-button-margin);
+      border-radius: var(--card-radius);
+      background-color: var(--secondary-bg);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      font-size: 0.9em;
+      box-sizing: border-box;
+      display: block;
+    }
+
+    .button {
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .button:active {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    input[type="text"]::placeholder {
+      color: var(--hint-color);
+      opacity: 0.7;
+    }
+
+    .countdown {
+      font-size: 0.8em;
+      color: var(--hint-color);
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .global-stats {
+      text-align: center;
+      font-weight: 600;
+    }
+
+    /* Task styles */
+    .task {
+      background-color: var(--secondary-bg);
+      border-radius: var(--card-radius);
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: var(--box-shadow);
+      border: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .task-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .task-info {
+      flex: 1;
+    }
+
+    .task-name {
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--accent-color);
+    }
+
+    .task-desc {
+      font-size: 0.9em;
+      color: var(--hint-color);
+    }
+
+    .task-reward {
+      font-weight: 600;
+      color: gold;
+      margin-left: 12px;
+    }
+
+    .task-button {
+      width: 100%;
+      padding: 12px;
+      background-color: var(--ton-blue);
+      color: white;
+      border: none;
+      border-radius: var(--card-radius);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .task-button:active {
+      transform: scale(0.98);
+      opacity: 0.9;
+    }
+
+    .task-button:disabled {
+      background-color: var(--hint-color);
+      cursor: not-allowed;
+    }
+  </style>
 
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -23,100 +280,187 @@
 
   <!-- Main content container -->
   <div class="container">
-    <!-- Global statistics section -->
-    <div class="card global-stats">
-      <div class="stats-row">
-        <div>Supply</div>
-        <div>100,000,000 $BLACK</div>
-      </div>
-      <div class="stats-row">
-        <div>Allocation</div>
-        <div>30,000,000 $BLACK</div>
-      </div>
-      <div class="stats-row">
-        <div>CMS</div>
-        <div><span id="mined">0.000</span> / 70,000,000 $BLACK</div>
-      </div>
-      <div class="stats-row">
-        <div>Total Miners</div>
-        <div><span id="totalminers">0</span></div>
-      </div>
-    </div>
-
-    <!-- User statistics and controls -->
-    <div class="card">
-      <h2 class="card-title">Miner</h2>
-      
-      <div class="stats-row">
-        <div>Username</div>
-        <div><span id="username">username</span></div>
-      </div>
-      
-      <div class="stats-row">
-        <div>Balance</div>
-        <div><span id="balance">0.000</span> $BLACK</div>
-      </div>
-      
-      <div class="stats-row">
-        <div>Mining Power</div>
-        <div>x<span id="power">1.0</span></div>
-      </div>
-
-      <button class="button" id="mineButton">Start Mining</button>
-    </div>
-
-    <!-- Daily countdown timer -->
-    <div class="countdown" id="countdown">Daily reset in 00:00:00</div>
-
- <!-- Daily code section -->
-<div class="card">
-  <h2 class="card-title">Daily Code</h2>
-  <div class="stats-row">
-    <div>Your Code</div>
-    <div><span id="dailyCode">…</span></div>
-  </div>
-
-  <div class="stats-row">
-    <div>Your Code Been Submitted</div>
-    <div><span id="subsOfCode">0/10</span></div>
-  </div>
-
-  <button class="button" id="sendButton">Send</button>
-  <button class="button" id="copyButton">Copy</button>
-  
-  <div class="stats-row">
-    <input type="text" id="codeInput" placeholder="enter code . . ." class="input" />
-  </div>
-  <button class="button" id="submitButton">Submit</button>
-</div>
-
-    <!-- Code Popularity Task -->
-    <div class="task" id="codePopularityTask">
-      <div class="task-content">
-        <div class="task-info">
-          <div class="task-details">
-            <div class="task-name">Code Popularity</div>
-            <div class="task-desc">Get 100 uses of your code</div>
-          </div>
+    <!-- Mine Page -->
+    <div class="page-container active" id="minePage">
+      <!-- Global statistics section -->
+      <div class="card global-stats">
+        <div class="stats-row">
+          <div>Supply</div>
+          <div>100,000,000 $BLACK</div>
         </div>
-        <div class="task-reward">+5 $BLACK</div>
+        <div class="stats-row">
+          <div>Allocation</div>
+          <div>30,000,000 $BLACK</div>
+        </div>
+        <div class="stats-row">
+          <div>CMS</div>
+          <div><span id="mined">0.000</span> / 70,000,000 $BLACK</div>
+        </div>
+        <div class="stats-row">
+          <div>Total Miners</div>
+          <div><span id="totalminers">0</span></div>
+        </div>
       </div>
-      <button class="task-button" id="codePopularityRewardButton">Claim Reward</button>
+
+      <!-- User statistics and controls -->
+      <div class="card">
+        <h2 class="card-title">Miner</h2>
+        
+        <div class="stats-row">
+          <div>Username</div>
+          <div><span id="username">username</span></div>
+        </div>
+        
+        <div class="stats-row">
+          <div>Balance</div>
+          <div><span id="balance">0.000</span> $BLACK</div>
+        </div>
+        
+        <div class="stats-row">
+          <div>Mining Power</div>
+          <div>x<span id="power">1.0</span></div>
+        </div>
+
+        <button class="button" id="mineButton">Start Mining</button>
+      </div>
+
+      <!-- Daily countdown timer -->
+      <div class="countdown" id="countdown">Daily reset in 00:00:00</div>
+
+      <!-- Daily code section -->
+      <div class="card">
+        <h2 class="card-title">Daily Code</h2>
+        <div class="stats-row">
+          <div>Your Code</div>
+          <div><span id="dailyCode">…</span></div>
+        </div>
+
+        <div class="stats-row">
+          <div>Your Code Been Submitted</div>
+          <div><span id="subsOfCode">0/10</span></div>
+        </div>
+
+        <button class="button" id="sendButton">Send</button>
+        <button class="button" id="copyButton">Copy</button>
+        
+        <div class="stats-row">
+          <input type="text" id="codeInput" placeholder="enter code . . ." class="input" />
+        </div>
+        <button class="button" id="submitButton">Submit</button>
+      </div>
     </div>
 
-    <!-- Bottom navigation menu -->
-    <nav class="nav-menu" id="nav-menu">
-      <ul class="nav-list">
-        <li><a href="index.html" class="active">MINE</a></li>
-        <li><a href="earn.html">EARN</a></li>
-        <li><a href="friends.html">FRIENDS</a></li>
-      </ul>
-    </nav>
+    <!-- Earn Page -->
+    <div class="page-container" id="earnPage">
+      <!-- Code Popularity Task -->
+      <div class="task" id="codePopularityTask">
+        <div class="task-content">
+          <div class="task-info">
+            <div class="task-details">
+              <div class="task-name">Code Popularity</div>
+              <div class="task-desc">Get 100 uses of your code</div>
+            </div>
+          </div>
+          <div class="task-reward">+5 $BLACK</div>
+        </div>
+        <button class="task-button" id="codePopularityRewardButton">Claim Reward</button>
+      </div>
+
+      <!-- Additional tasks -->
+      <div class="task">
+        <div class="task-content">
+          <div class="task-info">
+            <div class="task-details">
+              <div class="task-name">Daily Check-in</div>
+              <div class="task-desc">Check in for 7 consecutive days</div>
+            </div>
+          </div>
+          <div class="task-reward">+10 $BLACK</div>
+        </div>
+        <button class="task-button">Claim Reward</button>
+      </div>
+
+      <div class="task">
+        <div class="task-content">
+          <div class="task-info">
+            <div class="task-details">
+              <div class="task-name">Referral Bonus</div>
+              <div class="task-desc">Invite 5 friends to join</div>
+            </div>
+          </div>
+          <div class="task-reward">+15 $BLACK</div>
+        </div>
+        <button class="task-button">Claim Reward</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav-style toggle -->
+  <div class="nav-toggle">
+    <a href="#" class="nav-toggle-button active" id="mineToggle">
+    
+      <span>Mine</span>
+    </a>
+    <a href="#" class="nav-toggle-button" id="earnToggle">
+     
+      <span>Earn</span>
+    </a>
+    <a href="#" class="nav-toggle-button" id="friendsToggle">
+      
+      <span>Friends</span>
+    </a>
   </div>
 
   <!-- Main app script -->
-  <script type="module" src="app.js"></script>
+  <script>
+    // Toggle between views
+    const mineToggle = document.getElementById('mineToggle');
+    const earnToggle = document.getElementById('earnToggle');
+    const friendsToggle = document.getElementById('friendsToggle');
+    const minePage = document.getElementById('minePage');
+    const earnPage = document.getElementById('earnPage');
 
+    function setActiveView(view) {
+      // Reset all buttons and pages
+      [mineToggle, earnToggle, friendsToggle].forEach(btn => btn.classList.remove('active'));
+      [minePage, earnPage].forEach(page => page.classList.remove('active'));
+      
+      // Activate selected view
+      switch(view) {
+        case 'mine':
+          mineToggle.classList.add('active');
+          minePage.classList.add('active');
+          break;
+        case 'earn':
+          earnToggle.classList.add('active');
+          earnPage.classList.add('active');
+          break;
+        case 'friends':
+          friendsToggle.classList.add('active');
+          // You would add your friends page activation here
+          break;
+      }
+    }
+
+    // Event listeners
+    mineToggle.addEventListener('click', (e) => {
+      e.preventDefault();
+      setActiveView('mine');
+    });
+
+    earnToggle.addEventListener('click', (e) => {
+      e.preventDefault();
+      setActiveView('earn');
+    });
+
+    friendsToggle.addEventListener('click', (e) => {
+      e.preventDefault();
+      setActiveView('friends');
+      // You would add your friends page logic here
+    });
+
+    // Initialize with Mine view active
+    setActiveView('mine');
+  </script>
 </body>
-
 </html>
