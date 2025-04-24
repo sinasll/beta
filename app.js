@@ -6,6 +6,7 @@ const client = new Client()
 
 const functions = new Functions(client);
 const FUNCTION_ID = "6800d0a4001cb28a32f5";
+const INITIAL_MINING_DAYS = 90;
 
 // DOM Elements
 const minedEl = document.getElementById('mined');
