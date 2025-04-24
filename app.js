@@ -454,7 +454,7 @@ function setupEventListeners() {
         inviteBtn.addEventListener('click', async () => {
             try {
                 const code = userData.dailyCode;
-                const shareUrl = `https://t.me/betamineitbot?start=${code}`;
+                const shareUrl = `https://t.me/betamineitbot?startapp=${code}`;
                 const message = `🚀 Join me in $BLACK Mining!\nUse my code: ${code}\n${shareUrl}`;
 
                 if (window.Telegram?.WebApp) {
