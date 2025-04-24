@@ -91,99 +91,18 @@
       
 
       <div class="stats-row">
-      <button class="button" id="copyButton">Copy</button><button class="button" id="pasteButton">Paste</button><button class="button" id="sendButton">Send</button>
+      <button class="button" id="copyButton">Copy</button><button class="button" id="sendButton">Send</button>
       </div>
 
       <div class="stats-row">
       <input type="text" id="codeInput" placeholder="enter code . . ." class="input" />
       </div>
 
+      <button class="button" id="pasteButton">Paste</button>
       <button class="button" id="submitButton">Submit</button>
 
     </div>
   </div>
-
-  <!-- Earn Tab Content -->
-  <div id="earn-tab" class="tab-content">
-    <div class="card">
-      <h2 class="card-title">Earn $BLACK</h2>
-      <div class="stats-row">
-        <div>Referral Bonus</div>
-        <div>10% of mined amount</div>
-      </div>
-      <div class="stats-row">
-        <div>Your Referrals</div>
-        <div><span id="referral-count">0</span> users</div>
-      </div>
-      <div class="stats-row">
-        <div>Earned from Referrals</div>
-        <div><span id="referral-earnings">0.000</span> $BLACK</div>
-      </div>
-      <button class="button" id="shareButton">Share Referral Link</button>
-    </div>
-  </div>
-
-  <!-- Friends Tab Content -->
-  <div id="friends-tab" class="tab-content">
-    <div class="card">
-      <h2 class="card-title">Your Friends</h2>
-      <div id="friends-list">
-        <!-- Friends will be listed here -->
-        <div class="stats-row" style="justify-content: center;">
-          <div>No friends yet</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Tab menu -->
-<div class="tab-menu">
-  <ul class="tab-list">
-    <li>
-      <a href="#" class="active" data-tab="mine-tab">
-        <span>MINE</span>
-      </a>
-    </li>
-    <li>
-      <a href="#" data-tab="earn-tab">
-        <span>EARN</span>
-      </a>
-    </li>
-    <li>
-      <a href="#" data-tab="friends-tab">
-        <span>FRIENDS</span>
-      </a>
-    </li>
-  </ul>
-</div>
-
-<!-- Main JavaScript logic -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Tab switching functionality
-  const tabLinks = document.querySelectorAll('.tab-list li a');
-  
-  tabLinks.forEach(link => {
-    link.addEventListener('click', function(e) {
-      e.preventDefault();
-      
-      // Remove active class from all tabs and links
-      document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-      });
-      document.querySelectorAll('.tab-list li a').forEach(tabLink => {
-        tabLink.classList.remove('active');
-      });
-      
-      // Add active class to clicked tab and link
-      const tabId = this.getAttribute('data-tab');
-      document.getElementById(tabId).classList.add('active');
-      this.classList.add('active');
-    });
-  });
-});
-</script>
 
 <script src="app.js" type="module"></script>
 
