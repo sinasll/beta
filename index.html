@@ -87,6 +87,41 @@
 </div>
 </div>
 
+<!-- Friends/Referrals Card -->
+<div class="card">
+  <h2 class="card-title">Friends</h2>
+  
+  <!-- Referral Info -->
+  <div class="stats-row">
+    <div>Your Referral Code</div>
+    <div><span id="referralCode">...</span></div>
+  </div>
+  
+  <div class="stats-row">
+    <div>Total Referrals</div>
+    <div><span id="totalReferrals">0</span></div>
+  </div>
+  
+  <div class="stats-row">
+    <div>Earned Bonus</div>
+    <div><span id="referralEarnings">0.000</span> $BLACK</div>
+  </div>
+
+  <!-- Referral Actions -->
+  <div class="stats-row">
+    <button class="button" id="copyReferralButton">Copy Link</button>
+    <button class="button" id="inviteButton">Invite Friends</button>
+  </div>
+
+  <!-- Referred Friends List -->
+  <div class="friends-list">
+    <h3>Your Friends</h3>
+    <div id="friendsContainer" class="friends-container">
+      <!-- Friends will be listed here -->
+    </div>
+  </div>
+</div>
+
 <!-- App scripts -->
 <script src="app.js" type="module"></script>
 </body>

@@ -1,6 +1,3 @@
-// --------------------------------------------------
-// Appwrite Client (uses same endpoint/project)
-// --------------------------------------------------
 import { Client, Functions } from "https://esm.sh/appwrite@13.0.0";
 
 const client = new Client()
@@ -9,9 +6,6 @@ const client = new Client()
 const functions = new Functions(client);
 const FUNCTION_ID = "6800d0a4001cb28a32f5";
 
-// --------------------------------------------------
-// Task Definitions
-// --------------------------------------------------
 let logicTasks = [
   { id: 'mine60',      title: 'Mine for 60 seconds',           completed: false },
   { id: 'submitCode',  title: 'Submit a referral code',        completed: false },
@@ -20,162 +14,96 @@ let logicTasks = [
   { id: 'earnBonus',   title: 'Claim your 0.1× bonus',         completed: false }
 ];
 
-// State we fetch from backend
-let userDataTasks = {
-  codeSubmissionsToday: 0,
-  miningPower: 1.0,
-  referrals: 0,
-  hasEarnedBonus: false
-};
+let userDataTasks = { codeSubmissionsToday:0, miningPower:1, referrals:0, hasEarnedBonus:false };
 
-// Read mining-session start (set by your main app)
-function getMiningSessionStart() {
-  return parseInt(localStorage.getItem('miningSessionStart') || '0', 10);
+function initializeUser() {
+  const tg = window.Telegram?.WebApp;
+  let username, telegramId;
+  if (tg?.initDataUnsafe?.user) {
+    const u = tg.initDataUnsafe.user;
+    username   = u.username || `${u.first_name||''} ${u.last_name||''}`.trim();
+    telegramId = String(u.id);
+  } else {
+    let guest = localStorage.getItem('guestUsername');
+    if (!guest) {
+      guest = 'guest_'+Math.random().toString(36).slice(2,7);
+      localStorage.setItem('guestUsername',guest);
+    }
+    username   = guest;
+    telegramId = guest;
+  }
+  const ref = new URLSearchParams(location.search).get('ref')||'';
+  return { username, telegramId, referralCode:ref };
 }
 
-// --------------------------------------------------
-// UI Renderer
-// --------------------------------------------------
+async function fetchUserDataTasks() {
+  const payload = { ...initializeUser(), action:'mine' };
+  const exec = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
+  const data = JSON.parse(exec.responseBody||'{}');
+  userDataTasks.codeSubmissionsToday = data.code_submissions_today||0;
+  userDataTasks.miningPower         = data.mining_power||1;
+  userDataTasks.referrals           = data.total_invites||0;
+  userDataTasks.hasEarnedBonus      = data.has_earned_bonus||false;
+
+  const done = data.completed_tasks||[];
+  logicTasks = logicTasks.map(t=>({
+    ...t,
+    completed: done.includes(t.id) || (t.id==='earnBonus'&&userDataTasks.hasEarnedBonus)
+  }));
+  renderTasks();
+}
+
 function renderTasks() {
-  const container = document.getElementById('tasks-container');
-  container.innerHTML = '';
-
-  logicTasks.forEach(task => {
-    // if backend says this task is done, or we just completed it, show ✔
-    const done = task.completed;
-    const btnLabel = task.id === 'earnBonus' ? 'Claim' : 'Complete';
-
-    const div = document.createElement('div');
-    div.className = 'task-item';
-    div.innerHTML = `
-      <span class="task-title">${task.title}</span>
-      ${
-        done
-          ? `<span class="task-completed">✔ ${task.id==='earnBonus'?'Claimed':'Completed'}</span>`
-          : `<button class="task-button" id="btn_${task.id}">${btnLabel}</button>`
+  const c = document.getElementById('tasks-container');
+  c.innerHTML='';
+  logicTasks.forEach(t=>{
+    const done = t.completed;
+    const btn = t.id==='earnBonus'? 'Claim':'Complete';
+    const html = `
+      <span class="task-title">${t.title}</span>
+      ${done
+        ?'<span class="task-completed">✔ '+(t.id==='earnBonus'?'Claimed':'Completed')+'</span>'
+        :`<button class="task-button" id="btn_${t.id}">${btn}</button>`
       }
     `;
-    container.appendChild(div);
-
-    if (!done) {
-      document
-        .getElementById(`btn_${task.id}`)
-        .addEventListener('click', () => completeTask(task.id));
-    }
+    const div = document.createElement('div');
+    div.className='task-item';
+    div.innerHTML=html;
+    c.appendChild(div);
+    if (!done) document.getElementById(`btn_${t.id}`)
+      .addEventListener('click',()=>completeTask(t.id));
   });
 }
 
-// --------------------------------------------------
-// Task Completer (with server‐side persist)
-// --------------------------------------------------
-async function completeTask(taskId) {
-  // 1) local prereq checks
-  const now = Date.now();
-  switch (taskId) {
+async function completeTask(id) {
+  // pre-check
+  const now=Date.now();
+  switch(id){
     case 'mine60': {
-      const start = getMiningSessionStart();
-      if (!start || now - start < 60_000) {
-        return alert('You must mine for at least 60 seconds first.');
-      }
+      const start = parseInt(localStorage.getItem('miningSessionStart')||'0',10);
+      if (!start||now-start<60000) return alert('Mine 60s first');
       break;
     }
     case 'submitCode':
-      if (userDataTasks.codeSubmissionsToday < 1) {
-        return alert('Submit at least one code today first.');
-      }
+      if (userDataTasks.codeSubmissionsToday<1) return alert('Submit a code first');
       break;
     case 'reachPower2':
-      if (userDataTasks.miningPower < 2.0) {
-        return alert('Boost your mining power to 2× first.');
-      }
+      if (userDataTasks.miningPower<2) return alert('Reach 2× power first');
       break;
     case 'inviteFriend':
-      if (userDataTasks.referrals < 1) {
-        return alert('Invite a friend and have them open the app.');
-      }
+      if (userDataTasks.referrals<1) return alert('Invite a friend first');
       break;
     case 'earnBonus':
-      // always allowed once
       break;
-    default:
-      return;
   }
-
-  // 2) call the same backend function
-  try {
-    const payload = {
-      ...initializeUser(),
-      action: 'complete_task',
-      taskId
-    };
-    const exec = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
-    const data = JSON.parse(exec.responseBody || '{}');
-    if (data.error) throw new Error(data.message);
-
-    // 3) update local state and re-render
-    logicTasks = logicTasks.map(t =>
-      t.id === taskId ? { ...t, completed: true } : t
-    );
-    renderTasks();
-    alert('Task completed! 🎉');
-  } catch (err) {
-    console.error('Task completion failed:', err);
-    alert(err.message || 'Could not complete task right now.');
-  }
+  // record
+  const payload = { ...initializeUser(), action:'complete_task', taskId:id };
+  const exec = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
+  const data = JSON.parse(exec.responseBody||'{}');
+  if (data.error) return alert(data.message);
+  logicTasks = logicTasks.map(t=>t.id===id?{...t,completed:true}:t);
+  renderTasks();
+  alert('Task done!');
 }
 
-// --------------------------------------------------
-// User Fetch (same Telegram/guest logic as app.js)
-// --------------------------------------------------
-function initializeUser() {
-  const tg = window.Telegram?.WebApp;
-  if (tg?.initDataUnsafe?.user) {
-    const u = tg.initDataUnsafe.user;
-    const name = u.username || `${u.first_name||''} ${u.last_name||''}`.trim();
-    const ref  = new URLSearchParams(location.search).get('ref') || '';
-    return { username: name, telegramId: String(u.id), referralCode: ref };
-  }
-  let guest = localStorage.getItem('guestUsername');
-  if (!guest) {
-    guest = 'guest_' + Math.random().toString(36).slice(2,7);
-    localStorage.setItem('guestUsername', guest);
-  }
-  const ref = new URLSearchParams(location.search).get('ref') || '';
-  return { username: guest, telegramId: '', referralCode: ref };
-}
-
-// --------------------------------------------------
-// Load User Data + Completed Tasks
-// --------------------------------------------------
-async function fetchUserDataTasks() {
-  const payload = initializeUser();
-  try {
-    const exec = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
-    const data = JSON.parse(exec.responseBody || '{}');
-    if (data.error) throw new Error(data.message);
-
-    // map only what tasks need:
-    userDataTasks.codeSubmissionsToday = data.code_submissions_today || 0;
-    userDataTasks.miningPower         = data.mining_power || 1.0;
-    userDataTasks.referrals           = data.referrals || 0;
-    userDataTasks.hasEarnedBonus      = !!data.has_earned_bonus;
-
-    // mark any tasks the server already recorded
-    const done = data.completed_tasks || [];
-    logicTasks = logicTasks.map(t => ({
-      ...t,
-      completed: done.includes(t.id) || (t.id==='earnBonus' && userDataTasks.hasEarnedBonus)
-    }));
-
-    renderTasks();
-  } catch (err) {
-    console.error('fetchUserDataTasks error:', err);
-  }
-}
-
-// --------------------------------------------------
-// Initialize
-// --------------------------------------------------
-document.addEventListener('DOMContentLoaded', async () => {
-  await fetchUserDataTasks();
-});
+document.addEventListener('DOMContentLoaded',fetchUserDataTasks);

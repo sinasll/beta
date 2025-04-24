@@ -450,3 +450,92 @@ async function init() {
 
 // Start the app
 document.addEventListener('DOMContentLoaded', init);
+
+// Add to your app.js
+async function loadReferralInfo() {
+    try {
+      const user = await getUserData();
+      const friends = await getReferredFriends(user.$id);
+  
+      // Update referral info
+      document.getElementById('referralCode').textContent = user.own_referral_code || 'N/A';
+      document.getElementById('totalReferrals').textContent = user.total_invites || 0;
+      document.getElementById('referralEarnings').textContent = 
+        (user.referral_earnings?.toFixed(3) || '0.000') + ' $BLACK';
+  
+      // Populate friends list
+      const container = document.getElementById('friendsContainer');
+      container.innerHTML = friends.length > 0 
+        ? friends.map(f => `
+            <div class="friend-item">
+              <span>${f.username}</span>
+              <span>${new Date(f.join_date).toLocaleDateString()}</span>
+            </div>
+          `).join('')
+        : '<div class="no-friends">No friends invited yet</div>';
+    } catch (error) {
+      console.error('Error loading referral info:', error);
+      alert('Failed to load referral information');
+    }
+  }
+  
+  // Button handlers
+  document.getElementById('copyReferralButton').addEventListener('click', async () => {
+    try {
+      const code = document.getElementById('referralCode').textContent;
+      const link = `https://t.me/betamineitbot?start=${code}`;
+      await navigator.clipboard.writeText(link);
+      
+      if (window.Telegram.WebApp) {
+        window.Telegram.WebApp.showAlert('Referral link copied to clipboard!');
+      } else {
+        alert('Link copied to clipboard!');
+      }
+    } catch (error) {
+      console.error('Copy failed:', error);
+      prompt('Please copy this link manually:', link);
+    }
+  });
+  
+  document.getElementById('inviteButton').addEventListener('click', async () => {
+    try {
+      const user = await getUserData();
+      const referralCode = user.own_referral_code;
+      const shareUrl = `https://t.me/betamineitbot?start=${referralCode}`;
+      
+      const message = `🚀 Join me in $BLACK Mining!\n\n` +
+                     `Use my referral code: ${referralCode}\n` +
+                     `Start earning now: ${shareUrl}`;
+  
+      if (window.Telegram?.WebApp) {
+        // Native Telegram sharing
+        window.Telegram.WebApp.openTelegramLink(
+          `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(message)}`
+        );
+      } else {
+        // Fallback for regular browsers
+        const shareLink = `tg://msg?text=${encodeURIComponent(message)}`;
+        window.open(shareLink, '_blank', 'noopener,noreferrer');
+        
+        // Secondary fallback
+        if (confirm('Open Telegram to share? If not installed, copy link instead?')) {
+          window.location = shareLink;
+        } else {
+          await navigator.clipboard.writeText(shareUrl);
+          alert('Referral link copied to clipboard!');
+        }
+      }
+    } catch (error) {
+      console.error('Sharing failed:', error);
+      alert('Error sharing referral link');
+    }
+  });
+  
+  // Initialize on load
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.Telegram?.WebApp) {
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+    }
+    loadReferralInfo();
+  });
