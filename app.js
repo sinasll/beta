@@ -434,7 +434,7 @@ function setupEventListeners() {
         copyReferralBtn.addEventListener('click', async () => {
             try {
                 const code = referralCodeEl?.textContent;
-                const link = `https://t.me/betamineitbot?start=${code}`;
+                const link = `https://t.me/betamineitbot?startapp=${code}`;
                 await navigator.clipboard.writeText(link);
                 
                 if (window.Telegram?.WebApp) {
