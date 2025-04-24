@@ -338,81 +338,87 @@ function setupEventListeners() {
         }
     });
 
-    copyButton.addEventListener('click', async () => {
-        try {
-          await navigator.clipboard.writeText(dailyCodeEl.textContent);
-          copyButton.textContent = 'Copied';
-          setTimeout(() => copyButton.textContent = 'Copy', 2000);
-        } catch {}
-      });
+    if (copyBtn) {
+        copyBtn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(dailyCodeEl.textContent);
+                copyBtn.textContent = 'Copied';
+                setTimeout(() => copyBtn.textContent = 'Copy', 2000);
+            } catch {}
+        });
+    }
 
-      pasteButton.addEventListener('click', async () => {
-        try {
-          codeInput.value = await navigator.clipboard.readText();
-          pasteButton.textContent = 'Pasted';
-          setTimeout(() => pasteButton.textContent = 'Paste', 2000);
-        } catch {}
-      });
+    const pasteButton = document.getElementById('pasteButton');
+    if (pasteButton) {
+        pasteButton.addEventListener('click', async () => {
+            try {
+                codeInput.value = await navigator.clipboard.readText();
+                pasteButton.textContent = 'Pasted';
+                setTimeout(() => pasteButton.textContent = 'Paste', 2000);
+            } catch {}
+        });
+    }
 
-    submitBtn.addEventListener('click', async () => {
-        if (miningEnded) {
-            alert("The mining period has ended. No more code submissions allowed.");
-            return;
-        }
-        
-        const submittedCode = codeInput.value.trim();
-        if (!submittedCode) return alert('Please enter a code to submit');
-
-        try {
-            const payload = {
-                ...initializeUser(),
-                action: 'submit_code',
-                code: submittedCode
-            };
-
-            const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
-            const data = JSON.parse(execution.responseBody || '{}');
-
-            if (data.success) {
-                userData.balance = data.balance;
-                userData.miningPower = data.mining_power;
-                userData.submittedCodes = [...userData.submittedCodes, submittedCode];
-                userData.codeSubmissionsToday = data.owner_submissions || userData.codeSubmissionsToday;
-                userData.totalCodeSubmissions = data.total_code_submissions || userData.totalCodeSubmissions;
-                
-                saveMiningState();
-                updateUI();
-                alert(data.message || 'Code submitted successfully!');
-                codeInput.value = '';
-            } else {
-                alert(data.message || 'Code submission failed');
+    if (submitBtn) {
+        submitBtn.addEventListener('click', async () => {
+            if (miningEnded) {
+                alert("The mining period has ended. No more code submissions allowed.");
+                return;
             }
-        } catch (err) {
-            console.error('Code submission failed:', err);
-            alert(err.message || 'Failed to submit code.');
-        }
-    });
+            
+            const submittedCode = codeInput.value.trim();
+            if (!submittedCode) return alert('Please enter a code to submit');
 
-    sendButton.addEventListener('click', () => {
-        const code = dailyCodeEl.textContent;
-        
-        if (!code || code === '…') {
-            alert('No mining code available yet');
-            return;
-        }
-    
-        if (window.Telegram?.WebApp) {
-            const tg = window.Telegram.WebApp;
-            const message = `Use my $BLACK mining code: ${code}`;
-            tg.sendData(message);
-            tg.close();
-        } else {
-            alert(`Your current mining code: ${code}\n(Works best in Telegram app)`);
-        }
-    
-        sendButton.textContent = 'Sent ✓';
-        setTimeout(() => sendButton.textContent = 'Send', 2000);
-    });
+            try {
+                const payload = {
+                    ...initializeUser(),
+                    action: 'submit_code',
+                    code: submittedCode
+                };
+
+                const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
+                const data = JSON.parse(execution.responseBody || '{}');
+
+                if (data.success) {
+                    userData.balance = data.balance;
+                    userData.submittedCodes = [...userData.submittedCodes, submittedCode];
+                    userData.codeSubmissionsToday = data.owner_submissions || userData.codeSubmissionsToday;
+                    userData.totalCodeSubmissions = data.total_code_submissions || userData.totalCodeSubmissions;
+                    
+                    saveMiningState();
+                    updateUI();
+                    alert(data.message || 'Code submitted successfully!');
+                    codeInput.value = '';
+                } else {
+                    alert(data.message || 'Code submission failed');
+                }
+            } catch (err) {
+                console.error('Code submission failed:', err);
+                alert(err.message || 'Failed to submit code.');
+            }
+        });
+    }
+
+    if (sendBtn) {
+        sendBtn.addEventListener('click', () => {
+            const code = dailyCodeEl.textContent;
+            const shareText = `Use my $BLACK code today: ${code}`;
+            
+            if (window.Telegram?.WebApp) {
+                const tg = window.Telegram.WebApp;
+                // Send message directly through Telegram
+                tg.sendData(shareText); // This goes back to your bot
+                // Or open Telegram client directly:
+                tg.openLink(`https://t.me/share/url?url=${encodeURIComponent(shareText)}`);
+            } else {
+                // Fallback for regular browsers
+                alert(`Share this code: ${code}`);
+            }
+            
+            sendBtn.textContent = 'Sent ✓';
+            setTimeout(() => sendBtn.textContent = 'Send', 2000);
+        });
+    }
 }
 
 function copyToClipboard(text) {
