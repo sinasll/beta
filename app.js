@@ -11,12 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const telegramId = user.id;
   const username = user.username || user.first_name || `user_${telegramId}`;
 
-  // Cache DOM elements (ensure IDs match HTML exactly)
+  // Cache DOM elements
   const usernameEl = document.getElementById('username');
   const balanceEl = document.getElementById('balance');
   const powerEl = document.getElementById('power');
   const minedEl = document.getElementById('mined');
-  const totalminersEl = document.getElementById('totalminers'); // lowercase
+  const totalminersEl = document.getElementById('totalminers');
   const miningEndEl = document.getElementById('miningend');
   const countdownEl = document.getElementById('countdown');
   const mineButton = document.getElementById('mineButton');
@@ -178,12 +178,21 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch {}
   });
 
-  // Share via Telegram
-  sendButton.addEventListener('click', () => {
+// Share via Telegram (direct message to contacts)
+sendButton.addEventListener('click', () => {
     const code = dailyCodeEl.textContent;
-    tg.openLink(`https://t.me/share/url?url=&text=${encodeURIComponent(code)}`);
-    sendButton.textContent = 'Sent';
-    setTimeout(() => sendButton.textContent = 'Send', 2000);
+    const shareText = `💰 Use my $BLACK mining code: ${code}`;
+    
+    if (tg.isVersionAtLeast('6.2')) {
+      // For newer Telegram clients (better sharing experience)
+      tg.openTelegramLink(`https://t.me/share/url?url=&text=${encodeURIComponent(shareText)}`);
+    } else {
+      // Fallback for older clients
+      tg.openLink(`tg://msg?text=${encodeURIComponent(shareText)}`);
+    }
+    
+    sendButton.textContent = 'Sent ✓';
+    setTimeout(() => sendButton.textContent = 'Share', 2000);
   });
 
   // Paste into input
