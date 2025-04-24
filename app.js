@@ -32,6 +32,7 @@ const totalReferralsEl = document.getElementById('totalReferrals');
 const copyReferralBtn = document.getElementById('copyReferralButton');
 const inviteBtn = document.getElementById('inviteButton');
 const usedReferralCodeEl = document.getElementById('used-referral-code');
+const friendsContainerEl = document.getElementById('friendsContainer');
 
 // State
 let userData = {
@@ -194,6 +195,36 @@ function updateCountdown() {
     countdownEl.textContent = `Daily reset in ${hours}h ${minutes}m ${seconds}s`;
 }
 
+// ─── New: Helpers to fetch and render referred friends ───
+async function fetchReferredFriends() {
+    const payload = {
+        ...initializeUser(),
+        action: 'get_referred_friends'
+    };
+    const exec = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
+    const friends = JSON.parse(exec.responseBody || '[]');
+    populateFriends(friends);
+}
+
+function populateFriends(friends) {
+    // Update the Total Referrals badge
+    totalReferralsEl.textContent = friends.length;
+
+    // Clear out any existing list items
+    friendsContainerEl.innerHTML = '';
+
+    // Render each friend as a row
+    friends.forEach(f => {
+        const row = document.createElement('div');
+        row.className = 'friend-row stats-row';
+        row.innerHTML = `
+            <div>${f.username}</div>
+            <div>${(f.earned || 0).toFixed(3)} $BLACK</div>
+        `;
+        friendsContainerEl.appendChild(row);
+    });
+}
+
 async function fetchUserData() {
     try {
         const payload = initializeUser();
@@ -266,8 +297,8 @@ async function mineCoins() {
         userData.totalMined = data.total_mined;
         userData.miningPower = data.updated.mining_power;
         userData.nextReset = data.next_reset || userData.nextReset;
-        userData.codeSubmissionsToday = data.code_submissions_today || userData.codeSubmissionsToday;
-        userData.referrals = data.referrals || userData.referrals;
+        userData.codeSubmissionsToday = data.code_subissions_today || userData.codeSubmissionsToday;
+        userData.referrals = data.referral || userData.referrals;
         userData.referralEarnings = data.referral_earnings || userData.referralEarnings;
         userData.totalCodeSubmissions = data.total_code_submissions || userData.totalCodeSubmissions;
         userData.daysRemaining = data.days_remaining || userData.daysRemaining;
@@ -502,6 +533,7 @@ async function init() {
     
     try {
         await fetchUserData();
+        await fetchReferredFriends();    // ← NEW: load friends/referrals
         if (userData.isMining && !isAfterResetTime() && !miningEnded) {
             await startMining();
         }
