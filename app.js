@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const telegramId = user.id;
   const username = user.username || user.first_name || `user_${telegramId}`;
 
-  // Cache DOM elements
+  // Cache DOM elements (corrected variable names)
   const usernameEl = document.getElementById('username');
   const balanceEl = document.getElementById('balance');
   const powerEl = document.getElementById('power');
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let resetTimer;
   let endTimer;
 
-  // Display the Telegram username
+  // Display username
   usernameEl.textContent = username;
 
   // Generic API caller
@@ -51,12 +51,12 @@ document.addEventListener('DOMContentLoaded', () => {
     return res.json();
   }
 
-  // Start the countdown timers
+  // Timer functions
   function startTimers() {
     clearInterval(resetTimer);
     clearInterval(endTimer);
 
-    // Daily reset countdown
+    // Daily reset timer
     resetTimer = setInterval(() => {
       const now = new Date();
       const diff = nextResetTime - now;
@@ -65,13 +65,13 @@ document.addEventListener('DOMContentLoaded', () => {
         onReset();
         return;
       }
-      const hrs = String(Math.floor(diff / (1000 * 60 * 60)) % 24).padStart(2, '0');
-      const mins = String(Math.floor(diff / (1000 * 60)) % 60).padStart(2, '0');
-      const secs = String(Math.floor(diff / 1000) % 60).padStart(2, '0');
+      const hrs = String(Math.floor(diff / 36e5) % 24).padStart(2, '0');
+      const mins = String(Math.floor(diff / 6e4) % 60).padStart(2, '0');
+      const secs = String(Math.floor(diff / 1e3) % 60).padStart(2, '0');
       countdownEl.textContent = `daily resets in ${hrs}:${mins}:${secs}`;
     }, 1000);
 
-    // Mining end countdown (90-day period)
+    // Mining end timer
     endTimer = setInterval(() => {
       const now = new Date();
       const diff = miningEndTime - now;
@@ -80,51 +80,46 @@ document.addEventListener('DOMContentLoaded', () => {
         miningEndEl.textContent = 'Ended';
         return;
       }
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hrs  = String(Math.floor(diff / (1000 * 60 * 60)) % 24).padStart(2, '0');
-      const mins = String(Math.floor(diff / (1000 * 60)) % 60).padStart(2, '0');
-      const secs = String(Math.floor(diff / 1000) % 60).padStart(2, '0');
+      const days = Math.floor(diff / 864e5);
+      const hrs = String(Math.floor(diff / 36e5) % 24).padStart(2, '0');
+      const mins = String(Math.floor(diff / 6e4) % 60).padStart(2, '0');
+      const secs = String(Math.floor(diff / 1e3) % 60).padStart(2, '0');
       miningEndEl.textContent = `${days}d ${hrs}:${mins}:${secs}`;
     }, 1000);
   }
 
-  // Fetch current state from backend
+  // Fetch state from backend
   async function fetchState() {
     try {
       const resp = await apiAction('mine');
       if (resp.error) throw new Error(resp.message);
 
-      // Safely extract numeric values
-      const bal   = Number(resp.balance ?? resp.mined ?? 0);
-      const pow   = Number(resp.mining_power ?? 1);
-      const totM  = Number(resp.total_mined ?? 0);
-      const tMin  = Number(resp.total_miners ?? 0);
-      const code  = resp.daily_code ?? '';
-      const subD  = resp.code_submissions_today ?? 0;
-      const subT  = resp.total_code_submissions ?? 0;
+      // Extract values with defaults
+      const bal = Number(resp.balance ?? 0);
+      const pow = Number(resp.mining_power ?? 1);
+      const totM = Number(resp.total_mined ?? 0);
+      const tMin = Number(resp.total_miners ?? 0);
+      const code = resp.daily_code ?? '';
+      const subD = resp.code_submissions_today ?? 0;
+      const subT = resp.total_code_submissions ?? 0;
 
-      balanceEl.textContent     = bal.toFixed(3);
-      powerEl.textContent       = pow.toFixed(1);
-      minedEl.textContent       = totM.toFixed(3);
-      totalMinersEl.textContent = tMin;
-      dailyCodeEl.textContent   = code;
-      subsOfCodeEl.textContent  = `${subD}/10`;
+      // Update UI
+      balanceEl.textContent = bal.toFixed(3);
+      powerEl.textContent = pow.toFixed(1);
+      minedEl.textContent = totM.toFixed(3);
+      totalminersEl.textContent = tMin;
+      dailyCodeEl.textContent = code;
+      subsOfCodeEl.textContent = `${subD}/10`;
       totalOfCodeEl.textContent = subT;
 
-      nextResetTime  = new Date(resp.next_reset);
-      miningEndTime  = new Date(resp.mining_end_date);
+      // Handle timers
+      nextResetTime = new Date(resp.next_reset);
+      miningEndTime = new Date(resp.mining_end_date);
 
-      // Button state
-      if (resp.mining_ended) {
-        mineButton.disabled   = true;
-        mineButton.textContent = 'Ended';
-      } else if (resp.active_session) {
-        mineButton.disabled   = true;
-        mineButton.textContent = 'Mining...';
-      } else {
-        mineButton.disabled   = false;
-        mineButton.textContent = 'Start Mining';
-      }
+      // Update button state
+      mineButton.disabled = !!resp.mining_ended;
+      mineButton.textContent = resp.mining_ended ? 'Ended' : 
+        resp.active_session ? 'Mining...' : 'Start Mining';
 
       startTimers();
     } catch (err) {
@@ -132,113 +127,91 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Start a mining session
+  // Mining control
   async function startMining() {
-    mineButton.disabled   = true;
+    mineButton.disabled = true;
     mineButton.textContent = 'Mining...';
     try {
       const resp = await apiAction('start_mining');
       if (resp.error) throw new Error(resp.message);
 
-      const bal  = Number(resp.balance ?? resp.mined ?? 0);
-      const pow  = Number(resp.mining_power ?? 1);
-      const subD = resp.code_submissions_today ?? 0;
-      const subT = resp.total_code_submissions ?? Number(totalOfCodeEl.textContent);
+      // Update UI from response
+      balanceEl.textContent = Number(resp.balance ?? 0).toFixed(3);
+      powerEl.textContent = Number(resp.mining_power ?? 1).toFixed(1);
+      dailyCodeEl.textContent = resp.daily_code || dailyCodeEl.textContent;
+      subsOfCodeEl.textContent = `${resp.code_submissions_today ?? 0}/10`;
+      totalOfCodeEl.textContent = resp.total_code_submissions ?? 0;
 
-      balanceEl.textContent     = bal.toFixed(3);
-      powerEl.textContent       = pow.toFixed(1);
-      dailyCodeEl.textContent   = resp.daily_code ?? dailyCodeEl.textContent;
-      subsOfCodeEl.textContent  = `${subD}/10`;
-      totalOfCodeEl.textContent = subT;
-
-      nextResetTime  = new Date(resp.next_reset);
-      miningEndTime  = new Date(resp.mining_end_date);
+      // Update timers
+      nextResetTime = new Date(resp.next_reset);
+      miningEndTime = new Date(resp.mining_end_date);
       startTimers();
     } catch (err) {
-      console.error('Error starting mining:', err);
-      mineButton.disabled   = false;
+      console.error('Start mining failed:', err);
+      mineButton.disabled = false;
       mineButton.textContent = 'Start Mining';
     }
   }
 
-  // Handle daily reset
+  // Event handlers
   function onReset() {
-    mineButton.disabled   = false;
+    mineButton.disabled = false;
     mineButton.textContent = 'Start Mining';
     fetchState();
   }
 
-  // Copy daily code
   copyButton.addEventListener('click', async () => {
-    const code = dailyCodeEl.textContent;
     try {
-      await navigator.clipboard.writeText(code);
+      await navigator.clipboard.writeText(dailyCodeEl.textContent);
       copyButton.textContent = 'Copied';
       setTimeout(() => copyButton.textContent = 'Copy', 2000);
     } catch {}
   });
 
-// Share via Telegram (direct message to contacts)
-sendButton.addEventListener('click', () => {
+  sendButton.addEventListener('click', () => {
     const code = dailyCodeEl.textContent;
-    const shareText = `💰 Use my $BLACK mining code: ${code}`;
-    
-    if (tg.isVersionAtLeast('6.2')) {
-      // For newer Telegram clients (better sharing experience)
-      tg.openTelegramLink(`https://t.me/share/url?url=&text=${encodeURIComponent(shareText)}`);
-    } else {
-      // Fallback for older clients
-      tg.openLink(`tg://msg?text=${encodeURIComponent(shareText)}`);
-    }
-    
+    const text = encodeURIComponent(`💰 Use my $BLACK mining code: ${code}`);
+    tg.openLink(`https://t.me/share/url?url=&text=${text}`);
     sendButton.textContent = 'Sent ✓';
     setTimeout(() => sendButton.textContent = 'Share', 2000);
   });
 
-  // Paste into input
   pasteButton.addEventListener('click', async () => {
     try {
-      const text = await navigator.clipboard.readText();
-      codeInput.value = text;
+      codeInput.value = await navigator.clipboard.readText();
       pasteButton.textContent = 'Pasted';
       setTimeout(() => pasteButton.textContent = 'Paste', 2000);
     } catch {}
   });
 
-  // Submit referral code
   submitButton.addEventListener('click', async () => {
-    const codeVal = codeInput.value.trim();
-    if (!codeVal) return;
-    submitButton.disabled   = true;
+    const code = codeInput.value.trim();
+    if (!code) return;
+    
+    submitButton.disabled = true;
     submitButton.textContent = 'Submitting...';
+    
     try {
-      const resp = await apiAction('submit_code', { code: codeVal });
+      const resp = await apiAction('submit_code', { code });
       if (resp.error) throw new Error(resp.message);
 
-      const bal  = Number(resp.balance ?? 0);
-      const pow  = Number(resp.mining_power ?? 1);
-      const subO = resp.owner_submissions ?? Number(subsOfCodeEl.textContent.split('/')[0]);
-      const subT = resp.total_code_submissions ?? Number(totalOfCodeEl.textContent);
-
-      balanceEl.textContent     = bal.toFixed(3);
-      powerEl.textContent       = pow.toFixed(1);
-      subsOfCodeEl.textContent  = `${subO}/10`;
-      totalOfCodeEl.textContent = subT;
-      submitButton.textContent  = 'Submitted';
+      balanceEl.textContent = Number(resp.balance ?? 0).toFixed(3);
+      powerEl.textContent = Number(resp.mining_power ?? 1).toFixed(1);
+      subsOfCodeEl.textContent = `${resp.owner_submissions ?? 0}/10`;
+      totalOfCodeEl.textContent = resp.total_code_submissions ?? 0;
+      
+      submitButton.textContent = 'Submitted';
     } catch (err) {
-      console.error('Submit error:', err);
+      console.error('Submit failed:', err);
       submitButton.textContent = 'Error';
     } finally {
       setTimeout(() => {
-        submitButton.disabled   = false;
+        submitButton.disabled = false;
         submitButton.textContent = 'Submit';
       }, 2000);
     }
   });
 
-  // Mine button handler
   mineButton.addEventListener('click', startMining);
-
-  // Initial load
   fetchState();
 });

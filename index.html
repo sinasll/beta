@@ -1,110 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-<!-- Meta tags -->
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>$BLACK</title>
-
-<!-- CSS stylesheets -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<link rel="stylesheet" href="style.css">
-
-<!-- Telegram WebApp SDK -->
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>$BLACK</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
-
 <body>
+  <div class="header">
+    <h1 class="logo">$BLACK</h1>
+  </div>
 
-<!-- App header -->
-<div class="header">
-<h1 class="logo">$BLACK</h1>
-</div>
-
-<!-- Main container -->
-<div class="container">
-  <!-- Mine Tab Content -->
-  <div id="mine-tab" class="tab-content active">
-    <!-- Global statistics card -->
-    <div class="card global-stats">
-
-      <div class="stats-row">
-        <div>Total Mined</div>
-        <div><span id="mined">0.000</span></div>
+  <div class="container">
+    <div id="mine-tab" class="tab-content active">
+      <div class="card global-stats">
+        <div class="stats-row">
+          <div>Total Mined</div>
+          <div><span id="mined">0.000</span></div>
+        </div>
+        <div class="stats-row">
+          <div>Total Miners</div>
+          <div><span id="totalminers">0</span></div>
+        </div>
+        <div class="stats-row">
+          <div>Mining Ends In</div>
+          <div><span id="miningend">0</span></div>
+        </div>
+        <div class="countdown" id="countdown">daily resets in 00:00:00</div>
       </div>
 
-      <div class="stats-row">
-        <div>Total Miners</div>
-        <div><span id="totalminers">0</span></div>
+      <div class="card">
+        <h2 class="card-title">Miner</h2>
+        <div class="stats-row">
+          <div>Username</div>
+          <div><span id="username">username</span></div>
+        </div>
+        <div class="stats-row">
+          <div>Balance</div>
+          <div><span id="balance">0.000</span> $BLACK</div>
+        </div>
+        <div class="stats-row">
+          <div>Mining Power</div>
+          <div>x<span id="power">1.0</span></div>
+        </div>
+        <button class="button" id="mineButton">Start Mining</button>
       </div>
 
-      <div class="stats-row">
-        <div>Mining Ends In</div>
-        <div><span id="miningend">0</span></div>
+      <div class="card">
+        <h2 class="card-title">Daily Code</h2>
+        <div class="stats-row">
+          <div>Your Code</div>
+          <div><span id="dailyCode">…</span></div>
+        </div>
+        <div class="stats-row">
+          <div>Today Submits</div>
+          <div><span id="subsOfCode">0/10</span></div>
+        </div>
+        <div class="stats-row">
+          <div>Total Submits</div>
+          <div><span id="totalOfCode">0</span></div>
+        </div>
+        <div class="stats-row">
+          <button class="button" id="copyButton">Copy</button>
+          <button class="button" id="sendButton">Share</button>
+        </div>
+        <div class="stats-row">
+          <input type="text" id="codeInput" placeholder="enter code..." class="input">
+        </div>
+        <button class="button" id="pasteButton">Paste</button>
+        <button class="button" id="submitButton">Submit</button>
       </div>
-
-    <!-- Countdown until daily reset -->
-    <div class="countdown" id="countdown">daily resets in 00:00:00</div>
-
-    </div>
-
-    <!-- User statistics and controls -->
-    <div class="card">
-      <h2 class="card-title">Miner</h2>
-      <div class="stats-row">
-        <div>Username</div>
-        <div><span id="username">username</span></div>
-      </div>
-      <div class="stats-row">
-        <div>Balance</div>
-        <div><span id="balance">0.000</span> $BLACK</div>
-      </div>
-      <div class="stats-row">
-        <div>Mining Power</div>
-        <div>x<span id="power"> 1.0</span></div>
-      </div>
-      <button class="button" id="mineButton">Start Mining</button>
-    </div>
-
-
-
-    <!-- Daily referral code section -->
-    <div class="card">
-      <h2 class="card-title">Daily Code</h2>
-      <div class="stats-row">
-
-        <div>Your Code</div>
-        <div><span id="dailyCode">…</span></div>
-      </div>
-
-      <div class="stats-row">
-        <div>Today Code Submits</div>
-        <div><span id="subsOfCode">0/10</span></div>
-      </div>
-
-      <div class="stats-row">
-        <div>Total Code Submits</div>
-        <div><span id="totalOfCode">0</span></div>
-      </div>
-
-      
-
-      <div class="stats-row">
-      <button class="button" id="copyButton">Copy</button><button class="button" id="sendButton">Send</button>
-      </div>
-
-      <div class="stats-row">
-      <input type="text" id="codeInput" placeholder="enter code . . ." class="input" />
-      </div>
-
-      <button class="button" id="pasteButton">Paste</button>
-      <button class="button" id="submitButton">Submit</button>
-
     </div>
   </div>
 
-<script src="app.js"></script>
-
+  <script src="app.js"></script>
 </body>
 </html>
