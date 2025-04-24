@@ -220,7 +220,6 @@ friends.forEach(f => {
     row.className = 'friend-row stats-row';
     row.innerHTML = `
         <div>${f.username}</div>
-        <div>${(f.balance || 0).toFixed(3)} $BLACK</div>
     `;
     friendsContainerEl.appendChild(row);
 });
