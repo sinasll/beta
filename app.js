@@ -323,110 +323,156 @@ function setupTabs() {
 
 // Event Listeners
 function setupEventListeners() {
+    // Mining Button
     mineBtn.addEventListener('click', async () => {
         if (miningEnded) {
-            alert("The mining period has ended. No more mining is allowed.");
+            mineBtn.textContent = '⛔ Ended!';
+            setTimeout(() => mineBtn.textContent = 'Start Mining', 2000);
             return;
         }
         
-        if (!userData.isMining && !isAfterResetTime()) {
-            await startMining();
-        } else if (isAfterResetTime()) {
-            alert('Mining reset — please start again!');
-            await fetchUserData();
+        const originalText = mineBtn.textContent;
+        mineBtn.textContent = '⏳ Starting...';
+        mineBtn.disabled = true;
+
+        try {
+            if (!userData.isMining && !isAfterResetTime()) {
+                await startMining();
+            } else if (isAfterResetTime()) {
+                await fetchUserData();
+                mineBtn.textContent = '♻️ Refreshed!';
+            }
+        } catch (err) {
+            mineBtn.textContent = '❌ Failed!';
+            console.error('Mining error:', err);
+        } finally {
+            setTimeout(() => {
+                mineBtn.textContent = originalText;
+                mineBtn.disabled = false;
+            }, 2000);
         }
     });
 
+    // Copy Button
     copyButton.addEventListener('click', async () => {
         try {
-          await navigator.clipboard.writeText(dailyCodeEl.textContent);
-          copyButton.textContent = 'Copied';
-          setTimeout(() => copyButton.textContent = 'Copy', 2000);
-        } catch {}
-      });
+            await navigator.clipboard.writeText(dailyCodeEl.textContent);
+            copyButton.textContent = '✓ Copied!';
+            setTimeout(() => copyButton.textContent = 'Copy', 2000);
+        } catch {
+            copyButton.textContent = '❌ Failed!';
+            setTimeout(() => copyButton.textContent = 'Copy', 2000);
+        }
+    });
 
-      pasteButton.addEventListener('click', async () => {
+    // Paste Button
+    pasteButton.addEventListener('click', async () => {
         try {
-          codeInput.value = await navigator.clipboard.readText();
-          pasteButton.textContent = 'Pasted';
-          setTimeout(() => pasteButton.textContent = 'Paste', 2000);
-        } catch {}
-      });
+            codeInput.value = await navigator.clipboard.readText();
+            pasteButton.textContent = '✓ Pasted!';
+            setTimeout(() => pasteButton.textContent = 'Paste', 2000);
+        } catch {
+            pasteButton.textContent = '❌ Failed!';
+            setTimeout(() => pasteButton.textContent = 'Paste', 2000);
+        }
+    });
 
-    submitBtn.addEventListener('click', async () => {
+    // Submit Button
+    submitButton.addEventListener('click', async () => {
         if (miningEnded) {
-            alert("The mining period has ended. No more code submissions allowed.");
+            submitButton.textContent = '⛔ Ended!';
+            setTimeout(() => submitButton.textContent = 'Submit', 2000);
             return;
         }
         
         const submittedCode = codeInput.value.trim();
-        if (!submittedCode) return alert('Please enter a code to submit');
-
-        try {
-            const payload = {
-                ...initializeUser(),
-                action: 'submit_code',
-                code: submittedCode
-            };
-
-            const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
-            const data = JSON.parse(execution.responseBody || '{}');
-
-            if (data.success) {
-                userData.balance = data.balance;
-                userData.miningPower = data.mining_power;
-                userData.submittedCodes = [...userData.submittedCodes, submittedCode];
-                userData.codeSubmissionsToday = data.owner_submissions || userData.codeSubmissionsToday;
-                userData.totalCodeSubmissions = data.total_code_submissions || userData.totalCodeSubmissions;
-                
-                saveMiningState();
-                updateUI();
-                alert(data.message || 'Code submitted successfully!');
-                codeInput.value = '';
-            } else {
-                alert(data.message || 'Code submission failed');
-            }
-        } catch (err) {
-            console.error('Code submission failed:', err);
-            alert(err.message || 'Failed to submit code.');
-        }
-    });
-
-    sendButton.addEventListener('click', () => {
-        const code = dailyCodeEl.textContent;
-        
-        if (!code || code === '…') {
-            alert('No mining code available yet');
+        if (!submittedCode) {
+            submitButton.textContent = '⚠️ Enter Code!';
+            setTimeout(() => submitButton.textContent = 'Submit', 2000);
             return;
         }
     
-        if (window.Telegram?.WebApp) {
-            const tg = window.Telegram.WebApp;
-            const message = `Use my $BLACK mining code: ${code}`;
-            tg.sendData(message);
-            tg.close();
-        } else {
-            alert(`Your current mining code: ${code}\n(Works best in Telegram app)`);
-        }
+        const originalText = submitButton.textContent;
+        submitButton.textContent = '⏳ Processing...';
+        submitButton.disabled = true;
     
-        sendButton.textContent = 'Sent ✓';
-        setTimeout(() => sendButton.textContent = 'Send', 2000);
+        try {
+            const payload = { 
+                action: 'submit_code', 
+                code: submittedCode, 
+                telegramId: userData.telegramId 
+            };
+            const response = await apiAction(payload);
+            
+            if (response.success) {
+                submitButton.textContent = '✓ Success!';
+                codeInput.value = '';
+                updateUIFromResponse(response);
+            } else {
+                submitButton.textContent = `❌ ${response.message || 'Failed'}`;
+            }
+        } catch (err) {
+            submitButton.textContent = '⚠️ Error!';
+            console.error('Submission error:', err);
+        } finally {
+            setTimeout(() => {
+                submitButton.textContent = originalText;
+                submitButton.disabled = false;
+            }, 2000);
+        }
+    });
+
+    // Send/Share Button
+    sendButton.addEventListener('click', () => {
+        const code = dailyCodeEl.textContent;
+        const referralLink = `${window.location.origin}?ref=${code}`;
+        
+        if (!code || code === '…') {
+            sendButton.textContent = '⚠️ No Code!';
+            setTimeout(() => sendButton.textContent = 'Send', 1500);
+            return;
+        }
+
+        const originalText = sendButton.textContent;
+        sendButton.textContent = '✈️ Sharing...';
+        sendButton.disabled = true;
+
+        try {
+            if (window.Telegram?.WebApp) {
+                const tg = window.Telegram.WebApp;
+                const message = `💰 Join $BLACK Mining!\nUse my code: ${code}\n${referralLink}`;
+                tg.openLink(`tg://msg?text=${encodeURIComponent(message)}`);
+                sendButton.textContent = '✓ Shared!';
+            } else {
+                navigator.clipboard.writeText(`${code} - ${referralLink}`);
+                sendButton.textContent = '📋 Copied!';
+            }
+        } catch (err) {
+            sendButton.textContent = '❌ Failed!';
+            console.error('Sharing error:', err);
+        } finally {
+            setTimeout(() => {
+                sendButton.textContent = originalText;
+                sendButton.disabled = false;
+            }, 2000);
+        }
     });
 }
 
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text)
-        .then(() => alert('Referral link copied to clipboard!'))
-        .catch(() => alert('Failed to copy link.'));
-}
-
-// Initialize
+// Initialize App
 async function init() {
     const tg = window.Telegram?.WebApp;
     if (tg) {
         tg.expand();
         tg.ready();
         tg.enableClosingConfirmation();
+        
+        // Initialize Telegram user
+        if (tg.initDataUnsafe?.user) {
+            userData.telegramId = tg.initDataUnsafe.user.id;
+            userData.username = tg.initDataUnsafe.user.username || 
+                              `User${tg.initDataUnsafe.user.id.slice(-4)}`;
+        }
     }
 
     setupTabs();
@@ -438,14 +484,29 @@ async function init() {
         await startMining();
     }
 
+    // Update counters every second
     setInterval(updateCountdown, 1000);
     
-    // Check mining status periodically
+    // Refresh data every 5 minutes
     setInterval(async () => {
         await fetchUserData();
         updateUI();
-    }, 300000); // Every 5 minutes
+    }, 300000);
 }
 
-// Start the app
+// Start application
 document.addEventListener('DOMContentLoaded', init);
+
+// Helper function: Update UI from API response
+function updateUIFromResponse(response) {
+    balanceEl.textContent = response.balance?.toFixed(3) || '0.000';
+    powerEl.textContent = response.mining_power?.toFixed(1) || '1.0';
+    minedEl.textContent = response.total_mined?.toFixed(3) || '0.000';
+    totalminersEl.textContent = response.total_miners || '0';
+    subsOfCodeEl.textContent = `${response.owner_submissions || 0}/10`;
+    totalOfCodeEl.textContent = response.total_code_submissions || '0';
+    
+    if (response.daily_code) {
+        dailyCodeEl.textContent = response.daily_code;
+    }
+}
