@@ -195,9 +195,8 @@ async function fetchUserData() {
         userData.codeSubmissionsToday = data.code_submissions_today || 0;
         userData.referrals = data.referrals || 0;
         userData.referralEarnings = data.referral_earnings || 0;
-        userData.totalCodeSubmissions = data.total_code_submissions || 0; // Get from backend
+        userData.totalCodeSubmissions = data.total_code_submissions || 0;
 
-        // Store mining end date if provided
         if (data.mining_end_date) {
             miningEndDate = data.mining_end_date;
         }
@@ -206,7 +205,9 @@ async function fetchUserData() {
             stopMining();
         }
 
-        if (data.total_miners) totalMinersEl.textContent = data.total_miners;
+        if (data.total_miners) {
+            totalMinersEl.textContent = Number(data.total_miners).toLocaleString('en-US');
+        }
 
         saveMiningState();
         updateUI();
