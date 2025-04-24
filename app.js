@@ -48,7 +48,8 @@ let userData = {
     ownReferralCode: '',
     totalInvites: 0,
     usedReferralCode: '',
-    referralLinksClicked: 0
+    referralLinksClicked: 0,
+    daysRemaining: INITIAL_MINING_DAYS
 };
 
 let mineInterval = null;
@@ -68,12 +69,20 @@ function isAfterResetTime() {
     return new Date() >= new Date(userData.nextReset);
 }
 
+function calculateDaysRemaining(endDate) {
+    const now = new Date();
+    const end = new Date(endDate);
+    const timeRemaining = end - now;
+    return Math.max(0, Math.ceil(timeRemaining / (1000 * 60 * 60 * 24)));
+}
+
 function saveMiningState() {
     localStorage.setItem('isMining', JSON.stringify(userData.isMining));
     localStorage.setItem('nextReset', userData.nextReset);
     localStorage.setItem('submittedCodes', JSON.stringify(userData.submittedCodes));
     localStorage.setItem('codeSubmissionsToday', userData.codeSubmissionsToday.toString());
     localStorage.setItem('totalCodeSubmissions', userData.totalCodeSubmissions.toString());
+    localStorage.setItem('daysRemaining', userData.daysRemaining.toString());
 }
 
 function loadMiningState() {
@@ -82,6 +91,7 @@ function loadMiningState() {
     const storedCodes = JSON.parse(localStorage.getItem('submittedCodes') || '[]');
     const storedSubmissions = parseInt(localStorage.getItem('codeSubmissionsToday') || '0');
     const storedTotalSubmissions = parseInt(localStorage.getItem('totalCodeSubmissions') || '0');
+    const storedDaysRemaining = parseInt(localStorage.getItem('daysRemaining') || INITIAL_MINING_DAYS);
     
     if (storedReset && new Date() < new Date(storedReset)) {
         userData.isMining = storedIsMining;
@@ -89,14 +99,17 @@ function loadMiningState() {
         userData.submittedCodes = storedCodes;
         userData.codeSubmissionsToday = storedSubmissions;
         userData.totalCodeSubmissions = storedTotalSubmissions;
+        userData.daysRemaining = storedDaysRemaining;
     } else {
         localStorage.removeItem('isMining');
         localStorage.removeItem('nextReset');
         localStorage.removeItem('submittedCodes');
         localStorage.removeItem('codeSubmissionsToday');
+        localStorage.removeItem('daysRemaining');
         userData.isMining = false;
         userData.submittedCodes = [];
         userData.codeSubmissionsToday = 0;
+        userData.daysRemaining = INITIAL_MINING_DAYS;
     }
 }
 
@@ -151,19 +164,10 @@ function updateUI() {
         if (totalReferralsEl) totalReferralsEl.textContent = userData.totalInvites;
         if (usedReferralCodeEl) usedReferralCodeEl.textContent = userData.usedReferralCode || 'None';
         
-        if (miningEndDate && miningEndEl) {
-            const now = new Date();
-            const endDate = new Date(miningEndDate);
-            const timeRemaining = endDate - now;
-            
-            if (timeRemaining <= 0) {
-                miningEndEl.textContent = "Ended";
-                if (mineBtn) mineBtn.disabled = true;
-                if (mineBtn) mineBtn.textContent = "Mining Ended";
-            } else {
-                const days = Math.ceil(timeRemaining / (1000 * 60 * 60 * 24));
-                miningEndEl.textContent = `${days} days`;
-            }
+        if (miningEndDate) {
+            const days = userData.daysRemaining || calculateDaysRemaining(miningEndDate);
+            miningEndEl.textContent = days <= 0 ? "Ended" : `${days} days`;
+            miningEnded = days <= 0;
         }
     } catch (error) {
         console.error('UI update error:', error);
@@ -220,6 +224,7 @@ async function fetchUserData() {
 
         if (data.mining_end_date) {
             miningEndDate = data.mining_end_date;
+            userData.daysRemaining = data.days_remaining || calculateDaysRemaining(data.mining_end_date);
         }
         if (data.mining_ended) {
             miningEnded = true;
@@ -264,6 +269,7 @@ async function mineCoins() {
         userData.referrals = data.referrals || userData.referrals;
         userData.referralEarnings = data.referral_earnings || userData.referralEarnings;
         userData.totalCodeSubmissions = data.total_code_submissions || userData.totalCodeSubmissions;
+        userData.daysRemaining = data.days_remaining || userData.daysRemaining;
 
         if (data.mining_ended) {
             miningEnded = true;
@@ -298,7 +304,10 @@ async function startMining() {
         userData.nextReset = data.next_reset || userData.nextReset;
         userData.codeSubmissionsToday = data.code_submissions_today || 0;
         userData.totalCodeSubmissions = data.total_code_submissions || userData.totalCodeSubmissions;
-        if (data.mining_end_date) miningEndDate = data.mining_end_date;
+        if (data.mining_end_date) {
+            miningEndDate = data.mining_end_date;
+            userData.daysRemaining = data.days_remaining || calculateDaysRemaining(data.mining_end_date);
+        }
         if (data.mining_ended) miningEnded = true;
         
         saveMiningState();
