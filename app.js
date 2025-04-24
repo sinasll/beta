@@ -1,7 +1,7 @@
 // --------------------------------------------------
 // Imports & Appwrite Client Initialization
 // --------------------------------------------------
-import { Client, Functions, Query } from "https://esm.sh/appwrite@13.0.0";
+import { Client, Functions } from "https://esm.sh/appwrite@13.0.0";
 const client = new Client()
   .setEndpoint("https://fra.cloud.appwrite.io/v1")
   .setProject("6800cf6c0038c2026f07");
@@ -11,42 +11,47 @@ const FUNCTION_ID = "6800d0a4001cb28a32f5";
 // --------------------------------------------------
 // DOM Elements
 // --------------------------------------------------
-const minedEl             = document.getElementById('mined');
-const balanceEl           = document.getElementById('balance');
-const usernameEl          = document.getElementById('username');
-const powerEl             = document.getElementById('power');
-const mineBtn             = document.getElementById('mineButton');
-const totalMinersEl       = document.getElementById('totalminers');
-const countdownEl         = document.getElementById('countdown');
-const miningEndEl         = document.getElementById('miningend');
-const codeInput           = document.getElementById('codeInput');
-const copyBtn             = document.getElementById('copyButton');
-const submitBtn           = document.getElementById('submitButton');
-const dailyCodeEl         = document.getElementById('dailyCode');
-const subsOfCodeEl        = document.getElementById('subsOfCode');
-const totalOfCodeEl       = document.getElementById('totalOfCode');
+const minedEl = document.getElementById('mined');
+const balanceEl = document.getElementById('balance');
+const usernameEl = document.getElementById('username');
+const powerEl = document.getElementById('power');
+const mineBtn = document.getElementById('mineButton');
+const totalMinersEl = document.getElementById('totalminers');
+const countdownEl = document.getElementById('countdown');
+const codeInput = document.getElementById('codeInput');
+const copyBtn = document.getElementById('copyButton');
+const submitBtn = document.getElementById('submitButton');
+const dailyCodeEl = document.getElementById('dailyCode');
+const subsOfCodeEl = document.getElementById('subsOfCode');
+const sendBtn = document.getElementById('sendButton');
+const shareBtn = document.getElementById('shareButton');
+const miningEndEl = document.getElementById('miningend');
+const totalOfCodeEl = document.getElementById('totalOfCode');
 
 // --------------------------------------------------
 // Application State
 // --------------------------------------------------
 let userData = {
-  isMining: false,
-  balance: 0,
-  totalMined: 0,
-  miningPower: 1.0,
-  nextReset: null,
-  dailyCode: '',
-  submittedCodes: [],
-  codeSubmissionsToday: 0,
-  totalCodeSubmissions: 0
+  isMining: false,           // Whether mining is active
+  balance: 0,                // Current user balance
+  totalMined: 0,             // Lifetime mined amount
+  miningPower: 1.0,          // Mining multiplier
+  nextReset: null,           // ISO timestamp for daily reset
+  dailyCode: '',             // User's referral code
+  submittedCodes: [],        // Codes submitted today
+  codeSubmissionsToday: 0,   // Count of submissions today
+  totalCodeSubmissions: 0    // All-time code submissions
 };
-let mineInterval   = null;
-let miningEndDate  = null; // ISO string for 90-day end
-let miningEnded    = false;
+let mineInterval = null;      // Interval ID for mining loop
+let miningEndDate = null;      // When mining period ends
+let miningEnded = false;      // Flag if mining period is over
 
 // --------------------------------------------------
 // Utility Functions
 // --------------------------------------------------
+/**
+ * Returns an ISO timestamp for the next UTC 12:00 reset
+ */
 function getDefaultResetTime() {
   const now = new Date();
   const resetTime = new Date(now);
@@ -55,10 +60,16 @@ function getDefaultResetTime() {
   return resetTime.toISOString();
 }
 
+/**
+ * Check if the current time is past today's reset
+ */
 function isAfterResetTime() {
   return userData.nextReset && new Date() >= new Date(userData.nextReset);
 }
 
+/**
+ * Persist mining state to localStorage
+ */
 function saveMiningState() {
   localStorage.setItem('isMining', JSON.stringify(userData.isMining));
   localStorage.setItem('nextReset', userData.nextReset);
@@ -67,6 +78,9 @@ function saveMiningState() {
   localStorage.setItem('totalCodeSubmissions', userData.totalCodeSubmissions.toString());
 }
 
+/**
+ * Load mining state from localStorage (if still valid)
+ */
 function loadMiningState() {
   const storedReset = localStorage.getItem('nextReset');
   const now = new Date();
@@ -77,55 +91,84 @@ function loadMiningState() {
     userData.codeSubmissionsToday = parseInt(localStorage.getItem('codeSubmissionsToday') || '0');
     userData.totalCodeSubmissions = parseInt(localStorage.getItem('totalCodeSubmissions') || '0');
   } else {
-    ['isMining','nextReset','submittedCodes','codeSubmissionsToday','totalCodeSubmissions'].forEach(key =>
-      localStorage.removeItem(key)
-    );
+    // Clear stale data
+    ['isMining','nextReset','submittedCodes','codeSubmissionsToday'].forEach(key => localStorage.removeItem(key));
     userData.isMining = false;
     userData.submittedCodes = [];
     userData.codeSubmissionsToday = 0;
-    userData.totalCodeSubmissions = 0;
   }
 }
 
+/**
+ * Extracts Telegram user info or generates guest fallback
+ */
 function initializeUser() {
   const tg = window.Telegram?.WebApp;
   if (tg?.initDataUnsafe?.user) {
     const user = tg.initDataUnsafe.user;
     const username = user.username || `${user.first_name || ''} ${user.last_name || ''}`.trim();
-    const query = new URLSearchParams(location.search);
-    return { username, telegramId: String(user.id), referralCode: query.get('ref') || '' };
+    return { username, telegramId: String(user.id), referralCode: new URLSearchParams(location.search).get('ref') || '' };
   }
+  // Guest fallback
   let guest = localStorage.getItem('guestUsername');
   if (!guest) {
     guest = 'guest_' + Math.random().toString(36).slice(2,7);
     localStorage.setItem('guestUsername', guest);
   }
-  const query = new URLSearchParams(location.search);
-  return { username: guest, telegramId: '', referralCode: query.get('ref') || '' };
+  return { username: guest, telegramId: '', referralCode: new URLSearchParams(location.search).get('ref') || '' };
 }
 
 // --------------------------------------------------
 // UI Update Functions
 // --------------------------------------------------
+/**
+ * Refreshes all UI elements based on userData
+ */
 function updateUI() {
-  balanceEl.textContent       = userData.balance.toFixed(3);
-  minedEl.textContent         = userData.totalMined.toFixed(3);
-  powerEl.textContent         = userData.miningPower.toFixed(1);
+  balanceEl.textContent = userData.balance.toFixed(3);
+  minedEl.textContent = userData.totalMined.toFixed(3);
+  powerEl.textContent = userData.miningPower.toFixed(1);
 
-  mineBtn.textContent         = miningEnded
-    ? 'Mining Ended'
-    : (userData.isMining ? 'Mining...' : 'Start Mining');
-  mineBtn.disabled            = userData.isMining || isAfterResetTime() || miningEnded;
+  // Mining button state
+  mineBtn.textContent = miningEnded ? 'Mining Ended' : (userData.isMining ? 'Mining...' : 'Start Mining');
+  mineBtn.disabled = userData.isMining || isAfterResetTime() || miningEnded;
 
-  dailyCodeEl.textContent     = userData.dailyCode;
-  subsOfCodeEl.textContent    = `${userData.codeSubmissionsToday}/10`;
-  totalOfCodeEl.textContent   = userData.totalCodeSubmissions;
+  // Daily code & submissions
+  dailyCodeEl.textContent = userData.dailyCode;
+  subsOfCodeEl.textContent = `${userData.codeSubmissionsToday}/10`;
+  totalOfCodeEl.textContent = userData.totalCodeSubmissions;
 
-  if (userData.nextReset) updateDailyCountdown();
-  if (miningEndDate) updateMiningCountdown();
+  // Referrals
+  referralCountEl.textContent = userData.referrals;
+  referralEarningsEl.textContent = userData.referralEarnings.toFixed(3);
+
+  // Mining end countdown
+  if (miningEndDate) {
+    const diff = new Date(miningEndDate) - Date.now();
+    if (diff <= 0) {
+      mineBtn.disabled = true;
+      miningEnded = true;
+      miningEndEl.textContent = 'Ended';
+    } else {
+      miningEndEl.textContent = Math.ceil(diff/(1000*60*60*24)) + ' days';
+    }
+  }
+
+  // Code input validation
+  const code = codeInput.value.trim();
+  submitBtn.disabled = (
+    code.length !== 10 ||
+    code === userData.dailyCode ||
+    userData.submittedCodes.includes(code) ||
+    miningEnded
+  );
 }
 
-function updateDailyCountdown() {
+/**
+ * Updates the countdown timer until the next daily reset
+ */
+function updateCountdown() {
+  if (!userData.nextReset) return;
   const diff = new Date(userData.nextReset) - Date.now();
   if (diff <= 0) {
     countdownEl.textContent = 'Reset time!';
@@ -138,26 +181,13 @@ function updateDailyCountdown() {
   }
 }
 
-function updateMiningCountdown() {
-  const diff = new Date(miningEndDate) - Date.now();
-  if (diff <= 0) {
-    miningEndEl.textContent = 'Ended';
-    miningEnded = true;
-    mineBtn.disabled = true;
-  } else {
-    const days = Math.floor(diff/(1000*60*60*24));
-    const hrs  = Math.floor((diff%(1000*60*60*24))/(1000*60*60));
-    const mins = Math.floor((diff%(1000*60*60))/(1000*60));
-    const secs = Math.floor((diff%(1000*60))/1000);
-    miningEndEl.textContent = `${days}d ${hrs}h ${mins}m ${secs}s`;
-  }
-}
-
 // --------------------------------------------------
 // Appwrite Function Calls
 // --------------------------------------------------
+/**
+ * Fetch initial user data from backend
+ */
 async function fetchUserData() {
-  loadMiningState();
   const payload = initializeUser();
   usernameEl.textContent = payload.username;
   try {
@@ -165,6 +195,7 @@ async function fetchUserData() {
     const data = JSON.parse(exec.responseBody || '{}');
     if (data.error) throw new Error(data.message);
 
+    // Map backend response to userData
     Object.assign(userData, {
       isMining: data.active_session,
       balance: data.balance,
@@ -176,8 +207,8 @@ async function fetchUserData() {
       codeSubmissionsToday: data.code_submissions_today,
       totalCodeSubmissions: data.total_code_submissions
     });
-    miningEndDate = data.mining_end_date;
-    miningEnded  = data.mining_ended;
+    if (data.mining_end_date) miningEndDate = data.mining_end_date;
+    if (data.mining_ended) miningEnded = true;
     if (data.total_miners) totalMinersEl.textContent = Number(data.total_miners).toLocaleString();
 
     saveMiningState();
@@ -188,6 +219,9 @@ async function fetchUserData() {
   }
 }
 
+/**
+ * Perform one mining tick (called every minute)
+ */
 async function mineCoins() {
   if (isAfterResetTime() || miningEnded) return stopMining();
   const payload = initializeUser();
@@ -196,6 +230,7 @@ async function mineCoins() {
     const data = JSON.parse(exec.responseBody || '{}');
     if (data.error || !data.updated.active_session) throw new Error(data.message);
 
+    // Update userData
     Object.assign(userData, {
       balance: data.updated.balance,
       totalMined: data.total_mined,
@@ -204,9 +239,8 @@ async function mineCoins() {
       codeSubmissionsToday: data.code_submissions_today,
       totalCodeSubmissions: data.total_code_submissions
     });
-    miningEnded = data.mining_ended;
+    if (data.mining_ended) miningEnded = true;
 
-    saveMiningState();
     updateUI();
   } catch (err) {
     console.error('mineCoins error:', err);
@@ -214,6 +248,9 @@ async function mineCoins() {
   }
 }
 
+/**
+ * Start the mining session
+ */
 async function startMining() {
   if (userData.isMining || isAfterResetTime() || miningEnded) return;
   try {
@@ -222,18 +259,17 @@ async function startMining() {
     const data = JSON.parse(exec.responseBody || '{}');
     if (data.error || !data.started) throw new Error(data.message);
 
-    Object.assign(userData, {
-      isMining: true,
-      nextReset: data.next_reset,
-      codeSubmissionsToday: data.code_submissions_today,
-      totalCodeSubmissions: data.total_code_submissions
-    });
-    miningEndDate = data.mining_end_date;
-    miningEnded  = data.mining_ended;
+    userData.isMining = true;
+    userData.nextReset = data.next_reset;
+    userData.codeSubmissionsToday = data.code_submissions_today;
+    userData.totalCodeSubmissions = data.total_code_submissions;
+    if (data.mining_end_date) miningEndDate = data.mining_end_date;
+    if (data.mining_ended) miningEnded = true;
 
     saveMiningState();
     updateUI();
 
+    // Initial tick + interval
     await mineCoins();
     mineInterval = setInterval(mineCoins, 60000);
   } catch (err) {
@@ -243,6 +279,9 @@ async function startMining() {
   }
 }
 
+/**
+ * Stop the mining session and clear interval
+ */
 function stopMining() {
   clearInterval(mineInterval);
   mineInterval = null;
@@ -254,7 +293,11 @@ function stopMining() {
 // --------------------------------------------------
 // Event Listeners & Initialization
 // --------------------------------------------------
+/**
+ * Setup button & tab event handlers
+ */
 function setupEventListeners() {
+  // Mine button
   mineBtn.addEventListener('click', async () => {
     if (miningEnded) return alert('Mining period ended');
     if (!userData.isMining) await startMining();
@@ -264,43 +307,90 @@ function setupEventListeners() {
     }
   });
 
-  copyBtn?.addEventListener('click', async () => {
-    await navigator.clipboard.writeText(dailyCodeEl.textContent);
-    copyBtn.textContent = 'Copied';
-    setTimeout(() => copyBtn.textContent = 'Copy', 2000);
-  });
+  // Copy daily code
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(dailyCodeEl.textContent);
+      copyBtn.textContent = 'Copied';
+      setTimeout(() => copyBtn.textContent = 'Copy', 2000);
+    });
+  }
 
-  submitBtn?.addEventListener('click', async () => {
-    if (miningEnded) return alert('Code submissions closed');
-    const code = codeInput.value.trim();
-    if (!code) return alert('Enter a code');
-    try {
-      const payload = { ...initializeUser(), action: 'submit_code', code };
-      const exec    = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
-      const data    = JSON.parse(exec.responseBody || '{}');
-      if (!data.success) throw new Error(data.message);
+  // Paste code from clipboard
+  const pasteBtn = document.getElementById('pasteButton');
+  if (pasteBtn) {
+    pasteBtn.addEventListener('click', async () => {
+      codeInput.value = await navigator.clipboard.readText();
+      pasteBtn.textContent = 'Pasted';
+      setTimeout(() => pasteBtn.textContent = 'Paste', 2000);
+    });
+  }
 
-      userData.balance             = data.balance;
-      userData.submittedCodes.push(code);
-      userData.codeSubmissionsToday = data.owner_submissions;
-      userData.totalCodeSubmissions = data.total_code_submissions;
+  // Submit referral code
+  if (submitBtn) {
+    submitBtn.addEventListener('click', async () => {
+      if (miningEnded) return alert('Code submissions closed');
+      const code = codeInput.value.trim();
+      if (!code) return alert('Enter a code');
 
-      saveMiningState();
-      updateUI();
-      alert(data.message || 'Submitted!');
-      codeInput.value = '';
-    } catch (err) {
-      console.error('submit_code error:', err);
-      alert(err.message || 'Submission failed');
-    }
-  });
+      try {
+        const payload = { ...initializeUser(), action: 'submit_code', code };
+        const exec = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
+        const data = JSON.parse(exec.responseBody || '{}');
+        if (!data.success) throw new Error(data.message);
+
+        // Update UI on success
+        userData.balance = data.balance;
+        userData.submittedCodes.push(code);
+        userData.codeSubmissionsToday = data.owner_submissions;
+        userData.totalCodeSubmissions = data.total_code_submissions;
+        saveMiningState();
+        updateUI();
+        alert(data.message || 'Submitted!');
+        codeInput.value = '';
+      } catch (err) {
+        console.error('submit_code error:', err);
+        alert(err.message || 'Submission failed');
+      }
+    });
+  }
+
+  // Share button
+  if (sendBtn) {
+    sendBtn.addEventListener('click', () => {
+      const code = dailyCodeEl.textContent;
+      const shareBase = `Use my \`${code}\` code to start: https://t.me/betamineitbot?startapp=${encodeURIComponent(code)}`;
+      if (window.Telegram?.WebApp) {
+        const tg = window.Telegram.WebApp;
+        tg.sendData(shareBase);
+        tg.openLink(`https://t.me/share/url?url=${encodeURIComponent(shareBase)}`);
+      } else {
+        alert(`Share this link: https://t.me/betamineitbot?startapp=${encodeURIComponent(code)}`);
+      }
+      sendBtn.textContent = 'Sent ✓';
+      setTimeout(() => sendBtn.textContent = 'Send', 2000);
+    });
+  }}
+
+/**
+ * Initialize the entire application
+ */
+async function init() {
+  const tg = window.Telegram?.WebApp;
+  if (tg) { tg.expand(); tg.ready(); tg.enableClosingConfirmation(); }
+
+  setupEventListeners();
+  loadMiningState();
+  await fetchUserData();
+
+  // If user already mining, resume
+  if (userData.isMining && !isAfterResetTime() && !miningEnded) {
+    await startMining();
+  }
+
+  // Timers for UI updates
+  setInterval(updateCountdown, 1000);
+  setInterval(async () => { await fetchUserData(); updateUI(); }, 300000);
 }
 
-window.addEventListener('DOMContentLoaded', async () => {
-  await fetchUserData();
-  setupEventListeners();
-  setInterval(() => {
-    updateDailyCountdown();
-    updateMiningCountdown();
-  }, 1000);
-});
+document.addEventListener('DOMContentLoaded', init);
