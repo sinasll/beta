@@ -7,7 +7,7 @@ const client = new Client()
 const functions = new Functions(client);
 const FUNCTION_ID = "6800d0a4001cb28a32f5";
 
-// All DOM elements
+// DOM Elements
 const minedEl = document.getElementById('mined');
 const balanceEl = document.getElementById('balance');
 const usernameEl = document.getElementById('username');
@@ -30,8 +30,9 @@ const referralCodeEl = document.getElementById('referralCode');
 const totalReferralsEl = document.getElementById('totalReferrals');
 const copyReferralBtn = document.getElementById('copyReferralButton');
 const inviteBtn = document.getElementById('inviteButton');
+const usedReferralCodeEl = document.getElementById('used-referral-code');
 
-// State management
+// State
 let userData = {
     isMining: false,
     balance: 0,
@@ -45,14 +46,15 @@ let userData = {
     referralEarnings: 0,
     totalCodeSubmissions: 0,
     ownReferralCode: '',
-    totalInvites: 0
+    totalInvites: 0,
+    usedReferralCode: '',
+    referralLinksClicked: 0
 };
 
 let mineInterval = null;
 let miningEndDate = null;
 let miningEnded = false;
 
-// Utility functions
 function getDefaultResetTime() {
     const now = new Date();
     const resetTime = new Date(now);
@@ -100,13 +102,21 @@ function loadMiningState() {
 
 function initializeUser() {
     const tg = window.Telegram?.WebApp;
+    let referralCode = '';
+
+    if (tg?.initDataUnsafe?.start_param) {
+        referralCode = tg.initDataUnsafe.start_param;
+    } else {
+        const urlParams = new URLSearchParams(window.location.search);
+        referralCode = urlParams.get('startapp') || urlParams.get('ref') || '';
+    }
+
     if (tg?.initDataUnsafe?.user) {
         const user = tg.initDataUnsafe.user;
-        const username = user.username || `${user.first_name || ''} ${user.last_name || ''}`.trim();
         return {
-            username,
+            username: user.username || `${user.first_name || ''} ${user.last_name || ''}`.trim(),
             telegramId: user.id.toString(),
-            referralCode: new URLSearchParams(window.location.search).get('ref') || ''
+            referralCode: referralCode
         };
     }
 
@@ -119,7 +129,7 @@ function initializeUser() {
     return {
         username,
         telegramId: '',
-        referralCode: new URLSearchParams(window.location.search).get('ref') || ''
+        referralCode: referralCode
     };
 }
 
@@ -139,6 +149,7 @@ function updateUI() {
         if (referralEarningsEl) referralEarningsEl.textContent = userData.referralEarnings.toFixed(3);
         if (referralCodeEl) referralCodeEl.textContent = userData.ownReferralCode;
         if (totalReferralsEl) totalReferralsEl.textContent = userData.totalInvites;
+        if (usedReferralCodeEl) usedReferralCodeEl.textContent = userData.usedReferralCode || 'None';
         
         if (miningEndDate && miningEndEl) {
             const now = new Date();
@@ -204,6 +215,8 @@ async function fetchUserData() {
         userData.totalCodeSubmissions = data.total_code_submissions || 0;
         userData.ownReferralCode = data.own_referral_code || '';
         userData.totalInvites = data.total_invites || 0;
+        userData.usedReferralCode = data.used_referral_code || '';
+        userData.referralLinksClicked = data.referral_links_clicked || 0;
 
         if (data.mining_end_date) {
             miningEndDate = data.mining_end_date;
@@ -329,7 +342,6 @@ function setupTabs() {
 }
 
 function setupEventListeners() {
-    // Mining button
     if (mineBtn) {
         mineBtn.addEventListener('click', async () => {
             if (miningEnded) {
@@ -346,7 +358,6 @@ function setupEventListeners() {
         });
     }
 
-    // Code copy button
     if (copyBtn) {
         copyBtn.addEventListener('click', async () => {
             try {
@@ -357,7 +368,6 @@ function setupEventListeners() {
         });
     }
 
-    // Paste button
     const pasteButton = document.getElementById('pasteButton');
     if (pasteButton) {
         pasteButton.addEventListener('click', async () => {
@@ -369,7 +379,6 @@ function setupEventListeners() {
         });
     }
 
-    // Code submit button
     if (submitBtn) {
         submitBtn.addEventListener('click', async () => {
             if (miningEnded) {
@@ -410,7 +419,6 @@ function setupEventListeners() {
         });
     }
 
-    // Share button
     if (sendBtn) {
         sendBtn.addEventListener('click', () => {
             const code = dailyCodeEl.textContent;
@@ -429,11 +437,10 @@ function setupEventListeners() {
         });
     }
 
-    // Copy referral button
     if (copyReferralBtn) {
         copyReferralBtn.addEventListener('click', async () => {
             try {
-                const code = referralCodeEl?.textContent;
+                const code = userData.ownReferralCode;
                 const link = `https://t.me/betamineitbot?startapp=${code}`;
                 await navigator.clipboard.writeText(link);
                 
@@ -449,13 +456,12 @@ function setupEventListeners() {
         });
     }
 
-    // Invite button
     if (inviteBtn) {
         inviteBtn.addEventListener('click', async () => {
             try {
-                const code = userData.dailyCode;
+                const code = userData.ownReferralCode;
                 const shareUrl = `https://t.me/betamineitbot?startapp=${code}`;
-                const message = `🚀 Join me in $BLACK Mining!\nUse my code: ${code}\n${shareUrl}`;
+                const message = `🚀 Join $BLACK Mining!\nUse my code: ${code}\n${shareUrl}`;
 
                 if (window.Telegram?.WebApp) {
                     window.Telegram.WebApp.openTelegramLink(
