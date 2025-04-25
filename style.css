@@ -37,6 +37,7 @@ body {
   align-items: center;
   justify-content: center;
   z-index: 100;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .logo {
@@ -56,133 +57,196 @@ body {
   -webkit-overflow-scrolling: touch;
   padding: 16px;
 }
-  
-  .card {
-    background-color: var(--secondary-bg);
-    border-radius: var(--card-radius);
-    padding: 18px;
-    margin-bottom: 16px;
-    box-shadow: var(--box-shadow);
-    border: 1px solid var(--border-color);
-  }
-  
-  .card-title {
-    font-size: 1.1em;
-    font-weight: 600;
-    margin-top: 0;
-    margin-bottom: 16px;
-    color: var(--accent-color);
-  }
-  
-  .stats-row {
-    display: flex;
-    justify-content: space-between;
-    margin: 10px 0;
-    font-size: 0.9em;
-  }
-  
-  .stats-row div:first-child {
-    color: var(--hint-color);
-  }
-  
-  .button, 
-  input[type="text"],
-  input[type="submit"] {
-    width: var(--input-button-width);
-    padding: var(--input-button-padding);
-    margin: var(--input-button-margin);
-    border-radius: var(--card-radius);
-    background-color: var(--secondary-bg);
-    color: var(--text-color);
-    border: 1px solid var(--border-color);
-    font-size: 0.9em;
-    box-sizing: border-box;
-    display: block;
-  }
-  
-  .button {
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-align: center;
-    text-transform: uppercase;
-  }
-  
-  .button:active {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-  
-  input[type="text"]::placeholder {
-    color: var(--hint-color);
-    opacity: 0.7;
-  }
-  
-  .countdown {
-    font-size: 0.8em;
-    color: var(--hint-color);
-    text-align: center;
-    margin: 0px 0;
-  }
-  
-  .global-stats {
-    text-align: center;
-    font-weight: 600;
-  }
 
-  .nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: var(--nav-height);
-    background-color: var(--secondary-bg);
-    display: flex;
-    border-top: 1px solid var(--border-color);
-    z-index: 100;
-  }
-  .nav-item {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: var(--hint-color);
-    font-size: 0.75rem;
-    background: none;
-    border: none;
-    cursor: pointer;
-  }
-  .nav-item.active,
-  .nav-item:hover {
-    color: var(--accent-color);
-  }
-  .nav-item i {
-    font-size: 1.2rem;
-  }
-  .nav-item span {
-    margin-top: 4px;
-  }
-  
-  /* Tab content switch */
-  .tab-content {
-    display: none;
-  }
-  .tab-content.active {
-    display: block;
-  }
+.card {
+  background-color: var(--secondary-bg);
+  border-radius: var(--card-radius);
+  padding: 18px;
+  margin-bottom: 16px;
+  box-shadow: var(--box-shadow);
+  border: 1px solid var(--border-color);
+}
 
-  .friends-list {
-    margin-top: 1rem;
-  }
-  
-  .friends-container {
-    max-height: 200px;
-    overflow-y: auto;
-  }
-  
-  .friend-item {
-    padding: 0.5rem;
-    border-bottom: 1px solid #333;
-    display: flex;
-    justify-content: space-between;
-  }
+.card-title {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin-top: 0;
+  margin-bottom: 16px;
+  color: var(--accent-color);
+}
+
+.stats-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
+  font-size: 0.9em;
+}
+
+.stats-row div:first-child {
+  color: var(--hint-color);
+}
+
+.button, 
+input[type="text"],
+input[type="submit"] {
+  width: var(--input-button-width);
+  padding: var(--input-button-padding);
+  margin: var(--input-button-margin);
+  border-radius: var(--card-radius);
+  background-color: var(--secondary-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  font-size: 0.9em;
+  box-sizing: border-box;
+  display: block;
+}
+
+.button {
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.button:active {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+input[type="text"]::placeholder {
+  color: var(--hint-color);
+  opacity: 0.7;
+}
+
+.countdown {
+  font-size: 0.8em;
+  color: var(--hint-color);
+  text-align: center;
+  margin: 0px 0;
+}
+
+.global-stats {
+  text-align: center;
+  font-weight: 600;
+}
+
+/* Navigation styles */
+.nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--nav-height);
+  background-color: var(--bg-color);
+  display: flex;
+  border-top: 1px solid var(--border-color);
+  z-index: 100;
+}
+
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--hint-color);
+  font-size: 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+.nav-item.active,
+.nav-item:hover {
+  color: var(--accent-color);
+}
+
+.nav-item i {
+  font-size: 1.2rem;
+  margin-bottom: 4px;
+}
+
+/* Tab content switch */
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+.friends-list {
+  margin-top: 1rem;
+}
+
+.friends-container {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.friend-item {
+  padding: 0.5rem;
+  border-bottom: 1px solid #333;
+  display: flex;
+  justify-content: space-between;
+}
+
+.leaderboard-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.leaderboard-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.leaderboard-row:last-child {
+  border-bottom: none;
+}
+
+.rank {
+  width: 15%;
+  text-align: center;
+  font-weight: 600;
+}
+
+.user-info {
+  width: 55%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.username {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.amount {
+  width: 30%;
+  text-align: right;
+  font-weight: 600;
+  font-size: 12px;
+}

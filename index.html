@@ -22,7 +22,6 @@
 <div class="container">
 <!-- Mining tab -->
 <div id="mine-tab" class="tab-content active">
-
 <!-- Global stats -->
 <div class="card global-stats">
 <div class="stats-row">
@@ -87,16 +86,16 @@
 </div>
 </div>
 
-<!-- Friends/Referrals Card -->
+<!-- Friends tab (hidden by default) -->
+<div id="friends-tab" class="tab-content">
 <div class="card">
   <h2 class="card-title">Friends</h2>
   
   <!-- Referral Info -->
-<div class="stats-row" style="display: none !important;">
-  <div>Your Referral Code</div>
-  <div><span id="referralCode">...</span></div>
-</div>
-
+  <div class="stats-row" style="display: none !important;">
+    <div>Your Referral Code</div>
+    <div><span id="referralCode">...</span></div>
+  </div>
   
   <div class="stats-row">
     <div>Total Invites</div>
@@ -122,8 +121,92 @@
     </div>
   </div>
 </div>
+</div>
+
+<!-- Tasks tab (hidden by default) -->
+<div id="tasks-tab" class="tab-content">
+<div class="card">
+  <h2 class="card-title">Tasks</h2>
+
+  <div class="task-item">
+    <div class="stats-row">
+      <div>Daily Bonus</div>
+      <div class="stats-row">
+        <button class="button task-claim" data-task="daily">Claim</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="task-item">
+    <div class="stats-row">
+      <div>Join $BLACK Channel</div>
+      <div class="task-actions">
+        <div class="stats-row">
+          <a href="#" class="button task-link">Join</a>
+          <button class="button task-claim" data-task="channel">Claim</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Leaders tab (hidden by default) -->
+<div id="leaders-tab" class="tab-content">
+<div class="card">
+  <h2 class="card-title">Top Miners</h2>
+  <div class="leaderboard-header">
+    <div class="rank">#</div>
+    <div class="user-info">Miner</div>
+    <div class="amount">Amount</div>
+  </div>
+  <div id="leaderboard-rows">
+    <div class="loading"></div>
+  </div>
+</div>
+</div>
+
+</div>
+
+<!-- Bottom navigation -->
+<div class="nav">
+  <button class="nav-item active" data-tab="mine-tab">
+    <span>Mine</span>
+  </button>
+  <button class="nav-item" data-tab="friends-tab">
+    <span>Friends</span>
+  </button>
+  <button class="nav-item" data-tab="tasks-tab">
+    <span>Tasks</span>
+  </button>
+  <button class="nav-item" data-tab="leaders-tab">
+    <span>Leaders</span>
+  </button>
+</div>
 
 <!-- App scripts -->
 <script src="app.js" type="module"></script>
+<script type="module" src="leaders.js"></script>
+
+<script>
+  // Tab switching functionality
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', function() {
+      // Remove active class from all nav items and tab contents
+      document.querySelectorAll('.nav-item').forEach(navItem => {
+        navItem.classList.remove('active');
+      });
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      // Add active class to clicked nav item and corresponding tab
+      this.classList.add('active');
+      const tabId = this.getAttribute('data-tab');
+      document.getElementById(tabId).classList.add('active');
+    });
+  });
+</script>
+
 </body>
 </html>
