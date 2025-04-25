@@ -9,40 +9,40 @@ const FUNCTION_ID = "6800d0a4001cb28a32f5";
 const INITIAL_MINING_DAYS = 90;
 
 // DOM Elements
-const minedEl = document.getElementById('mined');
-const balanceEl = document.getElementById('balance');
-const usernameEl = document.getElementById('username');
-const powerEl = document.getElementById('power');
-const mineBtn = document.getElementById('mineButton');
-const totalMinersEl = document.getElementById('totalminers');
-const countdownEl = document.getElementById('countdown');
-const codeInput = document.getElementById('codeInput');
-const copyBtn = document.getElementById('copyButton');
-const submitBtn = document.getElementById('submitButton');
-const dailyCodeEl = document.getElementById('dailyCode');
-const subsOfCodeEl = document.getElementById('subsOfCode');
-const sendBtn = document.getElementById('sendButton');
-const referralCountEl = document.getElementById('referral-count');
-const referralEarningsEl = document.getElementById('referral-earnings');
-const shareBtn = document.getElementById('shareButton');
-const miningEndEl = document.getElementById('miningend');
-const totalOfCodeEl = document.getElementById('totalOfCode');
-const referralCodeEl = document.getElementById('referralCode');
-const totalReferralsEl = document.getElementById('totalReferrals');
-const copyReferralBtn = document.getElementById('copyReferralButton');
-const inviteBtn = document.getElementById('inviteButton');
-const usedReferralCodeEl = document.getElementById('used-referral-code');
-const friendsContainerEl = document.getElementById('friendsContainer');
-
-// Task Elements
-const claimDailyBtn = document.getElementById('claimDailyBtn');
-const claimJoinBtn = document.getElementById('claimJoinBtn');
-const claimFollowBtn = document.getElementById('claimFollowBtn');
-const claimSubsBtn = document.getElementById('claimSubsBtn');
-const dailyTaskStatus = document.getElementById('dailyTaskStatus');
-const joinTaskStatus = document.getElementById('joinTaskStatus');
-const followTaskStatus = document.getElementById('followTaskStatus');
-const subsTaskStatus = document.getElementById('subsTaskStatus');
+const elements = {
+  minedEl: document.getElementById('mined'),
+  balanceEl: document.getElementById('balance'),
+  usernameEl: document.getElementById('username'),
+  powerEl: document.getElementById('power'),
+  mineBtn: document.getElementById('mineButton'),
+  totalMinersEl: document.getElementById('totalminers'),
+  countdownEl: document.getElementById('countdown'),
+  codeInput: document.getElementById('codeInput'),
+  copyBtn: document.getElementById('copyButton'),
+  submitBtn: document.getElementById('submitButton'),
+  dailyCodeEl: document.getElementById('dailyCode'),
+  subsOfCodeEl: document.getElementById('subsOfCode'),
+  sendBtn: document.getElementById('sendButton'),
+  referralCountEl: document.getElementById('referral-count'),
+  referralEarningsEl: document.getElementById('referral-earnings'),
+  shareBtn: document.getElementById('shareButton'),
+  miningEndEl: document.getElementById('miningend'),
+  totalOfCodeEl: document.getElementById('totalOfCode'),
+  referralCodeEl: document.getElementById('referralCode'),
+  totalReferralsEl: document.getElementById('totalReferrals'),
+  copyReferralBtn: document.getElementById('copyReferralButton'),
+  inviteBtn: document.getElementById('inviteButton'),
+  usedReferralCodeEl: document.getElementById('used-referral-code'),
+  friendsContainerEl: document.getElementById('friendsContainer'),
+  claimDailyBtn: document.getElementById('claimDailyBtn'),
+  claimJoinBtn: document.getElementById('claimJoinBtn'),
+  claimFollowBtn: document.getElementById('claimFollowBtn'),
+  claimSubsBtn: document.getElementById('claimSubsBtn'),
+  dailyTaskStatus: document.getElementById('dailyTaskStatus'),
+  joinTaskStatus: document.getElementById('joinTaskStatus'),
+  followTaskStatus: document.getElementById('followTaskStatus'),
+  subsTaskStatus: document.getElementById('subsTaskStatus')
+};
 
 // State
 let userData = {
@@ -164,43 +164,56 @@ function initializeUser() {
 
 function updateUI() {
     try {
-        balanceEl.textContent = userData.balance.toFixed(3);
-        minedEl.textContent = userData.totalMined.toFixed(3);
-        powerEl.textContent = userData.miningPower.toFixed(1);
-        mineBtn.textContent = userData.isMining ? 'Mining...' : (miningEnded ? 'Mining Ended' : 'Start Mining');
-        mineBtn.disabled = userData.isMining || isAfterResetTime() || miningEnded;
-        dailyCodeEl.textContent = userData.dailyCode;
-        subsOfCodeEl.textContent = `${userData.codeSubmissionsToday}/10`;
-        totalOfCodeEl.textContent = userData.totalCodeSubmissions;
-        referralCountEl.textContent = userData.referrals;
-        referralEarningsEl.textContent = userData.referralEarnings.toFixed(3);
-        referralCodeEl.textContent = userData.ownReferralCode;
-        totalReferralsEl.textContent = userData.totalInvites;
-        usedReferralCodeEl.textContent = userData.usedReferralCode || 'None';
+        // Update all elements that exist
+        if (elements.balanceEl) elements.balanceEl.textContent = userData.balance.toFixed(3);
+        if (elements.minedEl) elements.minedEl.textContent = userData.totalMined.toFixed(3);
+        if (elements.powerEl) elements.powerEl.textContent = userData.miningPower.toFixed(1);
+        
+        if (elements.mineBtn) {
+            elements.mineBtn.textContent = userData.isMining ? 'Mining...' : (miningEnded ? 'Mining Ended' : 'Start Mining');
+            elements.mineBtn.disabled = userData.isMining || isAfterResetTime() || miningEnded;
+        }
+        
+        if (elements.dailyCodeEl) elements.dailyCodeEl.textContent = userData.dailyCode;
+        if (elements.subsOfCodeEl) elements.subsOfCodeEl.textContent = `${userData.codeSubmissionsToday}/10`;
+        if (elements.totalOfCodeEl) elements.totalOfCodeEl.textContent = userData.totalCodeSubmissions;
+        if (elements.referralCountEl) elements.referralCountEl.textContent = userData.referrals;
+        if (elements.referralEarningsEl) elements.referralEarningsEl.textContent = userData.referralEarnings.toFixed(3);
+        if (elements.referralCodeEl) elements.referralCodeEl.textContent = userData.ownReferralCode;
+        if (elements.totalReferralsEl) elements.totalReferralsEl.textContent = userData.totalInvites;
+        if (elements.usedReferralCodeEl) elements.usedReferralCodeEl.textContent = userData.usedReferralCode || 'None';
         
         // Task UI updates
-        claimDailyBtn.disabled = userData.hasClaimedDaily;
-        claimDailyBtn.textContent = userData.hasClaimedDaily ? 'Claimed ✓' : 'Claim +0.1x Power';
-        dailyTaskStatus.textContent = userData.hasClaimedDaily ? 'Claimed' : 'Available';
+        if (elements.claimDailyBtn) {
+            elements.claimDailyBtn.disabled = userData.hasClaimedDaily;
+            elements.claimDailyBtn.textContent = userData.hasClaimedDaily ? 'Claimed ✓' : 'Claim +0.1x Power';
+            elements.dailyTaskStatus.textContent = userData.hasClaimedDaily ? 'Claimed' : 'Available';
+        }
         
-        claimJoinBtn.disabled = userData.hasClaimedJoin;
-        claimJoinBtn.textContent = userData.hasClaimedJoin ? 'Claimed ✓' : 'Claim +5 $BLACK';
-        joinTaskStatus.textContent = userData.hasClaimedJoin ? 'Claimed' : 'Available';
+        if (elements.claimJoinBtn) {
+            elements.claimJoinBtn.disabled = userData.hasClaimedJoin;
+            elements.claimJoinBtn.textContent = userData.hasClaimedJoin ? 'Claimed ✓' : 'Claim +5 $BLACK';
+            elements.joinTaskStatus.textContent = userData.hasClaimedJoin ? 'Claimed' : 'Available';
+        }
         
-        claimFollowBtn.disabled = userData.hasClaimedFollow;
-        claimFollowBtn.textContent = userData.hasClaimedFollow ? 'Claimed ✓' : 'Claim +5 $BLACK';
-        followTaskStatus.textContent = userData.hasClaimedFollow ? 'Claimed' : 'Available';
+        if (elements.claimFollowBtn) {
+            elements.claimFollowBtn.disabled = userData.hasClaimedFollow;
+            elements.claimFollowBtn.textContent = userData.hasClaimedFollow ? 'Claimed ✓' : 'Claim +5 $BLACK';
+            elements.followTaskStatus.textContent = userData.hasClaimedFollow ? 'Claimed' : 'Available';
+        }
         
-        const subsDisabled = userData.hasClaimedSubs || userData.totalCodeSubmissions < 10;
-        claimSubsBtn.disabled = subsDisabled;
-        claimSubsBtn.textContent = userData.hasClaimedSubs ? 'Claimed ✓' : 
-            `Claim +10 $BLACK (${userData.totalCodeSubmissions}/10)`;
-        subsTaskStatus.textContent = userData.hasClaimedSubs ? 'Claimed' : 
-            `${userData.totalCodeSubmissions}/10 submissions`;
+        if (elements.claimSubsBtn) {
+            const subsDisabled = userData.hasClaimedSubs || userData.totalCodeSubmissions < 10;
+            elements.claimSubsBtn.disabled = subsDisabled;
+            elements.claimSubsBtn.textContent = userData.hasClaimedSubs ? 'Claimed ✓' : 
+                `Claim +10 $BLACK (${userData.totalCodeSubmissions}/10)`;
+            elements.subsTaskStatus.textContent = userData.hasClaimedSubs ? 'Claimed' : 
+                `${userData.totalCodeSubmissions}/10 submissions`;
+        }
 
-        if (miningEndDate) {
+        if (elements.miningEndEl && miningEndDate) {
             const days = userData.daysRemaining || calculateDaysRemaining(miningEndDate);
-            miningEndEl.textContent = days <= 0 ? "Ended" : `${days} days`;
+            elements.miningEndEl.textContent = days <= 0 ? "Ended" : `${days} days`;
             miningEnded = days <= 0;
         }
     } catch (error) {
@@ -209,13 +222,13 @@ function updateUI() {
 }
 
 function updateCountdown() {
-    if (!userData.nextReset || !countdownEl) return;
+    if (!userData.nextReset || !elements.countdownEl) return;
     const now = new Date();
     const nextReset = new Date(userData.nextReset);
     const timeUntilReset = nextReset - now;
 
     if (timeUntilReset <= 0) {
-        countdownEl.textContent = 'Reset time!';
+        elements.countdownEl.textContent = 'Reset time!';
         if (userData.isMining) stopMining();
         return;
     }
@@ -224,35 +237,41 @@ function updateCountdown() {
     const minutes = Math.floor((timeUntilReset / (1000 * 60)) % 60);
     const seconds = Math.floor((timeUntilReset / 1000) % 60);
 
-    countdownEl.textContent = `Daily reset in ${hours}h ${minutes}m ${seconds}s`;
+    elements.countdownEl.textContent = `Daily reset in ${hours}h ${minutes}m ${seconds}s`;
 }
 
 async function fetchReferredFriends() {
-    const payload = {
-        ...initializeUser(),
-        action: 'get_referred_friends'
-    };
-    const exec = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
-    const friends = JSON.parse(exec.responseBody || '[]');
-    populateFriends(friends);
+    try {
+        const payload = {
+            ...initializeUser(),
+            action: 'get_referred_friends'
+        };
+        const exec = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
+        const friends = JSON.parse(exec.responseBody || '[]');
+        populateFriends(friends);
+    } catch (error) {
+        console.error('Error fetching referred friends:', error);
+    }
 }
 
 function populateFriends(friends) {
-    totalReferralsEl.textContent = friends.length;
-    friendsContainerEl.innerHTML = '';
+    if (!elements.friendsContainerEl) return;
+    
+    elements.totalReferralsEl.textContent = friends.length;
+    elements.friendsContainerEl.innerHTML = '';
 
     friends.forEach(f => {
         const row = document.createElement('div');
         row.className = 'friend-row stats-row';
         row.innerHTML = `<div>${f.username}</div>`;
-        friendsContainerEl.appendChild(row);
+        elements.friendsContainerEl.appendChild(row);
     });
 }
 
 async function fetchUserData() {
     try {
         const payload = initializeUser();
-        usernameEl.textContent = payload.username;
+        if (elements.usernameEl) elements.usernameEl.textContent = payload.username;
 
         const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
         const data = JSON.parse(execution.responseBody || '{}');
@@ -290,8 +309,8 @@ async function fetchUserData() {
             stopMining();
         }
 
-        if (data.total_miners) {
-            totalMinersEl.textContent = Number(data.total_miners).toLocaleString('en-US');
+        if (elements.totalMinersEl && data.total_miners) {
+            elements.totalMinersEl.textContent = Number(data.total_miners).toLocaleString('en-US');
         }
 
         saveMiningState();
@@ -403,8 +422,11 @@ function setupTabs() {
             });
             
             const tabId = this.getAttribute('data-tab');
-            document.getElementById(tabId).classList.add('active');
-            this.classList.add('active');
+            const tabContent = document.getElementById(tabId);
+            if (tabContent) {
+                tabContent.classList.add('active');
+                this.classList.add('active');
+            }
         });
     });
 }
@@ -446,163 +468,195 @@ async function handleTaskClaim(taskType) {
 }
 
 function setupEventListeners() {
-    mineBtn.addEventListener('click', async () => {
-        if (miningEnded) {
-            alert("The mining period has ended. No more mining is allowed.");
-            return;
-        }
-        
-        if (!userData.isMining && !isAfterResetTime()) {
-            await startMining();
-        } else if (isAfterResetTime()) {
-            alert('Mining reset — please start again!');
-            await fetchUserData();
-        }
-    });
+    // Mine button
+    if (elements.mineBtn) {
+        elements.mineBtn.addEventListener('click', async () => {
+            if (miningEnded) {
+                alert("The mining period has ended. No more mining is allowed.");
+                return;
+            }
+            
+            if (!userData.isMining && !isAfterResetTime()) {
+                await startMining();
+            } else if (isAfterResetTime()) {
+                alert('Mining reset — please start again!');
+                await fetchUserData();
+            }
+        });
+    }
 
-    copyBtn.addEventListener('click', async () => {
-        try {
-            await navigator.clipboard.writeText(dailyCodeEl.textContent);
-            copyBtn.textContent = 'Copied';
-            setTimeout(() => copyBtn.textContent = 'Copy', 2000);
-        } catch {}
-    });
-
-    const pasteButton = document.getElementById('pasteButton');
-    if (pasteButton) {
-        pasteButton.addEventListener('click', async () => {
+    // Copy button
+    if (elements.copyBtn) {
+        elements.copyBtn.addEventListener('click', async () => {
             try {
-                codeInput.value = await navigator.clipboard.readText();
-                pasteButton.textContent = 'Pasted';
-                setTimeout(() => pasteButton.textContent = 'Paste', 2000);
+                await navigator.clipboard.writeText(elements.dailyCodeEl.textContent);
+                elements.copyBtn.textContent = 'Copied';
+                setTimeout(() => {
+                    if (elements.copyBtn) elements.copyBtn.textContent = 'Copy';
+                }, 2000);
             } catch {}
         });
     }
 
-    submitBtn.addEventListener('click', async () => {
-        if (miningEnded) {
-            alert("The mining period has ended. No more code submissions allowed.");
-            return;
-        }
-        
-        const submittedCode = codeInput.value.trim();
-        if (!submittedCode) return alert('Please enter a code to submit');
-
-        try {
-            const payload = {
-                ...initializeUser(),
-                action: 'submit_code',
-                code: submittedCode
-            };
-
-            const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
-            const data = JSON.parse(execution.responseBody || '{}');
-
-            if (data.success) {
-                userData.balance = data.balance;
-                userData.submittedCodes = [...userData.submittedCodes, submittedCode];
-                userData.codeSubmissionsToday = data.owner_submissions || userData.codeSubmissionsToday;
-                userData.totalCodeSubmissions = data.total_code_submissions || userData.totalCodeSubmissions;
-                
-                saveMiningState();
-                updateUI();
-                alert(data.message || 'Code submitted successfully!');
-                codeInput.value = '';
-            } else {
-                alert(data.message || 'Code submission failed');
+    // Submit button
+    if (elements.submitBtn) {
+        elements.submitBtn.addEventListener('click', async () => {
+            if (miningEnded) {
+                alert("The mining period has ended. No more code submissions allowed.");
+                return;
             }
-        } catch (err) {
-            console.error('Code submission failed:', err);
-            alert(err.message || 'Failed to submit code.');
-        }
-    });
+            
+            const submittedCode = elements.codeInput.value.trim();
+            if (!submittedCode) return alert('Please enter a code to submit');
 
-    sendBtn.addEventListener('click', () => {
-        const code = dailyCodeEl.textContent;
-        const shareText = `Use my $BLACK code today: ${code}`;
-        
-        if (window.Telegram?.WebApp) {
-            const tg = window.Telegram.WebApp;
-            tg.sendData(shareText);
-            tg.openLink(`https://t.me/share/url?url=${encodeURIComponent(shareText)}`);
-        } else {
-            alert(`Share this code: ${code}`);
-        }
-        
-        sendBtn.textContent = 'Sent ✓';
-        setTimeout(() => sendBtn.textContent = 'Send', 2000);
-    });
+            try {
+                const payload = {
+                    ...initializeUser(),
+                    action: 'submit_code',
+                    code: submittedCode
+                };
 
-    copyReferralBtn.addEventListener('click', async () => {
-        try {
-            const code = userData.ownReferralCode;
-            const link = `https://t.me/betamineitbot?startapp=${code}`;
-            await navigator.clipboard.writeText(link);
+                const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
+                const data = JSON.parse(execution.responseBody || '{}');
+
+                if (data.success) {
+                    userData.balance = data.balance;
+                    userData.submittedCodes = [...userData.submittedCodes, submittedCode];
+                    userData.codeSubmissionsToday = data.owner_submissions || userData.codeSubmissionsToday;
+                    userData.totalCodeSubmissions = data.total_code_submissions || userData.totalCodeSubmissions;
+                    
+                    saveMiningState();
+                    updateUI();
+                    alert(data.message || 'Code submitted successfully!');
+                    elements.codeInput.value = '';
+                } else {
+                    alert(data.message || 'Code submission failed');
+                }
+            } catch (err) {
+                console.error('Code submission failed:', err);
+                alert(err.message || 'Failed to submit code.');
+            }
+        });
+    }
+
+    // Task buttons
+    if (elements.claimDailyBtn) {
+        elements.claimDailyBtn.addEventListener('click', () => handleTaskClaim('daily'));
+    }
+    if (elements.claimJoinBtn) {
+        elements.claimJoinBtn.addEventListener('click', () => handleTaskClaim('join_channel'));
+    }
+    if (elements.claimFollowBtn) {
+        elements.claimFollowBtn.addEventListener('click', () => handleTaskClaim('follow_ceo'));
+    }
+    if (elements.claimSubsBtn) {
+        elements.claimSubsBtn.addEventListener('click', () => handleTaskClaim('subs'));
+    }
+
+    // Other buttons
+    if (elements.sendBtn) {
+        elements.sendBtn.addEventListener('click', () => {
+            const code = elements.dailyCodeEl.textContent;
+            const shareText = `Use my $BLACK code today: ${code}`;
             
             if (window.Telegram?.WebApp) {
-                window.Telegram.WebApp.showAlert('Referral link copied!');
+                const tg = window.Telegram.WebApp;
+                tg.sendData(shareText);
+                tg.openLink(`https://t.me/share/url?url=${encodeURIComponent(shareText)}`);
             } else {
-                alert('Link copied to clipboard!');
+                alert(`Share this code: ${code}`);
             }
-        } catch (error) {
-            console.error('Copy failed:', error);
-            prompt('Please copy this link manually:', link);
-        }
-    });
+            
+            elements.sendBtn.textContent = 'Sent ✓';
+            setTimeout(() => {
+                if (elements.sendBtn) elements.sendBtn.textContent = 'Send';
+            }, 2000);
+        });
+    }
 
-    inviteBtn.addEventListener('click', async () => {
-        try {
-            const code = userData.ownReferralCode;
-            const shareUrl = `https://t.me/betamineitbot?startapp=${code}`;
-            const message = `🚀 Join $BLACK Mining!\nUse my code: ${code}\n${shareUrl}`;
-
-            if (window.Telegram?.WebApp) {
-                window.Telegram.WebApp.openTelegramLink(
-                    `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(message)}`
-                );
-            } else {
-                const shareLink = `tg://msg?text=${encodeURIComponent(message)}`;
-                window.open(shareLink, '_blank');
+    if (elements.copyReferralBtn) {
+        elements.copyReferralBtn.addEventListener('click', async () => {
+            try {
+                const code = userData.ownReferralCode;
+                const link = `https://t.me/betamineitbot?startapp=${code}`;
+                await navigator.clipboard.writeText(link);
+                
+                if (window.Telegram?.WebApp) {
+                    window.Telegram.WebApp.showAlert('Referral link copied!');
+                } else {
+                    alert('Link copied to clipboard!');
+                }
+            } catch (error) {
+                console.error('Copy failed:', error);
+                prompt('Please copy this link manually:', link);
             }
-        } catch (error) {
-            console.error('Sharing failed:', error);
-        }
-    });
+        });
+    }
 
-    // Task Claim Handlers
-    claimDailyBtn.addEventListener('click', () => handleTaskClaim('daily'));
-    claimJoinBtn.addEventListener('click', () => handleTaskClaim('join_channel'));
-    claimFollowBtn.addEventListener('click', () => handleTaskClaim('follow_ceo'));
-    claimSubsBtn.addEventListener('click', () => handleTaskClaim('subs'));
+    if (elements.inviteBtn) {
+        elements.inviteBtn.addEventListener('click', async () => {
+            try {
+                const code = userData.ownReferralCode;
+                const shareUrl = `https://t.me/betamineitbot?startapp=${code}`;
+                const message = `🚀 Join $BLACK Mining!\nUse my code: ${code}\n${shareUrl}`;
+
+                if (window.Telegram?.WebApp) {
+                    window.Telegram.WebApp.openTelegramLink(
+                        `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(message)}`
+                    );
+                } else {
+                    const shareLink = `tg://msg?text=${encodeURIComponent(message)}`;
+                    window.open(shareLink, '_blank');
+                }
+            } catch (error) {
+                console.error('Sharing failed:', error);
+            }
+        });
+    }
 }
 
 async function init() {
-    const tg = window.Telegram?.WebApp;
-    if (tg) {
-        tg.expand();
-        tg.ready();
-        tg.enableClosingConfirmation();
-    }
-
-    setupTabs();
-    setupEventListeners();
-    loadMiningState();
-    
     try {
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.expand();
+            tg.ready();
+            tg.enableClosingConfirmation();
+        }
+
+        // Wait for DOM to be ready
+        if (document.readyState === 'loading') {
+            await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve));
+        }
+
+        setupTabs();
+        loadMiningState();
+        
+        // Initialize elements that exist
         await fetchUserData();
         await fetchReferredFriends();
+        
+        // Setup event listeners after elements are loaded
+        setupEventListeners();
+
         if (userData.isMining && !isAfterResetTime() && !miningEnded) {
             await startMining();
         }
+
+        // Start countdown if element exists
+        if (elements.countdownEl) {
+            setInterval(updateCountdown, 1000);
+        }
+
+        // Periodic refresh
+        setInterval(async () => {
+            await fetchUserData();
+            updateUI();
+        }, 300000);
     } catch (error) {
         console.error('Initialization error:', error);
     }
-
-    setInterval(updateCountdown, 1000);
-    setInterval(async () => {
-        await fetchUserData();
-        updateUI();
-    }, 300000);
 }
 
-document.addEventListener('DOMContentLoaded', init);
+// Start the application
+init();
