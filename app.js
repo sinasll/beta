@@ -1,4 +1,3 @@
-
 import { Client, Functions } from "https://esm.sh/appwrite@13.0.0";
 
 const client = new Client()
@@ -35,6 +34,16 @@ const inviteBtn = document.getElementById('inviteButton');
 const usedReferralCodeEl = document.getElementById('used-referral-code');
 const friendsContainerEl = document.getElementById('friendsContainer');
 
+// Task Elements
+const claimDailyBtn = document.getElementById('claimDailyBtn');
+const claimJoinBtn = document.getElementById('claimJoinBtn');
+const claimFollowBtn = document.getElementById('claimFollowBtn');
+const claimSubsBtn = document.getElementById('claimSubsBtn');
+const dailyTaskStatus = document.getElementById('dailyTaskStatus');
+const joinTaskStatus = document.getElementById('joinTaskStatus');
+const followTaskStatus = document.getElementById('followTaskStatus');
+const subsTaskStatus = document.getElementById('subsTaskStatus');
+
 // State
 let userData = {
     isMining: false,
@@ -52,7 +61,12 @@ let userData = {
     totalInvites: 0,
     usedReferralCode: '',
     referralLinksClicked: 0,
-    daysRemaining: INITIAL_MINING_DAYS
+    daysRemaining: INITIAL_MINING_DAYS,
+    // Task states
+    hasClaimedDaily: false,
+    hasClaimedJoin: false,
+    hasClaimedFollow: false,
+    hasClaimedSubs: false
 };
 
 let mineInterval = null;
@@ -167,6 +181,31 @@ function updateUI() {
         if (totalReferralsEl) totalReferralsEl.textContent = userData.totalInvites;
         if (usedReferralCodeEl) usedReferralCodeEl.textContent = userData.usedReferralCode || 'None';
         
+        // Task UI updates
+        if (claimDailyBtn) {
+            claimDailyBtn.disabled = userData.hasClaimedDaily;
+            claimDailyBtn.textContent = userData.hasClaimedDaily ? 'Claimed ✓' : 'Claim +0.1x Power';
+            dailyTaskStatus.textContent = userData.hasClaimedDaily ? 'Claimed' : 'Available';
+        }
+        if (claimJoinBtn) {
+            claimJoinBtn.disabled = userData.hasClaimedJoin;
+            claimJoinBtn.textContent = userData.hasClaimedJoin ? 'Claimed ✓' : 'Claim +5 $BLACK';
+            joinTaskStatus.textContent = userData.hasClaimedJoin ? 'Claimed' : 'Available';
+        }
+        if (claimFollowBtn) {
+            claimFollowBtn.disabled = userData.hasClaimedFollow;
+            claimFollowBtn.textContent = userData.hasClaimedFollow ? 'Claimed ✓' : 'Claim +5 $BLACK';
+            followTaskStatus.textContent = userData.hasClaimedFollow ? 'Claimed' : 'Available';
+        }
+        if (claimSubsBtn) {
+            const subsDisabled = userData.hasClaimedSubs || userData.totalCodeSubmissions < 10;
+            claimSubsBtn.disabled = subsDisabled;
+            claimSubsBtn.textContent = userData.hasClaimedSubs ? 'Claimed ✓' : 
+                `Claim +10 $BLACK (${userData.totalCodeSubmissions}/10)`;
+            subsTaskStatus.textContent = userData.hasClaimedSubs ? 'Claimed' : 
+                `${userData.totalCodeSubmissions}/10 submissions`;
+        }
+
         if (miningEndDate) {
             const days = userData.daysRemaining || calculateDaysRemaining(miningEndDate);
             miningEndEl.textContent = days <= 0 ? "Ended" : `${days} days`;
@@ -196,7 +235,6 @@ function updateCountdown() {
     countdownEl.textContent = `Daily reset in ${hours}h ${minutes}m ${seconds}s`;
 }
 
-// ─── New: Helpers to fetch and render referred friends ───
 async function fetchReferredFriends() {
     const payload = {
         ...initializeUser(),
@@ -208,22 +246,15 @@ async function fetchReferredFriends() {
 }
 
 function populateFriends(friends) {
-    // Update the Total Referrals badge
     totalReferralsEl.textContent = friends.length;
-
-    // Clear out any existing list items
     friendsContainerEl.innerHTML = '';
 
-    // Render each friend as a row
-// Render each friend as a row
-friends.forEach(f => {
-    const row = document.createElement('div');
-    row.className = 'friend-row stats-row';
-    row.innerHTML = `
-        <div>${f.username}</div>
-    `;
-    friendsContainerEl.appendChild(row);
-});
+    friends.forEach(f => {
+        const row = document.createElement('div');
+        row.className = 'friend-row stats-row';
+        row.innerHTML = `<div>${f.username}</div>`;
+        friendsContainerEl.appendChild(row);
+    });
 }
 
 async function fetchUserData() {
@@ -254,6 +285,12 @@ async function fetchUserData() {
         userData.totalInvites = data.total_invites || 0;
         userData.usedReferralCode = data.used_referral_code || '';
         userData.referralLinksClicked = data.referral_links_clicked || 0;
+
+        // Task states
+        userData.hasClaimedDaily = data.has_claimed_daily || false;
+        userData.hasClaimedJoin = data.has_claimed_join_channel || false;
+        userData.hasClaimedFollow = data.has_claimed_follow_ceo || false;
+        userData.hasClaimedSubs = data.has_claimed_subs_task || false;
 
         if (data.mining_end_date) {
             miningEndDate = data.mining_end_date;
@@ -298,8 +335,8 @@ async function mineCoins() {
         userData.totalMined = data.total_mined;
         userData.miningPower = data.updated.mining_power;
         userData.nextReset = data.next_reset || userData.nextReset;
-        userData.codeSubmissionsToday = data.code_subissions_today || userData.codeSubmissionsToday;
-        userData.referrals = data.referral || userData.referrals;
+        userData.codeSubmissionsToday = data.code_submissions_today || userData.codeSubmissionsToday;
+        userData.referrals = data.referrals || userData.referrals;
         userData.referralEarnings = data.referral_earnings || userData.referralEarnings;
         userData.totalCodeSubmissions = data.total_code_submissions || userData.totalCodeSubmissions;
         userData.daysRemaining = data.days_remaining || userData.daysRemaining;
@@ -381,6 +418,50 @@ function setupTabs() {
             this.classList.add('active');
         });
     });
+}
+
+async function handleTaskClaim(taskType) {
+    try {
+        const payload = {
+            ...initializeUser(),
+            action: 'claim_task',
+            task: taskType
+        };
+
+        const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
+        const data = JSON.parse(execution.responseBody || '{}');
+
+        if (data.error) {
+            alert(data.message || 'Failed to claim task');
+            return;
+        }
+
+        switch(taskType) {
+            case 'daily':
+                userData.hasClaimedDaily = true;
+                userData.miningPower += 0.1;
+                break;
+            case 'join_channel':
+                userData.hasClaimedJoin = true;
+                userData.balance += 5;
+                break;
+            case 'follow_ceo':
+                userData.hasClaimedFollow = true;
+                userData.balance += 5;
+                break;
+            case 'subs':
+                userData.hasClaimedSubs = true;
+                userData.balance += 10;
+                break;
+        }
+
+        saveMiningState();
+        updateUI();
+        alert(data.message || 'Task claimed successfully!');
+    } catch (err) {
+        console.error('Task claim failed:', err);
+        alert(err.message || 'Failed to claim task');
+    }
 }
 
 function setupEventListeners() {
@@ -518,6 +599,20 @@ function setupEventListeners() {
             }
         });
     }
+
+    // Task Claim Handlers
+    if (claimDailyBtn) {
+        claimDailyBtn.addEventListener('click', () => handleTaskClaim('daily'));
+    }
+    if (claimJoinBtn) {
+        claimJoinBtn.addEventListener('click', () => handleTaskClaim('join_channel'));
+    }
+    if (claimFollowBtn) {
+        claimFollowBtn.addEventListener('click', () => handleTaskClaim('follow_ceo'));
+    }
+    if (claimSubsBtn) {
+        claimSubsBtn.addEventListener('click', () => handleTaskClaim('subs'));
+    }
 }
 
 async function init() {
@@ -534,7 +629,7 @@ async function init() {
     
     try {
         await fetchUserData();
-        await fetchReferredFriends();    // ← NEW: load friends/referrals
+        await fetchReferredFriends();
         if (userData.isMining && !isAfterResetTime() && !miningEnded) {
             await startMining();
         }
