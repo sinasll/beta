@@ -462,21 +462,31 @@ function setupEventListeners() {
 
     if (sendBtn) {
         sendBtn.addEventListener('click', () => {
-            const code = dailyCodeEl.textContent;
-            const shareText = `Use my $BLACK code today: ${code}`;
-            
-            if (window.Telegram?.WebApp) {
-                const tg = window.Telegram.WebApp;
-                tg.sendData(shareText);
-                tg.openLink(`https://t.me/share/url?url=${encodeURIComponent(shareText)}`);
-            } else {
-                alert(`Share this code: ${code}`);
-            }
-            
-            sendBtn.textContent = 'Sent ✓';
-            setTimeout(() => sendBtn.textContent = 'Send', 2000);
+          const code       = dailyCodeEl.textContent.trim();
+          const link       = `https://t.me/betamineitbot?startapp=${code}`;
+          // Markdown: *bold* for $BLACK, `code` for daily code
+          const text       = [
+            `Start mining *$BLACK* where you only have to start every 24hrs! 🏴`,
+            ``,
+            `Use my code today and get x0.5 \`${code}\``
+          ].join('\n');
+      
+          if (window.Telegram?.WebApp) {
+            // One link only: preview generated from 'url'
+            window.Telegram.WebApp.openTelegramLink(
+              `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`
+            );
+          } else {
+            // Fallback: append the link at the bottom
+            const fallback = `${text}\n\n${link}`;
+            window.open(`tg://msg?text=${encodeURIComponent(fallback)}`, '_blank');
+          }
+      
+          sendBtn.textContent = 'Sent ✓';
+          setTimeout(() => sendBtn.textContent = 'Send', 2000);
         });
-    }
+      }
+      
 
     if (copyReferralBtn) {
         copyReferralBtn.addEventListener('click', async () => {
