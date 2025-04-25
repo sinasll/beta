@@ -62,7 +62,6 @@ let userData = {
     usedReferralCode: '',
     referralLinksClicked: 0,
     daysRemaining: INITIAL_MINING_DAYS,
-    // Task states
     hasClaimedDaily: false,
     hasClaimedJoin: false,
     hasClaimedFollow: false,
@@ -165,46 +164,39 @@ function initializeUser() {
 
 function updateUI() {
     try {
-        if (balanceEl) balanceEl.textContent = userData.balance.toFixed(3);
-        if (minedEl) minedEl.textContent = userData.totalMined.toFixed(3);
-        if (powerEl) powerEl.textContent = userData.miningPower.toFixed(1);
-        if (mineBtn) {
-            mineBtn.textContent = userData.isMining ? 'Mining...' : (miningEnded ? 'Mining Ended' : 'Start Mining');
-            mineBtn.disabled = userData.isMining || isAfterResetTime() || miningEnded;
-        }
-        if (dailyCodeEl) dailyCodeEl.textContent = userData.dailyCode;
-        if (subsOfCodeEl) subsOfCodeEl.textContent = `${userData.codeSubmissionsToday}/10`;
-        if (totalOfCodeEl) totalOfCodeEl.textContent = userData.totalCodeSubmissions;
-        if (referralCountEl) referralCountEl.textContent = userData.referrals;
-        if (referralEarningsEl) referralEarningsEl.textContent = userData.referralEarnings.toFixed(3);
-        if (referralCodeEl) referralCodeEl.textContent = userData.ownReferralCode;
-        if (totalReferralsEl) totalReferralsEl.textContent = userData.totalInvites;
-        if (usedReferralCodeEl) usedReferralCodeEl.textContent = userData.usedReferralCode || 'None';
+        balanceEl.textContent = userData.balance.toFixed(3);
+        minedEl.textContent = userData.totalMined.toFixed(3);
+        powerEl.textContent = userData.miningPower.toFixed(1);
+        mineBtn.textContent = userData.isMining ? 'Mining...' : (miningEnded ? 'Mining Ended' : 'Start Mining');
+        mineBtn.disabled = userData.isMining || isAfterResetTime() || miningEnded;
+        dailyCodeEl.textContent = userData.dailyCode;
+        subsOfCodeEl.textContent = `${userData.codeSubmissionsToday}/10`;
+        totalOfCodeEl.textContent = userData.totalCodeSubmissions;
+        referralCountEl.textContent = userData.referrals;
+        referralEarningsEl.textContent = userData.referralEarnings.toFixed(3);
+        referralCodeEl.textContent = userData.ownReferralCode;
+        totalReferralsEl.textContent = userData.totalInvites;
+        usedReferralCodeEl.textContent = userData.usedReferralCode || 'None';
         
         // Task UI updates
-        if (claimDailyBtn) {
-            claimDailyBtn.disabled = userData.hasClaimedDaily;
-            claimDailyBtn.textContent = userData.hasClaimedDaily ? 'Claimed ✓' : 'Claim +0.1x Power';
-            dailyTaskStatus.textContent = userData.hasClaimedDaily ? 'Claimed' : 'Available';
-        }
-        if (claimJoinBtn) {
-            claimJoinBtn.disabled = userData.hasClaimedJoin;
-            claimJoinBtn.textContent = userData.hasClaimedJoin ? 'Claimed ✓' : 'Claim +5 $BLACK';
-            joinTaskStatus.textContent = userData.hasClaimedJoin ? 'Claimed' : 'Available';
-        }
-        if (claimFollowBtn) {
-            claimFollowBtn.disabled = userData.hasClaimedFollow;
-            claimFollowBtn.textContent = userData.hasClaimedFollow ? 'Claimed ✓' : 'Claim +5 $BLACK';
-            followTaskStatus.textContent = userData.hasClaimedFollow ? 'Claimed' : 'Available';
-        }
-        if (claimSubsBtn) {
-            const subsDisabled = userData.hasClaimedSubs || userData.totalCodeSubmissions < 10;
-            claimSubsBtn.disabled = subsDisabled;
-            claimSubsBtn.textContent = userData.hasClaimedSubs ? 'Claimed ✓' : 
-                `Claim +10 $BLACK (${userData.totalCodeSubmissions}/10)`;
-            subsTaskStatus.textContent = userData.hasClaimedSubs ? 'Claimed' : 
-                `${userData.totalCodeSubmissions}/10 submissions`;
-        }
+        claimDailyBtn.disabled = userData.hasClaimedDaily;
+        claimDailyBtn.textContent = userData.hasClaimedDaily ? 'Claimed ✓' : 'Claim +0.1x Power';
+        dailyTaskStatus.textContent = userData.hasClaimedDaily ? 'Claimed' : 'Available';
+        
+        claimJoinBtn.disabled = userData.hasClaimedJoin;
+        claimJoinBtn.textContent = userData.hasClaimedJoin ? 'Claimed ✓' : 'Claim +5 $BLACK';
+        joinTaskStatus.textContent = userData.hasClaimedJoin ? 'Claimed' : 'Available';
+        
+        claimFollowBtn.disabled = userData.hasClaimedFollow;
+        claimFollowBtn.textContent = userData.hasClaimedFollow ? 'Claimed ✓' : 'Claim +5 $BLACK';
+        followTaskStatus.textContent = userData.hasClaimedFollow ? 'Claimed' : 'Available';
+        
+        const subsDisabled = userData.hasClaimedSubs || userData.totalCodeSubmissions < 10;
+        claimSubsBtn.disabled = subsDisabled;
+        claimSubsBtn.textContent = userData.hasClaimedSubs ? 'Claimed ✓' : 
+            `Claim +10 $BLACK (${userData.totalCodeSubmissions}/10)`;
+        subsTaskStatus.textContent = userData.hasClaimedSubs ? 'Claimed' : 
+            `${userData.totalCodeSubmissions}/10 submissions`;
 
         if (miningEndDate) {
             const days = userData.daysRemaining || calculateDaysRemaining(miningEndDate);
@@ -260,7 +252,7 @@ function populateFriends(friends) {
 async function fetchUserData() {
     try {
         const payload = initializeUser();
-        if (usernameEl) usernameEl.textContent = payload.username;
+        usernameEl.textContent = payload.username;
 
         const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
         const data = JSON.parse(execution.responseBody || '{}');
@@ -276,7 +268,6 @@ async function fetchUserData() {
         userData.miningPower = data.mining_power || 1.0;
         userData.nextReset = data.next_reset || getDefaultResetTime();
         userData.dailyCode = data.daily_code || '';
-        userData.submittedCodes = data.submitted_codes || [];
         userData.codeSubmissionsToday = data.code_submissions_today || 0;
         userData.referrals = data.referrals || 0;
         userData.referralEarnings = data.referral_earnings || 0;
@@ -285,8 +276,6 @@ async function fetchUserData() {
         userData.totalInvites = data.total_invites || 0;
         userData.usedReferralCode = data.used_referral_code || '';
         userData.referralLinksClicked = data.referral_links_clicked || 0;
-
-        // Task states
         userData.hasClaimedDaily = data.has_claimed_daily || false;
         userData.hasClaimedJoin = data.has_claimed_join_channel || false;
         userData.hasClaimedFollow = data.has_claimed_follow_ceo || false;
@@ -301,7 +290,7 @@ async function fetchUserData() {
             stopMining();
         }
 
-        if (data.total_miners && totalMinersEl) {
+        if (data.total_miners) {
             totalMinersEl.textContent = Number(data.total_miners).toLocaleString('en-US');
         }
 
@@ -436,28 +425,20 @@ async function handleTaskClaim(taskType) {
             return;
         }
 
-        switch(taskType) {
-            case 'daily':
-                userData.hasClaimedDaily = true;
-                userData.miningPower += 0.1;
-                break;
-            case 'join_channel':
-                userData.hasClaimedJoin = true;
-                userData.balance += 5;
-                break;
-            case 'follow_ceo':
-                userData.hasClaimedFollow = true;
-                userData.balance += 5;
-                break;
-            case 'subs':
-                userData.hasClaimedSubs = true;
-                userData.balance += 10;
-                break;
-        }
+        // Update all relevant user data from response
+        userData.balance = data.balance || userData.balance;
+        userData.miningPower = data.mining_power || userData.miningPower;
+        userData.hasClaimedDaily = data.has_claimed_daily || userData.hasClaimedDaily;
+        userData.hasClaimedJoin = data.has_claimed_join_channel || userData.hasClaimedJoin;
+        userData.hasClaimedFollow = data.has_claimed_follow_ceo || userData.hasClaimedFollow;
+        userData.hasClaimedSubs = data.has_claimed_subs_task || userData.hasClaimedSubs;
 
         saveMiningState();
         updateUI();
         alert(data.message || 'Task claimed successfully!');
+        
+        // Refresh full user state
+        await fetchUserData();
     } catch (err) {
         console.error('Task claim failed:', err);
         alert(err.message || 'Failed to claim task');
@@ -465,31 +446,27 @@ async function handleTaskClaim(taskType) {
 }
 
 function setupEventListeners() {
-    if (mineBtn) {
-        mineBtn.addEventListener('click', async () => {
-            if (miningEnded) {
-                alert("The mining period has ended. No more mining is allowed.");
-                return;
-            }
-            
-            if (!userData.isMining && !isAfterResetTime()) {
-                await startMining();
-            } else if (isAfterResetTime()) {
-                alert('Mining reset — please start again!');
-                await fetchUserData();
-            }
-        });
-    }
+    mineBtn.addEventListener('click', async () => {
+        if (miningEnded) {
+            alert("The mining period has ended. No more mining is allowed.");
+            return;
+        }
+        
+        if (!userData.isMining && !isAfterResetTime()) {
+            await startMining();
+        } else if (isAfterResetTime()) {
+            alert('Mining reset — please start again!');
+            await fetchUserData();
+        }
+    });
 
-    if (copyBtn) {
-        copyBtn.addEventListener('click', async () => {
-            try {
-                await navigator.clipboard.writeText(dailyCodeEl.textContent);
-                copyBtn.textContent = 'Copied';
-                setTimeout(() => copyBtn.textContent = 'Copy', 2000);
-            } catch {}
-        });
-    }
+    copyBtn.addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText(dailyCodeEl.textContent);
+            copyBtn.textContent = 'Copied';
+            setTimeout(() => copyBtn.textContent = 'Copy', 2000);
+        } catch {}
+    });
 
     const pasteButton = document.getElementById('pasteButton');
     if (pasteButton) {
@@ -502,117 +479,101 @@ function setupEventListeners() {
         });
     }
 
-    if (submitBtn) {
-        submitBtn.addEventListener('click', async () => {
-            if (miningEnded) {
-                alert("The mining period has ended. No more code submissions allowed.");
-                return;
+    submitBtn.addEventListener('click', async () => {
+        if (miningEnded) {
+            alert("The mining period has ended. No more code submissions allowed.");
+            return;
+        }
+        
+        const submittedCode = codeInput.value.trim();
+        if (!submittedCode) return alert('Please enter a code to submit');
+
+        try {
+            const payload = {
+                ...initializeUser(),
+                action: 'submit_code',
+                code: submittedCode
+            };
+
+            const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
+            const data = JSON.parse(execution.responseBody || '{}');
+
+            if (data.success) {
+                userData.balance = data.balance;
+                userData.submittedCodes = [...userData.submittedCodes, submittedCode];
+                userData.codeSubmissionsToday = data.owner_submissions || userData.codeSubmissionsToday;
+                userData.totalCodeSubmissions = data.total_code_submissions || userData.totalCodeSubmissions;
+                
+                saveMiningState();
+                updateUI();
+                alert(data.message || 'Code submitted successfully!');
+                codeInput.value = '';
+            } else {
+                alert(data.message || 'Code submission failed');
             }
-            
-            const submittedCode = codeInput.value.trim();
-            if (!submittedCode) return alert('Please enter a code to submit');
+        } catch (err) {
+            console.error('Code submission failed:', err);
+            alert(err.message || 'Failed to submit code.');
+        }
+    });
 
-            try {
-                const payload = {
-                    ...initializeUser(),
-                    action: 'submit_code',
-                    code: submittedCode
-                };
+    sendBtn.addEventListener('click', () => {
+        const code = dailyCodeEl.textContent;
+        const shareText = `Use my $BLACK code today: ${code}`;
+        
+        if (window.Telegram?.WebApp) {
+            const tg = window.Telegram.WebApp;
+            tg.sendData(shareText);
+            tg.openLink(`https://t.me/share/url?url=${encodeURIComponent(shareText)}`);
+        } else {
+            alert(`Share this code: ${code}`);
+        }
+        
+        sendBtn.textContent = 'Sent ✓';
+        setTimeout(() => sendBtn.textContent = 'Send', 2000);
+    });
 
-                const execution = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
-                const data = JSON.parse(execution.responseBody || '{}');
-
-                if (data.success) {
-                    userData.balance = data.balance;
-                    userData.submittedCodes = [...userData.submittedCodes, submittedCode];
-                    userData.codeSubmissionsToday = data.owner_submissions || userData.codeSubmissionsToday;
-                    userData.totalCodeSubmissions = data.total_code_submissions || userData.totalCodeSubmissions;
-                    
-                    saveMiningState();
-                    updateUI();
-                    alert(data.message || 'Code submitted successfully!');
-                    codeInput.value = '';
-                } else {
-                    alert(data.message || 'Code submission failed');
-                }
-            } catch (err) {
-                console.error('Code submission failed:', err);
-                alert(err.message || 'Failed to submit code.');
-            }
-        });
-    }
-
-    if (sendBtn) {
-        sendBtn.addEventListener('click', () => {
-            const code = dailyCodeEl.textContent;
-            const shareText = `Use my $BLACK code today: ${code}`;
+    copyReferralBtn.addEventListener('click', async () => {
+        try {
+            const code = userData.ownReferralCode;
+            const link = `https://t.me/betamineitbot?startapp=${code}`;
+            await navigator.clipboard.writeText(link);
             
             if (window.Telegram?.WebApp) {
-                const tg = window.Telegram.WebApp;
-                tg.sendData(shareText);
-                tg.openLink(`https://t.me/share/url?url=${encodeURIComponent(shareText)}`);
+                window.Telegram.WebApp.showAlert('Referral link copied!');
             } else {
-                alert(`Share this code: ${code}`);
+                alert('Link copied to clipboard!');
             }
-            
-            sendBtn.textContent = 'Sent ✓';
-            setTimeout(() => sendBtn.textContent = 'Send', 2000);
-        });
-    }
+        } catch (error) {
+            console.error('Copy failed:', error);
+            prompt('Please copy this link manually:', link);
+        }
+    });
 
-    if (copyReferralBtn) {
-        copyReferralBtn.addEventListener('click', async () => {
-            try {
-                const code = userData.ownReferralCode;
-                const link = `https://t.me/betamineitbot?startapp=${code}`;
-                await navigator.clipboard.writeText(link);
-                
-                if (window.Telegram?.WebApp) {
-                    window.Telegram.WebApp.showAlert('Referral link copied!');
-                } else {
-                    alert('Link copied to clipboard!');
-                }
-            } catch (error) {
-                console.error('Copy failed:', error);
-                prompt('Please copy this link manually:', link);
+    inviteBtn.addEventListener('click', async () => {
+        try {
+            const code = userData.ownReferralCode;
+            const shareUrl = `https://t.me/betamineitbot?startapp=${code}`;
+            const message = `🚀 Join $BLACK Mining!\nUse my code: ${code}\n${shareUrl}`;
+
+            if (window.Telegram?.WebApp) {
+                window.Telegram.WebApp.openTelegramLink(
+                    `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(message)}`
+                );
+            } else {
+                const shareLink = `tg://msg?text=${encodeURIComponent(message)}`;
+                window.open(shareLink, '_blank');
             }
-        });
-    }
-
-    if (inviteBtn) {
-        inviteBtn.addEventListener('click', async () => {
-            try {
-                const code = userData.ownReferralCode;
-                const shareUrl = `https://t.me/betamineitbot?startapp=${code}`;
-                const message = `🚀 Join $BLACK Mining!\nUse my code: ${code}\n${shareUrl}`;
-
-                if (window.Telegram?.WebApp) {
-                    window.Telegram.WebApp.openTelegramLink(
-                        `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(message)}`
-                    );
-                } else {
-                    const shareLink = `tg://msg?text=${encodeURIComponent(message)}`;
-                    window.open(shareLink, '_blank');
-                }
-            } catch (error) {
-                console.error('Sharing failed:', error);
-            }
-        });
-    }
+        } catch (error) {
+            console.error('Sharing failed:', error);
+        }
+    });
 
     // Task Claim Handlers
-    if (claimDailyBtn) {
-        claimDailyBtn.addEventListener('click', () => handleTaskClaim('daily'));
-    }
-    if (claimJoinBtn) {
-        claimJoinBtn.addEventListener('click', () => handleTaskClaim('join_channel'));
-    }
-    if (claimFollowBtn) {
-        claimFollowBtn.addEventListener('click', () => handleTaskClaim('follow_ceo'));
-    }
-    if (claimSubsBtn) {
-        claimSubsBtn.addEventListener('click', () => handleTaskClaim('subs'));
-    }
+    claimDailyBtn.addEventListener('click', () => handleTaskClaim('daily'));
+    claimJoinBtn.addEventListener('click', () => handleTaskClaim('join_channel'));
+    claimFollowBtn.addEventListener('click', () => handleTaskClaim('follow_ceo'));
+    claimSubsBtn.addEventListener('click', () => handleTaskClaim('subs'));
 }
 
 async function init() {
