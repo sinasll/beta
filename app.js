@@ -214,15 +214,15 @@ function populateFriends(friends) {
     friendsContainerEl.innerHTML = '';
 
     // Render each friend as a row
-    friends.forEach(f => {
-        const row = document.createElement('div');
-        row.className = 'friend-row stats-row';
-        row.innerHTML = `
-            <div>${f.username}</div>
-            <div>${(f.earned || 0).toFixed(3)} $BLACK</div>
-        `;
-        friendsContainerEl.appendChild(row);
-    });
+// Render each friend as a row
+friends.forEach(f => {
+    const row = document.createElement('div');
+    row.className = 'friend-row stats-row';
+    row.innerHTML = `
+        <div>${f.username}</div>
+    `;
+    friendsContainerEl.appendChild(row);
+});
 }
 
 async function fetchUserData() {
