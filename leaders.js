@@ -1,7 +1,7 @@
 import { Client, Functions } from "https://esm.sh/appwrite@13.0.0";
 
-const PROJECT_ID   = "6800cf6c0038c2026f07";                // ← your Appwrite project ID
-const FUNCTION_ID  = "680442d4002cb52d1977";  // ← your Function ID
+const PROJECT_ID   = "6800cf6c0038c2026f07";
+const FUNCTION_ID  = "680442d4002cb52d1977"; 
 
 const client    = new Client()
   .setEndpoint("https://fra.cloud.appwrite.io/v1")

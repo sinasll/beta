@@ -250,3 +250,14 @@ input[type="text"]::placeholder {
   font-weight: 600;
   font-size: 12px;
 }
+
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background-color: #3a3a3a !important;
+}
+
+.task-claimed {
+  color: #00ff00;
+  font-weight: bold;
+}
