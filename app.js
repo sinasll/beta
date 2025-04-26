@@ -271,10 +271,14 @@ async function handleTaskClick(task) {
         };
         const exec = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
         const data = JSON.parse(exec.responseBody || '{}');
+        
         if (data.success) {
-            userData.balance = data.balance;
+            userData.balance     = data.balance;
             userData.miningPower = data.mining_power;
-            userData.tasksCompleted = data.tasks_completed;
+            
+            userData.tasksCompleted[task] = true;
+            
+            refreshTasksState();
             updateUI();
         } else {
             alert(data.message || 'Task failed');
@@ -284,6 +288,7 @@ async function handleTaskClick(task) {
         alert(err.message || 'Error completing task');
     }
 }
+
 
 taskItems.forEach(li => {
     li.querySelector('.complete-task').addEventListener('click', () => {
@@ -616,4 +621,3 @@ async function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
-
