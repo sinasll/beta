@@ -37,6 +37,19 @@ const friendsContainerEl = document.getElementById('friendsContainer');
 // Task Elements
 const taskItems = document.querySelectorAll('.task-item');
 
+// Wire each “Claim” button to open the <a> in its description:
+taskItems.forEach(li => {
+  const btn  = li.querySelector('.complete-task');
+  const link = li.querySelector('.task-desc a');
+  
+  if (link) {
+    btn.disabled = false;
+    btn.addEventListener('click', () => {
+      window.open(link.href, '_blank');
+    });
+  }
+});
+
 // State
 let userData = {
     isMining: false,
