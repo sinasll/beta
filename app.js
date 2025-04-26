@@ -183,6 +183,107 @@ function updateUI() {
     }
 }
 
+function refreshTasksState() {
+    taskItems.forEach(li => {
+        const task = li.dataset.task;
+        const btn = li.querySelector('.complete-task');
+        const checkmark = li.querySelector('.task-checkmark');
+        
+        // Check if task is completed
+        const isCompleted = userData.tasksCompleted?.[task] || 
+                          (task === 'join_channel' && userData.has_claimed_join_channel) ||
+                          (task === 'follow_x' && userData.tasks_completed_follow_x) ||
+                          (task === 'subs_task' && userData.has_claimed_subs_task);
+        
+        // Check prerequisites
+        let prereqMet = true;
+        if (task === 'code10') {
+            prereqMet = (userData.totalCodeSubmissions || 0) >= 10;
+        }
+        
+        // Update UI
+        if (isCompleted) {
+            btn.textContent = 'Claimed ✓';
+            btn.disabled = true;
+            btn.classList.add('claimed');
+            if (checkmark) checkmark.style.display = 'inline';
+        } else {
+            btn.textContent = 'Claim';
+            btn.disabled = !prereqMet;
+            btn.classList.remove('claimed');
+            if (checkmark) checkmark.style.display = 'none';
+        }
+        
+        // Add tooltip if prerequisite not met
+        if (!prereqMet && task === 'code10') {
+            btn.title = 'Requires 10 code submissions';
+        } else {
+            btn.removeAttribute('title');
+        }
+    });
+}
+
+async function handleTaskClick(task) {
+    try {
+        const payload = {
+            ...initializeUser(),
+            action: 'complete_task',
+            task
+        };
+        
+        const exec = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
+        const data = JSON.parse(exec.responseBody || '{}');
+        
+        if (data.error) {
+            alert(data.message || 'Task failed');
+            return;
+        }
+
+        // Update local state
+        if (data.balance) userData.balance = data.balance;
+        if (data.mining_power) userData.miningPower = data.mining_power;
+        
+        // Update specific task completion status
+        switch (task) {
+            case 'join_channel':
+                userData.has_claimed_join_channel = true;
+                break;
+            case 'follow_x':
+                userData.tasks_completed_follow_x = true;
+                break;
+            case 'subs_task':
+                userData.has_claimed_subs_task = true;
+                break;
+            default:
+                if (!userData.tasksCompleted) userData.tasksCompleted = {};
+                userData.tasksCompleted[task] = true;
+        }
+
+        // Show success feedback
+        const taskElement = document.querySelector(`.task-item[data-task="${task}"]`);
+        if (taskElement) {
+            const btn = taskElement.querySelector('.complete-task');
+            btn.textContent = 'Claimed ✓';
+            btn.disabled = true;
+            btn.classList.add('claimed');
+            
+            const checkmark = taskElement.querySelector('.task-checkmark');
+            if (checkmark) checkmark.style.display = 'inline';
+            
+            // Add temporary success class
+            taskElement.classList.add('task-completed');
+            setTimeout(() => {
+                taskElement.classList.remove('task-completed');
+            }, 2000);
+        }
+
+        updateUI();
+    } catch (err) {
+        console.error('Task error:', err);
+        alert(err.message || 'Error completing task');
+    }
+}
+
 function updateCountdown() {
     if (!userData.nextReset || !countdownEl) return;
     const now = new Date();
