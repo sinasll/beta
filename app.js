@@ -62,6 +62,18 @@ let mineInterval = null;
 let miningEndDate = null;
 let miningEnded = false;
 
+// Helper function to format numbers (NEW)
+function formatNumber(num, decimals = 3) {
+    if (isNaN(num)) return '0.' + '0'.repeat(decimals);
+    
+    const parts = Number(num).toFixed(decimals).split('.');
+    const wholePart = parts[0];
+    const decimalPart = parts[1] || '';
+    
+    const formattedWhole = wholePart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return formattedWhole + (decimalPart ? '.' + decimalPart : '');
+}
+
 function getDefaultResetTime() {
     const now = new Date();
     const resetTime = new Date(now);
@@ -154,133 +166,32 @@ function initializeUser() {
 
 function updateUI() {
     try {
-        if (balanceEl) balanceEl.textContent = userData.balance.toFixed(3);
-        if (minedEl) minedEl.textContent = userData.totalMined.toFixed(3);
-        if (powerEl) powerEl.textContent = userData.miningPower.toFixed(1);
+        // Updated with formatted numbers
+        if (balanceEl) balanceEl.textContent = formatNumber(userData.balance);
+        if (minedEl) minedEl.textContent = formatNumber(userData.totalMined);
+        if (powerEl) powerEl.textContent = formatNumber(userData.miningPower, 1);
         if (mineBtn) {
             mineBtn.textContent = userData.isMining ? 'Mining...' : (miningEnded ? 'Mining Ended' : 'Start Mining');
             mineBtn.disabled = userData.isMining || isAfterResetTime() || miningEnded;
         }
         if (dailyCodeEl) dailyCodeEl.textContent = userData.dailyCode;
-        if (subsOfCodeEl) subsOfCodeEl.textContent = `${userData.codeSubmissionsToday}/10`;
-        if (totalOfCodeEl) totalOfCodeEl.textContent = userData.totalCodeSubmissions;
-        if (referralCountEl) referralCountEl.textContent = userData.referrals;
-        if (referralEarningsEl) referralEarningsEl.textContent = userData.referralEarnings.toFixed(3);
+        if (subsOfCodeEl) subsOfCodeEl.textContent = `${formatNumber(userData.codeSubmissionsToday, 0)}/10`;
+        if (totalOfCodeEl) totalOfCodeEl.textContent = formatNumber(userData.totalCodeSubmissions, 0);
+        if (referralCountEl) referralCountEl.textContent = formatNumber(userData.referrals, 0);
+        if (referralEarningsEl) referralEarningsEl.textContent = formatNumber(userData.referralEarnings);
         if (referralCodeEl) referralCodeEl.textContent = userData.ownReferralCode;
-        if (totalReferralsEl) totalReferralsEl.textContent = userData.totalInvites;
+        if (totalReferralsEl) totalReferralsEl.textContent = formatNumber(userData.totalInvites, 0);
         if (usedReferralCodeEl) usedReferralCodeEl.textContent = userData.usedReferralCode || 'None';
         
-        // Update tasks state
         refreshTasksState();
 
         if (miningEndDate) {
             const days = userData.daysRemaining || calculateDaysRemaining(miningEndDate);
-            miningEndEl.textContent = days <= 0 ? "Ended" : `${days} days`;
+            miningEndEl.textContent = days <= 0 ? "Ended" : `${formatNumber(days, 0)} days`;
             miningEnded = days <= 0;
         }
     } catch (error) {
         console.error('UI update error:', error);
-    }
-}
-
-function refreshTasksState() {
-    taskItems.forEach(li => {
-        const task = li.dataset.task;
-        const btn = li.querySelector('.complete-task');
-        const checkmark = li.querySelector('.task-checkmark');
-        
-        // Check if task is completed
-        const isCompleted = userData.tasksCompleted?.[task] || 
-                          (task === 'join_channel' && userData.has_claimed_join_channel) ||
-                          (task === 'follow_x' && userData.tasks_completed_follow_x) ||
-                          (task === 'subs_task' && userData.has_claimed_subs_task);
-        
-        // Check prerequisites
-        let prereqMet = true;
-        if (task === 'code10') {
-            prereqMet = (userData.totalCodeSubmissions || 0) >= 10;
-        }
-        
-        // Update UI
-        if (isCompleted) {
-            btn.textContent = 'Claimed ✓';
-            btn.disabled = true;
-            btn.classList.add('claimed');
-            if (checkmark) checkmark.style.display = 'inline';
-        } else {
-            btn.textContent = 'Claim';
-            btn.disabled = !prereqMet;
-            btn.classList.remove('claimed');
-            if (checkmark) checkmark.style.display = 'none';
-        }
-        
-        // Add tooltip if prerequisite not met
-        if (!prereqMet && task === 'code10') {
-            btn.title = 'Requires 10 code submissions';
-        } else {
-            btn.removeAttribute('title');
-        }
-    });
-}
-
-async function handleTaskClick(task) {
-    try {
-        const payload = {
-            ...initializeUser(),
-            action: 'complete_task',
-            task
-        };
-        
-        const exec = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
-        const data = JSON.parse(exec.responseBody || '{}');
-        
-        if (data.error) {
-            alert(data.message || 'Task failed');
-            return;
-        }
-
-        // Update local state
-        if (data.balance) userData.balance = data.balance;
-        if (data.mining_power) userData.miningPower = data.mining_power;
-        
-        // Update specific task completion status
-        switch (task) {
-            case 'join_channel':
-                userData.has_claimed_join_channel = true;
-                break;
-            case 'follow_x':
-                userData.tasks_completed_follow_x = true;
-                break;
-            case 'subs_task':
-                userData.has_claimed_subs_task = true;
-                break;
-            default:
-                if (!userData.tasksCompleted) userData.tasksCompleted = {};
-                userData.tasksCompleted[task] = true;
-        }
-
-        // Show success feedback
-        const taskElement = document.querySelector(`.task-item[data-task="${task}"]`);
-        if (taskElement) {
-            const btn = taskElement.querySelector('.complete-task');
-            btn.textContent = 'Claimed ✓';
-            btn.disabled = true;
-            btn.classList.add('claimed');
-            
-            const checkmark = taskElement.querySelector('.task-checkmark');
-            if (checkmark) checkmark.style.display = 'inline';
-            
-            // Add temporary success class
-            taskElement.classList.add('task-completed');
-            setTimeout(() => {
-                taskElement.classList.remove('task-completed');
-            }, 2000);
-        }
-
-        updateUI();
-    } catch (err) {
-        console.error('Task error:', err);
-        alert(err.message || 'Error completing task');
     }
 }
 
@@ -300,10 +211,9 @@ function updateCountdown() {
     const minutes = Math.floor((timeUntilReset / (1000 * 60)) % 60);
     const seconds = Math.floor((timeUntilReset / 1000) % 60);
 
-    countdownEl.textContent = `Daily reset in ${hours}h ${minutes}m ${seconds}s`;
+    countdownEl.textContent = `Daily reset in ${formatNumber(hours, 0)}h ${formatNumber(minutes, 0)}m ${formatNumber(seconds, 0)}s`;
 }
 
-// ─── New: Helpers to fetch and render referred friends ───
 async function fetchReferredFriends() {
     const payload = {
         ...initializeUser(),
@@ -315,19 +225,18 @@ async function fetchReferredFriends() {
 }
 
 function populateFriends(friends) {
-    totalReferralsEl.textContent = friends.length;
+    totalReferralsEl.textContent = formatNumber(friends.length, 0);
     friendsContainerEl.innerHTML = '';
     friends.forEach(f => {
         const row = document.createElement('div');
         row.className = 'friend-row stats-row';
         row.innerHTML = `
             <div>${f.username}</div>
+            <div>${formatNumber(f.earned)} $BLACK</div>
         `;
         friendsContainerEl.appendChild(row);
     });
 }
-
-// ─── New: Task helpers ───
 
 function refreshTasksState() {
     taskItems.forEach(li => {
@@ -410,7 +319,7 @@ async function fetchUserData() {
         }
 
         if (data.total_miners && totalMinersEl) {
-            totalMinersEl.textContent = Number(data.total_miners).toLocaleString('en-US');
+            totalMinersEl.textContent = formatNumber(data.total_miners, 0);
         }
 
         saveMiningState();
@@ -443,8 +352,8 @@ async function mineCoins() {
         userData.totalMined = data.total_mined;
         userData.miningPower = data.updated.mining_power;
         userData.nextReset = data.next_reset || userData.nextReset;
-        userData.codeSubmissionsToday = data.updated.code_subissions_today || userData.codeSubmissionsToday;
-        userData.referrals = data.referral || userData.referrals;
+        userData.codeSubmissionsToday = data.updated.code_submissions_today || userData.codeSubmissionsToday;
+        userData.referrals = data.referrals || userData.referrals;
         userData.referralEarnings = data.referral_earnings || userData.referralEarnings;
         userData.totalCodeSubmissions = data.total_code_submissions || userData.totalCodeSubmissions;
         userData.daysRemaining = data.days_remaining || userData.daysRemaining;
@@ -664,16 +573,34 @@ function setupEventListeners() {
         });
     }
 }
+async function init() {
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+        tg.expand();
+        tg.ready();
+        tg.enableClosingConfirmation();
+    }
 
-document.addEventListener('DOMContentLoaded', async () => {
     setupTabs();
     setupEventListeners();
     loadMiningState();
-    await fetchUserData();
-    await fetchReferredFriends();
-    if (userData.isMining && !isAfterResetTime() && !miningEnded) {
-        await startMining();
+    
+    try {
+        await fetchUserData();
+        await fetchReferredFriends();    // ← NEW: load friends/referrals
+        if (userData.isMining && !isAfterResetTime() && !miningEnded) {
+            await startMining();
+        }
+    } catch (error) {
+        console.error('Initialization error:', error);
     }
+
     setInterval(updateCountdown, 1000);
-    setInterval(async () => { await fetchUserData(); updateUI(); }, 300000);
-});
+    setInterval(async () => {
+        await fetchUserData();
+        updateUI();
+    }, 300000);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+
