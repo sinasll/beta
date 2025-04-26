@@ -232,7 +232,7 @@ function populateFriends(friends) {
         row.className = 'friend-row stats-row';
         row.innerHTML = `
             <div>${f.username}</div>
-            <div>${formatNumber(f.earned)} $BLACK</div>
+            <div>${formatNumber(f.balance)} $BLACK</div>
         `;
         friendsContainerEl.appendChild(row);
     });
