@@ -536,8 +536,8 @@ function setupEventListeners() {
     if (sendBtn) {
         sendBtn.addEventListener('click', async () => {
             const code = dailyCodeEl.textContent;
-            const shareText = `Use my $BLACK code today: \`${code}\``;
-            const shareUrl = `https://t.me/betamineitbot?startapp=${code}`;
+            const shareText = `\nUse my $BLACK code today\n \`${code}\``;
+            const shareUrl = `https://t.me/betamineitbot?startapp`;
             
             if (window.Telegram?.WebApp) {
                 // Use Telegram's native sharing with proper formatting
@@ -579,7 +579,7 @@ function setupEventListeners() {
             try {
                 const code = userData.ownReferralCode;
                 const shareUrl = `https://t.me/betamineitbot?startapp=${code}`;
-                const message = `🚀 Join $BLACK Mining!\nUse my code: ${code}\n${shareUrl}`;
+                const message = `\nstart mining $BLACK today with one button!`;
 
                 if (window.Telegram?.WebApp) {
                     window.Telegram.WebApp.openTelegramLink(
