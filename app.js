@@ -534,16 +534,20 @@ function setupEventListeners() {
     }
 
     if (sendBtn) {
-        sendBtn.addEventListener('click', () => {
+        sendBtn.addEventListener('click', async () => {
             const code = dailyCodeEl.textContent;
-            const shareText = `Use my $BLACK code today: ${code}`;
+            const shareText = `Use my $BLACK code today: \`${code}\``;
+            const shareUrl = `https://t.me/betamineitbot?startapp=${code}`;
             
             if (window.Telegram?.WebApp) {
-                const tg = window.Telegram.WebApp;
-                tg.sendData(shareText);
-                tg.openLink(`https://t.me/share/url?url=${encodeURIComponent(shareText)}`);
+                // Use Telegram's native sharing with proper formatting
+                window.Telegram.WebApp.openTelegramLink(
+                    `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`
+                );
             } else {
-                alert(`Share this code: ${code}`);
+                // Fallback for browsers
+                navigator.clipboard.writeText(shareText);
+                alert('Code copied to clipboard!');
             }
             
             sendBtn.textContent = 'Sent ✓';
