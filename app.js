@@ -550,7 +550,7 @@ function setupEventListeners() {
                 alert('Code copied to clipboard!');
             }
             
-            sendBtn.textContent = 'Sent ✓';
+            sendBtn.textContent = 'Sending';
             setTimeout(() => sendBtn.textContent = 'Send', 2000);
         });
     }
