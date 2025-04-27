@@ -46,6 +46,13 @@ function renderLeaderboard(leaderboard) {
     return;
   }
 
+  function formatNumber(num) {
+    return Number(num).toLocaleString('en-US', {
+      minimumFractionDigits: 3,
+      maximumFractionDigits: 3
+    });
+  }
+  
   leaderboard.forEach(miner => {
     const row = document.createElement("div");
     row.className = "leaderboard-row";
@@ -54,7 +61,7 @@ function renderLeaderboard(leaderboard) {
       <div class="user-info">
         <span class="username">${escapeHtml(miner.username)}</span>
       </div>
-      <div class="amount">${escapeHtml(miner.amount)} </div>
+      <div class="amount">${escapeHtml(formatNumber(miner.amount))}</div>
     `;
     container.appendChild(row);
   });

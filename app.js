@@ -77,7 +77,7 @@ let miningEnded = false;
 
 // Helper function to format numbers (NEW)
 function formatNumber(num, decimals = 3) {
-    if (isNaN(num)) return '0.' + '0'.repeat(decimals);
+    if (isNaN(num)) return '0' + '0'.repeat(decimals);
     
     const parts = Number(num).toFixed(decimals).split('.');
     const wholePart = parts[0];

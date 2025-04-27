@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -100,7 +101,7 @@
   
   <div class="stats-row">
     <div>Total Invites</div>
-    <div><span id="totalReferrals">0</span></div>
+    <div><span id="totalReferrals"></span></div>
   </div>
   
   <div class="stats-row" style="display: none !important;">
@@ -137,7 +138,7 @@
           <a href="https://t.me/+1jp73BA89CNkMTg6" target="_blank"></a>
         </div>
         <div class="task-reward">+5 $BLACK</div>
-        <button class="button complete-task" disabled>Claim</button>
+        <button class="button complete-task" data-claimed="false">Claim</button>
       </li>
   
       <!-- Task 2 -->
@@ -147,7 +148,7 @@
           <a href="https://x.com/_blackxin" target="_blank"></a>
         </div>
         <div class="task-reward">+5 $BLACK</div>
-        <button class="button complete-task" disabled>Claim</button>
+        <button class="button complete-task" data-claimed="false">Claim</button>
       </li>
   
       <!-- Task 3 -->
@@ -156,7 +157,7 @@
           <strong>Have a total of 10 successful code submissions</strong>
         </div>
         <div class="task-reward">+1.0× power</div>
-        <button class="button complete-task" disabled>Claim</button>
+        <button class="button complete-task" data-claimed="false">Claim</button>
       </li>
     </ul>
   </div>
@@ -165,17 +166,17 @@
 
 <!-- Leaders tab (hidden by default) -->
 <div id="leaders-tab" class="tab-content">
-<div class="card">
-  <h2 class="card-title">Top Miners</h2>
-  <div class="leaderboard-header">
-    <div class="rank">#</div>
-    <div class="user-info">Miner</div>
-    <div class="amount">Amount</div>
+  <div class="card leaderboard-card">
+    <div class="card-header">
+      <h2 class="card-title">Top Miners</h2>
+    </div>
+    <div class="leaderboard-container">
+      
+      <div id="leaderboard-rows" class="leaderboard-body">
+        <div class="loading-spinner"></div>
+      </div>
+    </div>
   </div>
-  <div id="leaderboard-rows">
-    <div class="loading"></div>
-  </div>
-</div>
 </div>
 
 <div class="card2"></div>
