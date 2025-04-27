@@ -54,7 +54,7 @@ function renderLeaderboard(leaderboard) {
       <div class="user-info">
         <span class="username">${escapeHtml(miner.username)}</span>
       </div>
-      <div class="amount">${escapeHtml(miner.amount)} $BLACK</div>
+      <div class="amount">${escapeHtml(miner.amount)} </div>
     `;
     container.appendChild(row);
   });
