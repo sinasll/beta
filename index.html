@@ -56,6 +56,11 @@
 <div>x<span id="power">1.0</span></div>
 </div>
 <button class="button" id="mineButton">Start Mining</button>
+<!-- Upgrade Card -->
+<div class="card upgrade-placeholder">
+  <h2 class="card-title">Upgrades</h2>
+  <small class="coming-soon">Coming Soon</small>
+</div>
 </div>
 
 <!-- Codes -->
@@ -86,35 +91,6 @@
 </div>
 </div>
 </div>
-
-  <!-- Upgrade Options Card -->
-  <div class="card">
-    <h2 class="card-title">Mining Power Upgrades</h2>
-    <div class="upgrade-list">
-      <div class="upgrade-item">
-        <div class="upgrade-label">0.5× Power</div>
-        <div class="upgrade-cost">Cost: 10 $black</div>
-        <button class="button purchase-button" data-multiplier="0.5" data-cost="10">
-          Purchase
-        </button>
-      </div>
-      <div class="upgrade-item">
-        <div class="upgrade-label">1.0× Power</div>
-        <div class="upgrade-cost">Cost: 20 $black</div>
-        <button class="button purchase-button" data-multiplier="1.0" data-cost="20">
-          Purchase
-        </button>
-      </div>
-      <div class="upgrade-item">
-        <div class="upgrade-label">1.5× Power</div>
-        <div class="upgrade-cost">Cost: 30 $black</div>
-        <button class="button purchase-button" data-multiplier="1.5" data-cost="30">
-          Purchase
-        </button>
-      </div>
-    </div>
-  </div>
-
 
 <!-- Friends tab -->
 <div id="friends-tab" class="tab-content">
@@ -230,8 +206,6 @@
 <!-- App scripts -->
 <script src="app.js" type="module"></script>
 <script type="module" src="leaders.js"></script>
-<script type="module" src="upgrade.js"></script>
-
 
 <script>
   // Tab switching functionality
