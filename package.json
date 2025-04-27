@@ -1,18 +1,7 @@
 {
-  "name": "your-app-name",
-  "version": "1.0.0",
-  "private": true,
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
   "dependencies": {
     "appwrite": "^17.0.2",
     "crypto-js": "^4.2.0",
     "node-appwrite": "^16.0.0"
-  },
-  "devDependencies": {
-    "vite": "^6.3.3"
   }
 }
