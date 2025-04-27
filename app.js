@@ -483,13 +483,50 @@ function setupEventListeners() {
     }
 
     const pasteButton = document.getElementById('pasteButton');
-    if (pasteButton) {
+    const codeInput = document.getElementById('codeInput'); // Direct reference to your input
+    
+    if (pasteButton && codeInput) {
         pasteButton.addEventListener('click', async () => {
             try {
-                codeInput.value = await navigator.clipboard.readText();
-                pasteButton.textContent = 'Pasted';
-                setTimeout(() => pasteButton.textContent = 'Paste', 2000);
-            } catch {}
+                // Focus first for better mobile UX
+                codeInput.focus();
+                
+                // Try modern Clipboard API first
+                const clipboardText = await navigator.clipboard.readText();
+                
+                if (clipboardText) {
+                    codeInput.value = clipboardText;
+                    codeInput.dispatchEvent(new Event('input')); // Trigger input event
+                    pasteButton.textContent = 'Pasted';
+                } else {
+                    pasteButton.textContent = 'Empty';
+                }
+            } catch (error) {
+                // Handle permission issues or older browsers
+                if (error.name === 'NotAllowedError') {
+                    // Try legacy method for mobile browsers
+                    try {
+                        pasteButton.textContent = '📎 Tap to paste';
+                        const oldValue = codeInput.value;
+                        codeInput.value = '';
+                        codeInput.select();
+                        
+                        if (document.execCommand('paste')) {
+                            if (codeInput.value === '') codeInput.value = oldValue;
+                            pasteButton.textContent = 'Pasted!';
+                        }
+                    } catch (err) {
+                        pasteButton.textContent = 'Allow access';
+                    }
+                } else {
+                    pasteButton.textContent = 'Failed!';
+                }
+            } finally {
+                setTimeout(() => {
+                    pasteButton.textContent = 'Paste';
+                    codeInput.blur();
+                }, 2000);
+            }
         });
     }
 
