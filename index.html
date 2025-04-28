@@ -14,9 +14,10 @@
 </head>
 
 <body>
+  
 <!-- App header -->
 <div class="header">
-<h1 class="logo">$BLACK</h1>
+<h1 class="logo">$BLACK beta</h1>
 </div>
 
 <!-- Main container -->
@@ -32,10 +33,6 @@
 <div class="stats-row">
 <div>Total Miners</div>
 <div><span id="totalminers">0</span></div>
-</div>
-<div class="stats-row">
-<div>Mining Ends In</div>
-<div><span id="miningend">0</span></div>
 </div>
 <div class="countdown" id="countdown">daily resets in 00:00:00</div>
 </div>
@@ -184,6 +181,75 @@
 </div>
 
 <div class="card2"></div>
+
+<div class="stars"></div>
+<script>
+  const starsContainer = document.querySelector('.stars');
+  const starCount = 100;
+  const stars = [];
+  
+  function createStar() {
+    const star = document.createElement('div');
+    star.classList.add('star');
+    
+    resetStar(star, true);
+    
+    starsContainer.appendChild(star);
+    stars.push(star);
+  }
+  
+  function resetStar(star, initial = false) {
+    // Random starting position inside viewport
+    star.x = Math.random() * window.innerWidth;
+    star.y = Math.random() * window.innerHeight;
+    
+    // Random gentle drifting velocity
+    star.vx = (Math.random() - 0.5) * 0.3;
+    star.vy = (Math.random() - 0.5) * 0.3;
+  
+    const size = 1 + Math.random() * 2;
+    star.style.width = `${size}px`;
+    star.style.height = `${size}px`;
+    star.style.opacity = (0.2 + Math.random() * 0.5).toFixed(2);
+    star.style.filter = `blur(${1 + Math.random() * 2}px)`;
+    
+    if (initial) {
+      star.style.transform = `translate(${star.x}px, ${star.y}px)`;
+    }
+  }
+  
+  function animateStars() {
+    for (const star of stars) {
+      star.x += star.vx;
+      star.y += star.vy;
+  
+      // If the star moves offscreen, reset it somewhere randomly
+      if (star.x < -50 || star.x > window.innerWidth + 50 || star.y < -50 || star.y > window.innerHeight + 50) {
+        resetStar(star);
+      }
+  
+      star.style.transform = `translate(${star.x}px, ${star.y}px)`;
+    }
+    requestAnimationFrame(animateStars);
+  }
+  
+  // Generate all stars
+  for (let i = 0; i < starCount; i++) {
+    createStar();
+  }
+  
+  // Animate
+  animateStars();
+  
+  // Optional: Reposition stars if window resizes
+  window.addEventListener('resize', () => {
+    stars.forEach(star => {
+      star.x = Math.random() * window.innerWidth;
+      star.y = Math.random() * window.innerHeight;
+    });
+  });
+  </script>
+  
 
 </div>
 

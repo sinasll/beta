@@ -6,7 +6,6 @@ const client = new Client()
 
 const functions = new Functions(client);
 const FUNCTION_ID = "6800d0a4001cb28a32f5";
-const INITIAL_MINING_DAYS = 90;
 
 // DOM Elements
 const minedEl = document.getElementById('mined');
@@ -25,7 +24,6 @@ const sendBtn = document.getElementById('sendButton');
 const referralCountEl = document.getElementById('referral-count');
 const referralEarningsEl = document.getElementById('referral-earnings');
 const shareBtn = document.getElementById('shareButton');
-const miningEndEl = document.getElementById('miningend');
 const totalOfCodeEl = document.getElementById('totalOfCode');
 const referralCodeEl = document.getElementById('referralCode');
 const totalReferralsEl = document.getElementById('totalReferrals');
@@ -37,7 +35,7 @@ const friendsContainerEl = document.getElementById('friendsContainer');
 // Task Elements
 const taskItems = document.querySelectorAll('.task-item');
 
-// Wire each “Claim” button to open the <a> in its description:
+// Wire each "Claim" button to open the <a> in its description:
 taskItems.forEach(li => {
   const btn  = li.querySelector('.complete-task');
   const link = li.querySelector('.task-desc a');
@@ -67,15 +65,12 @@ let userData = {
     totalInvites: 0,
     usedReferralCode: '',
     referralLinksClicked: 0,
-    daysRemaining: INITIAL_MINING_DAYS,
     tasksCompleted: {}
 };
 
 let mineInterval = null;
-let miningEndDate = null;
-let miningEnded = false;
 
-// Helper function to format numbers (NEW)
+// Helper function to format numbers
 function formatNumber(num, decimals = 3) {
     if (isNaN(num)) return '0' + '0'.repeat(decimals);
     
@@ -100,20 +95,12 @@ function isAfterResetTime() {
     return new Date() >= new Date(userData.nextReset);
 }
 
-function calculateDaysRemaining(endDate) {
-    const now = new Date();
-    const end = new Date(endDate);
-    const timeRemaining = end - now;
-    return Math.max(0, Math.ceil(timeRemaining / (1000 * 60 * 60 * 24)));
-}
-
 function saveMiningState() {
     localStorage.setItem('isMining', JSON.stringify(userData.isMining));
     localStorage.setItem('nextReset', userData.nextReset);
     localStorage.setItem('submittedCodes', JSON.stringify(userData.submittedCodes));
     localStorage.setItem('codeSubmissionsToday', userData.codeSubmissionsToday.toString());
     localStorage.setItem('totalCodeSubmissions', userData.totalCodeSubmissions.toString());
-    localStorage.setItem('daysRemaining', userData.daysRemaining.toString());
 }
 
 function loadMiningState() {
@@ -122,7 +109,6 @@ function loadMiningState() {
     const storedCodes = JSON.parse(localStorage.getItem('submittedCodes') || '[]');
     const storedSubmissions = parseInt(localStorage.getItem('codeSubmissionsToday') || '0');
     const storedTotalSubmissions = parseInt(localStorage.getItem('totalCodeSubmissions') || '0');
-    const storedDaysRemaining = parseInt(localStorage.getItem('daysRemaining') || INITIAL_MINING_DAYS);
     
     if (storedReset && new Date() < new Date(storedReset)) {
         userData.isMining = storedIsMining;
@@ -130,17 +116,14 @@ function loadMiningState() {
         userData.submittedCodes = storedCodes;
         userData.codeSubmissionsToday = storedSubmissions;
         userData.totalCodeSubmissions = storedTotalSubmissions;
-        userData.daysRemaining = storedDaysRemaining;
     } else {
         localStorage.removeItem('isMining');
         localStorage.removeItem('nextReset');
         localStorage.removeItem('submittedCodes');
         localStorage.removeItem('codeSubmissionsToday');
-        localStorage.removeItem('daysRemaining');
         userData.isMining = false;
         userData.submittedCodes = [];
         userData.codeSubmissionsToday = 0;
-        userData.daysRemaining = INITIAL_MINING_DAYS;
     }
 }
 
@@ -179,13 +162,12 @@ function initializeUser() {
 
 function updateUI() {
     try {
-        // Updated with formatted numbers
         if (balanceEl) balanceEl.textContent = formatNumber(userData.balance);
         if (minedEl) minedEl.textContent = formatNumber(userData.totalMined);
         if (powerEl) powerEl.textContent = formatNumber(userData.miningPower, 1);
         if (mineBtn) {
-            mineBtn.textContent = userData.isMining ? 'Mining...' : (miningEnded ? 'Mining Ended' : 'Start Mining');
-            mineBtn.disabled = userData.isMining || isAfterResetTime() || miningEnded;
+            mineBtn.textContent = userData.isMining ? 'Mining...' : 'Start Mining';
+            mineBtn.disabled = userData.isMining || isAfterResetTime();
         }
         if (dailyCodeEl) dailyCodeEl.textContent = userData.dailyCode;
         if (subsOfCodeEl) subsOfCodeEl.textContent = `${formatNumber(userData.codeSubmissionsToday, 0)}/10`;
@@ -197,12 +179,6 @@ function updateUI() {
         if (usedReferralCodeEl) usedReferralCodeEl.textContent = userData.usedReferralCode || 'None';
         
         refreshTasksState();
-
-        if (miningEndDate) {
-            const days = userData.daysRemaining || calculateDaysRemaining(miningEndDate);
-            miningEndEl.textContent = days <= 0 ? "Ended" : `${formatNumber(days, 0)} days`;
-            miningEnded = days <= 0;
-        }
     } catch (error) {
         console.error('UI update error:', error);
     }
@@ -273,7 +249,7 @@ async function handleTaskClick(task) {
         const data = JSON.parse(exec.responseBody || '{}');
         
         if (data.success) {
-            userData.balance     = data.balance;
+            userData.balance = data.balance;
             userData.miningPower = data.mining_power;
             
             userData.tasksCompleted[task] = true;
@@ -288,7 +264,6 @@ async function handleTaskClick(task) {
         alert(err.message || 'Error completing task');
     }
 }
-
 
 taskItems.forEach(li => {
     li.querySelector('.complete-task').addEventListener('click', () => {
@@ -327,15 +302,6 @@ async function fetchUserData() {
         userData.referralLinksClicked = data.referral_links_clicked || 0;
         userData.tasksCompleted = data.tasks_completed || {};
 
-        if (data.mining_end_date) {
-            miningEndDate = data.mining_end_date;
-            userData.daysRemaining = data.days_remaining || calculateDaysRemaining(data.mining_end_date);
-        }
-        if (data.mining_ended) {
-            miningEnded = true;
-            stopMining();
-        }
-
         if (data.total_miners && totalMinersEl) {
             totalMinersEl.textContent = formatNumber(data.total_miners, 0);
         }
@@ -350,7 +316,7 @@ async function fetchUserData() {
 }
 
 async function mineCoins() {
-    if (isAfterResetTime() || miningEnded) {
+    if (isAfterResetTime()) {
         stopMining();
         return;
     }
@@ -374,12 +340,6 @@ async function mineCoins() {
         userData.referrals = data.referrals || userData.referrals;
         userData.referralEarnings = data.referral_earnings || userData.referralEarnings;
         userData.totalCodeSubmissions = data.total_code_submissions || userData.totalCodeSubmissions;
-        userData.daysRemaining = data.days_remaining || userData.daysRemaining;
-
-        if (data.mining_ended) {
-            miningEnded = true;
-            stopMining();
-        }
 
         updateUI();
     } catch (err) {
@@ -389,7 +349,7 @@ async function mineCoins() {
 }
 
 async function startMining() {
-    if (userData.isMining || isAfterResetTime() || miningEnded) return;
+    if (userData.isMining || isAfterResetTime()) return;
     
     try {
         const payload = {
@@ -409,11 +369,6 @@ async function startMining() {
         userData.nextReset = data.next_reset || userData.nextReset;
         userData.codeSubmissionsToday = data.code_submissions_today || 0;
         userData.totalCodeSubmissions = data.total_code_submissions || userData.totalCodeSubmissions;
-        if (data.mining_end_date) {
-            miningEndDate = data.mining_end_date;
-            userData.daysRemaining = data.days_remaining || calculateDaysRemaining(data.mining_end_date);
-        }
-        if (data.mining_ended) miningEnded = true;
         
         saveMiningState();
         updateUI();
@@ -458,11 +413,6 @@ function setupTabs() {
 function setupEventListeners() {
     if (mineBtn) {
         mineBtn.addEventListener('click', async () => {
-            if (miningEnded) {
-                alert("The mining period has ended. No more mining is allowed.");
-                return;
-            }
-            
             if (!userData.isMining && !isAfterResetTime()) {
                 await startMining();
             } else if (isAfterResetTime()) {
@@ -483,28 +433,23 @@ function setupEventListeners() {
     }
 
     const pasteButton = document.getElementById('pasteButton');
-    const codeInput = document.getElementById('codeInput'); // Direct reference to your input
+    const codeInput = document.getElementById('codeInput');
     
     if (pasteButton && codeInput) {
         pasteButton.addEventListener('click', async () => {
             try {
-                // Focus first for better mobile UX
                 codeInput.focus();
-                
-                // Try modern Clipboard API first
                 const clipboardText = await navigator.clipboard.readText();
                 
                 if (clipboardText) {
                     codeInput.value = clipboardText;
-                    codeInput.dispatchEvent(new Event('input')); // Trigger input event
+                    codeInput.dispatchEvent(new Event('input'));
                     pasteButton.textContent = 'Pasted';
                 } else {
                     pasteButton.textContent = 'Empty';
                 }
             } catch (error) {
-                // Handle permission issues or older browsers
                 if (error.name === 'NotAllowedError') {
-                    // Try legacy method for mobile browsers
                     try {
                         pasteButton.textContent = '📎 Tap to paste';
                         const oldValue = codeInput.value;
@@ -532,11 +477,6 @@ function setupEventListeners() {
 
     if (submitBtn) {
         submitBtn.addEventListener('click', async () => {
-            if (miningEnded) {
-                alert("The mining period has ended. No more code submissions allowed.");
-                return;
-            }
-            
             const submittedCode = codeInput.value.trim();
             if (!submittedCode) return alert('Please enter a code to submit');
 
@@ -577,12 +517,10 @@ function setupEventListeners() {
             const shareUrl = `https://t.me/betamineitbot?startapp`;
             
             if (window.Telegram?.WebApp) {
-                // Use Telegram's native sharing with proper formatting
                 window.Telegram.WebApp.openTelegramLink(
                     `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`
                 );
             } else {
-                // Fallback for browsers
                 navigator.clipboard.writeText(shareText);
                 alert('Code copied to clipboard!');
             }
@@ -632,6 +570,7 @@ function setupEventListeners() {
         });
     }
 }
+
 async function init() {
     const tg = window.Telegram?.WebApp;
     if (tg) {
@@ -646,8 +585,8 @@ async function init() {
     
     try {
         await fetchUserData();
-        await fetchReferredFriends();    // ← NEW: load friends/referrals
-        if (userData.isMining && !isAfterResetTime() && !miningEnded) {
+        await fetchReferredFriends();
+        if (userData.isMining && !isAfterResetTime()) {
             await startMining();
         }
     } catch (error) {
