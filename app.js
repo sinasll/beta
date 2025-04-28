@@ -251,8 +251,7 @@ async function handleTaskClick(task) {
         if (data.success) {
             userData.balance = data.balance;
             userData.miningPower = data.mining_power;
-            
-            userData.tasksCompleted[task] = true;
+            userData.tasksCompleted = data.tasks_completed || userData.tasksCompleted;
             
             refreshTasksState();
             updateUI();
@@ -301,7 +300,7 @@ async function fetchUserData() {
         userData.usedReferralCode = data.used_referral_code || '';
         userData.referralLinksClicked = data.referral_links_clicked || 0;
         userData.tasksCompleted = data.tasks_completed || {};
-
+        
         if (data.total_miners && totalMinersEl) {
             totalMinersEl.textContent = formatNumber(data.total_miners, 0);
         }
