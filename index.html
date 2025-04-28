@@ -68,11 +68,11 @@
 <div><span id="dailyCode">…</span></div>
 </div>
 <div class="stats-row">
-<div>Today Code Submits</div>
+<div>Today's Submissions</div>
 <div><span id="subsOfCode">0/10</span></div>
 </div>
 <div class="stats-row">
-<div>Total Code Submits</div>
+<div>Total Submissions</div>
 <div><span id="totalOfCode">0</span></div>
 </div>
 <div class="stats-row">
@@ -155,7 +155,7 @@
       <!-- Task 3 -->
       <li class="task-item" data-task="code10">
         <div class="task-desc">
-          <strong>Have a total of 10 successful code submissions</strong>
+          <strong>Have a total of 10 successful code submissions by others</strong>
         </div>
         <div class="task-reward">+1.0× power</div>
         <button class="button complete-task" data-claimed="false">Claim</button>
@@ -183,6 +183,49 @@
 <div class="card2"></div>
 
 <div class="stars"></div>
+  
+</div>
+
+<!-- Bottom navigation -->
+<div class="nav">
+  <button class="nav-item active" data-tab="mine-tab">
+    <span>Mine</span>
+  </button>
+  <button class="nav-item" data-tab="leaders-tab">
+    <span>Leaders</span>
+  </button>
+  <button class="nav-item" data-tab="tasks-tab">
+    <span>Tasks</span>
+  </button>
+  <button class="nav-item" data-tab="friends-tab">
+    <span>Friends</span>
+  </button>
+</div>
+
+<!-- App scripts -->
+<script src="app.js" type="module"></script>
+<script type="module" src="leaders.js"></script>
+
+<script>
+  // Tab switching functionality
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', function() {
+      // Remove active class from all nav items and tab contents
+      document.querySelectorAll('.nav-item').forEach(navItem => {
+        navItem.classList.remove('active');
+      });
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      // Add active class to clicked nav item and corresponding tab
+      this.classList.add('active');
+      const tabId = this.getAttribute('data-tab');
+      document.getElementById(tabId).classList.add('active');
+    });
+  });
+</script>
+
 <script>
   const starsContainer = document.querySelector('.stars');
   const starCount = 100;
@@ -246,49 +289,6 @@
     stars.forEach(star => {
       star.x = Math.random() * window.innerWidth;
       star.y = Math.random() * window.innerHeight;
-    });
-  });
-  </script>
-  
-
-</div>
-
-<!-- Bottom navigation -->
-<div class="nav">
-  <button class="nav-item active" data-tab="mine-tab">
-    <span>Mine</span>
-  </button>
-  <button class="nav-item" data-tab="leaders-tab">
-    <span>Leaders</span>
-  </button>
-  <button class="nav-item" data-tab="tasks-tab">
-    <span>Tasks</span>
-  </button>
-  <button class="nav-item" data-tab="friends-tab">
-    <span>Friends</span>
-  </button>
-</div>
-
-<!-- App scripts -->
-<script src="app.js" type="module"></script>
-<script type="module" src="leaders.js"></script>
-
-<script>
-  // Tab switching functionality
-  document.querySelectorAll('.nav-item').forEach(item => {
-    item.addEventListener('click', function() {
-      // Remove active class from all nav items and tab contents
-      document.querySelectorAll('.nav-item').forEach(navItem => {
-        navItem.classList.remove('active');
-      });
-      document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-      });
-      
-      // Add active class to clicked nav item and corresponding tab
-      this.classList.add('active');
-      const tabId = this.getAttribute('data-tab');
-      document.getElementById(tabId).classList.add('active');
     });
   });
 </script>
