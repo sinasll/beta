@@ -511,9 +511,11 @@ function setupEventListeners() {
 
     if (sendBtn) {
         sendBtn.addEventListener('click', async () => {
-            const code = dailyCodeEl.textContent;
-            const shareText = `\nUse my $BLACK code today\n \`${code}\``;
-            const shareUrl = `https://t.me/blackinbetabot?startapp`;
+          const dailyCode    = dailyCodeEl.textContent.trim();
+          const referralCode = userData.ownReferralCode;
+      
+          const shareText = `\nUse my $BLACK code today\n\`${dailyCode}\``;
+          const shareUrl  = `https://t.me/blackinbetabot?startapp=${referralCode}`;
             
             if (window.Telegram?.WebApp) {
                 window.Telegram.WebApp.openTelegramLink(
