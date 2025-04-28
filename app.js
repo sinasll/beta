@@ -160,28 +160,56 @@ function initializeUser() {
     };
 }
 
+let dotInterval = null;
+let dotCount = 0;
+
+// call this to kick off the dots animation
+function startDotAnimation() {
+  if (dotInterval) return;               // already running
+  dotInterval = setInterval(() => {
+    dotCount = (dotCount % 3) + 1;       // 1 → 2 → 3 → 1 …
+    mineBtn.textContent = `Mining ${Array(dotCount).fill('.').join(' ')}`;
+  }, 500);                               // change every 500ms
+}
+
+// call this to stop it and reset
+function stopDotAnimation() {
+  clearInterval(dotInterval);
+  dotInterval = null;
+  dotCount = 0;
+  mineBtn.textContent = 'Start Mining';
+}
+
 function updateUI() {
-    try {
-        if (balanceEl) balanceEl.textContent = formatNumber(userData.balance);
-        if (minedEl) minedEl.textContent = formatNumber(userData.totalMined);
-        if (powerEl) powerEl.textContent = formatNumber(userData.miningPower, 1);
-        if (mineBtn) {
-            mineBtn.textContent = userData.isMining ? 'Mining...' : 'Start Mining';
-            mineBtn.disabled = userData.isMining || isAfterResetTime();
-        }
-        if (dailyCodeEl) dailyCodeEl.textContent = userData.dailyCode;
-        if (subsOfCodeEl) subsOfCodeEl.textContent = `${formatNumber(userData.codeSubmissionsToday, 0)}/10`;
-        if (totalOfCodeEl) totalOfCodeEl.textContent = formatNumber(userData.totalCodeSubmissions, 0);
-        if (referralCountEl) referralCountEl.textContent = formatNumber(userData.referrals, 0);
-        if (referralEarningsEl) referralEarningsEl.textContent = formatNumber(userData.referralEarnings);
-        if (referralCodeEl) referralCodeEl.textContent = userData.ownReferralCode;
-        if (totalReferralsEl) totalReferralsEl.textContent = formatNumber(userData.totalInvites, 0);
-        if (usedReferralCodeEl) usedReferralCodeEl.textContent = userData.usedReferralCode || 'None';
-        
-        refreshTasksState();
-    } catch (error) {
-        console.error('UI update error:', error);
+  try {
+    if (balanceEl) balanceEl.textContent = formatNumber(userData.balance);
+    if (minedEl)  minedEl.textContent = formatNumber(userData.totalMined);
+    if (powerEl)  powerEl.textContent = formatNumber(userData.miningPower, 1);
+
+    if (mineBtn) {
+      // disable whenever mining or after reset
+      mineBtn.disabled = userData.isMining || isAfterResetTime();
+
+      if (userData.isMining) {
+        startDotAnimation();
+      } else {
+        stopDotAnimation();
+      }
     }
+
+    if (dailyCodeEl)       dailyCodeEl.textContent = userData.dailyCode;
+    if (subsOfCodeEl)      subsOfCodeEl.textContent = `${formatNumber(userData.codeSubmissionsToday, 0)}/10`;
+    if (totalOfCodeEl)     totalOfCodeEl.textContent = formatNumber(userData.totalCodeSubmissions, 0);
+    if (referralCountEl)   referralCountEl.textContent = formatNumber(userData.referrals, 0);
+    if (referralEarningsEl)referralEarningsEl.textContent = formatNumber(userData.referralEarnings);
+    if (referralCodeEl)    referralCodeEl.textContent = userData.ownReferralCode;
+    if (totalReferralsEl)  totalReferralsEl.textContent = formatNumber(userData.totalInvites, 0);
+    if (usedReferralCodeEl)usedReferralCodeEl.textContent = userData.usedReferralCode || 'None';
+
+    refreshTasksState();
+  } catch (error) {
+    console.error('UI update error:', error);
+  }
 }
 
 function updateCountdown() {
