@@ -132,12 +132,7 @@ input[type="submit"] {
   border: 1px solid var(--border-color);
   position: relative;
   overflow: hidden;
-
-  background: linear-gradient(
-    135deg,
-    var(--secondary-bg) 0%,
-    var(--bg-color) 100%
-  );
+  background: black;
 }
 
 .button {
@@ -148,23 +143,6 @@ input[type="submit"] {
   text-decoration: none;
 }
 
-@keyframes starScroll {
-  from {
-    transform: translate(0, 0) rotate(0deg);
-  }
-  to {
-    transform: translate(-200px, 200px) rotate(360deg);
-  }
-}
-
-.button:active {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-input[type="text"]::placeholder {
-  color: var(--hint-color);
-  opacity: 0.7;
-}
 
 .countdown {
   font-size: 0.8em;
@@ -449,10 +427,10 @@ input[type="text"]::placeholder {
   min-width: 80px;
   padding: 8px 16px;
   margin: 0;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: black;
   font-size: 0.85rem;
   text-transform: none;
-}
+  }
 
 .button.complete-task:not(:disabled):hover {
   background-color: rgba(255, 255, 255, 0.15);
