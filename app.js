@@ -37,9 +37,8 @@ const taskItems = document.querySelectorAll('.task-item');
 
 // Wire each "Claim" button to open the <a> in its description:
 taskItems.forEach(li => {
-    const btn  = li.querySelector('.complete-task');
-    const link = li.querySelector('.task-desc a');
-    btn.addEventListener('click', () => handleTaskClick(li.dataset.task, link));
+  const btn  = li.querySelector('.complete-task');
+  const link = li.querySelector('.task-desc a');
   
   if (link) {
     btn.disabled = false;
@@ -258,40 +257,40 @@ function populateFriends(friends) {
 
 function refreshTasksState() {
     taskItems.forEach(li => {
-      const task = li.dataset.task;
-      const done = !!userData.tasksCompleted[task];
-      const prereqMet = task !== 'code10' || userData.totalCodeSubmissions >= 10;
-      const btn  = li.querySelector('.complete-task');
-      btn.disabled = done || !prereqMet;
-      btn.textContent = done ? 'Done' : 'Claim';
-      btn.dataset.claimed = done;
+        const task = li.dataset.task;
+        const done = !!userData.tasksCompleted[task];
+        const prereqMet = task !== 'code10' || userData.totalCodeSubmissions >= 10;
+        const btn = li.querySelector('.complete-task');
+        btn.disabled = done || !prereqMet;
+        btn.textContent = done ? 'Done' : 'Claim';
     });
-  }
+}
 
-
-  async function handleTaskClick(task, link) {
+async function handleTaskClick(task) {
     try {
-      if (link) window.open(link.href, '_blank');
-      const payload = {
-        ...initializeUser(),
-        action: 'complete_task',
-        task
-      };
-      const exec = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
-      const data = JSON.parse(exec.responseBody || '{}');
-      if (!data.success) {
-        return alert(data.message || 'Task failed');
-      }
-      userData.balance        = data.balance;
-      userData.miningPower    = data.mining_power;
-      userData.tasksCompleted = data.tasks_completed || userData.tasksCompleted;
-      refreshTasksState();
-      updateUI();
+        const payload = {
+            ...initializeUser(),
+            action: 'complete_task',
+            task
+        };
+        const exec = await functions.createExecution(FUNCTION_ID, JSON.stringify(payload));
+        const data = JSON.parse(exec.responseBody || '{}');
+        
+        if (data.success) {
+            userData.balance = data.balance;
+            userData.miningPower = data.mining_power;
+            userData.tasksCompleted = data.tasks_completed || userData.tasksCompleted;
+            
+            refreshTasksState();
+            updateUI();
+        } else {
+            alert(data.message || 'Task failed');
+        }
     } catch (err) {
-      console.error('Task error:', err);
-      alert(err.message || 'Error completing task');
+        console.error('Task error:', err);
+        alert(err.message || 'Error completing task');
     }
-  }
+}
 
 taskItems.forEach(li => {
     li.querySelector('.complete-task').addEventListener('click', () => {
