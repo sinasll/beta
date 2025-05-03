@@ -90,6 +90,17 @@ body {
   margin-bottom: 16px;
   box-shadow: var(--box-shadow);
   border: 1px solid var(--border-color);
+  margin-top: 10px;
+}
+
+.end {
+  text-align: center;
+  font-size: 35px;
+}
+
+.end2 {
+  text-align: center;
+  font-size: 25px;
 }
 
 .card2 {
@@ -470,6 +481,12 @@ input[type="submit"] {
     margin-left: auto;
   }
 }
+
+.button.complete-task[data-claimed="true"] {
+  background-color: rgba(0, 255, 0, 0.1);
+  color: #00ff00;
+}
+
 
   /* 1) Container + shimmer overlay */
   .upgrade-placeholder {
